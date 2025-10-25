@@ -9,11 +9,24 @@ import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
 import CustomPage from './CustomPage'
 
-export default function App({ setShowApp, appSequence }) {
+export default function App({ 
+    setShowApp, 
+    setShowApp2, 
+    appSequence, 
+    flach,
+    länge,
+    setLänge,
+    breite,
+    setBreite,
+    höhe,
+    setHöhe
+ }) {
 
+    /*
     const [bodenLänge, setBodenLänge] = useState(40) // max 40
     const [bodenBreite, setBodenBreite] = useState(25) // max 25
     const [gebäudeHöhe, setGebäudeHöhe] = useState(15)
+    */
     
     const [koordinate, setKoordinate] = useState([0,0,0])
 
@@ -173,8 +186,8 @@ export default function App({ setShowApp, appSequence }) {
             padding: 18,
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
             color: "#000000ff",                            // besserer Kontrast
-            width: 380,
-            height: 50,
+            width: 400,
+            height: 90,
             border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
             zIndex: 999,
             borderRadius: 12
@@ -182,27 +195,33 @@ export default function App({ setShowApp, appSequence }) {
             <div 
             style={{
                 top: 3.5,
-                right: 89,
+                right: 84,
                 position: 'fixed',
                 borderRadius: 12,
                 padding: "5px",
-                border: "1px solid rgba(12, 8, 8, 0.2)",
+                border: "1px solid rgba(59, 44, 44, 0.2)",
+                height: 80,
+                marginLeft: 20,
+                color: "rgba(66, 39, 39, 0.2)"
             }}
-            onClick={() => setShowApp(false)}
+            onClick={setShowApp}
             >
                 <h2 className='navbar'>Home</h2>
             </div>
 
             <div style={{
                 top: 3.5,
-                right: 10,
+                right: 5,
                 position: 'fixed',
                 borderRadius: 12,
                 padding: "5px",
                 border: "1px solid rgba(12, 8, 8, 0.2)",
+                height: 80,
+                width: 75,
+                textAlign: 'center'
             }}
-            onClick={() => console.log("Reset")}>
-                <h2 className='navbar'>Reset</h2>
+            onClick={setShowApp2}>
+                <h2 className='navbar'>Edit</h2>
             </div>
 
             <img 
@@ -219,13 +238,14 @@ export default function App({ setShowApp, appSequence }) {
 
             
             <Halle 
-            bodenLänge={bodenLänge}
-            bodenBreite={bodenBreite}
-            gebäudeHöhe={gebäudeHöhe}
+            bodenLänge={länge+17}
+            bodenBreite={breite+15}
+            gebäudeHöhe={höhe+3}
             koordinate={koordinate}
             setTürAttribute={setTürAttribute}
             setSelectedObject={setSelectedObject}
             objs={objs}
+            flach={flach}
             />
             
 
@@ -234,68 +254,76 @@ export default function App({ setShowApp, appSequence }) {
 
         <div style={{
             position: "fixed",
-            top: 20,
-            left: 20,
+            top: 15,
+            left: 15,
             background: "rgba(255, 255, 255, 0.15)", // halbtransparent
             backdropFilter: "blur(10px)",             // Blur-Effekt
             WebkitBackdropFilter: "blur(10px)",       // Safari-Support
-            padding: 18,
             borderRadius: 12,
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
             color: "#000000ff",                            // besserer Kontrast
-            width: 320,
-            height: türAttribute ? 500 : 240,
+            width: 360,
+            height: türAttribute ? 250 : 250, // 500 : 250
             border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
-            zIndex: 999
+            zIndex: 999,
+            visibility: türAttribute ? "inherit" : "hidden"
         }}>
-            <SliderMui 
-                title={"Länge"} 
-                multiplier={0} 
-                value={bodenLänge} 
-                onChange={setBodenLänge}
-                min={22}
-                max={40}
-            />
+            <div style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                // Hier wieder sichtbar machen
+                visibility: türAttribute ? "hidden" : "hidden"
+            }}>
+                <SliderMui
+                    title={"Länge"} 
+                    multiplier={3} 
+                    value={länge} 
+                    onChange={setLänge}
+                    min={22}
+                    max={40}
+                />
 
-            <SliderMui 
-                title={"Breite"} 
-                multiplier={1} 
-                value={bodenBreite} 
-                onChange={setBodenBreite}
-                min={18}
-                max={25} 
-            />
+                <SliderMui 
+                    title={"Breite"} 
+                    multiplier={4} 
+                    value={breite} 
+                    onChange={setBreite}
+                    min={18}
+                    max={25} 
+                />
 
-            <SliderMui 
-                title={"Höhe"} 
-                multiplier={2} 
-                value={gebäudeHöhe} 
-                onChange={setGebäudeHöhe}
-                min={7}
-                max={20} 
-            />
+                <SliderMui 
+                    title={"Höhe"} 
+                    multiplier={5} 
+                    value={höhe} 
+                    onChange={setHöhe}
+                    min={7}
+                    max={20} 
+                />
+            </div>
 
         {türAttribute && (
             <>
                 {console.log(selectedObject)}
-                <ButtonMui multiplier={7} title={"Löschen"} onClick={() => deleteObj(selectedObject.id)} />
+                <ButtonMui multiplier={2} title={"Löschen"} onClick={() => deleteObj(selectedObject.id)} />
                 
                 <SliderMui 
                 title={"Objekt Breite"}
-                multiplier={4}
+                multiplier={0}
                 value={selectedObject.value[0]}
                 onChange={newValue => handleOnChange(0, newValue)}
                 min={2}
-                max={selectedObject.type === "lüfter" ? 7 : bodenBreite-4}
+                max={selectedObject.type === "lüfter" ? breite : breite+5}
                 />
 
                 <SliderMui 
                 title={"Objekt Höhe"}
-                multiplier={5}
+                multiplier={1}
                 value={selectedObject.value[1]}
                 onChange={newValue => handleOnChange(1, newValue)}
-                min={2}
-                max={(selectedObject.type === "lüfter" ? 7 : (selectedObject.type === "tür" ? gebäudeHöhe-2 : bodenBreite/1.5))}
+                min={3}
+                max={Math.round((selectedObject.type === "lüfter" ? 7 : (selectedObject.type === "tür" ? höhe-2 : breite/1.5)))}
                 />
             </>
         )}

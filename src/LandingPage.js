@@ -1,7 +1,9 @@
 import { Center } from "@react-three/drei";
 import "./styles.css";
+import AbfragePage from "./AbfragePage";
 
-export default function LandingPage({ openApp }) {
+export default function LandingPage({ openAbfrage }) {
+
 
     return(
         <>
@@ -19,7 +21,7 @@ export default function LandingPage({ openApp }) {
                 
                 <h1>Hallenkonfigurator</h1>
                 
-                <button className="button" onClick={openApp}>
+                <button className="button" onClick={openAbfrage}>
                     Los Geht´s!
                 </button>
                 

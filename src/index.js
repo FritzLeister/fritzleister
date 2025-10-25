@@ -9,8 +9,8 @@ import LoadingPage from "./LoadingPage"; // falls du eine eigene Lade-Seite hast
 import CustomPage from "./CustomPage";
 
 
-/*
-function AppSequence({ setShowAppC }) {
+
+function CustomPageFunc({ setShowApp, setFlach, setLänge, länge, breite, setBreite, höhe, setHöhe }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +23,17 @@ function AppSequence({ setShowAppC }) {
 
   return (
     <>
-      {loading ? <App setShowApp={setShowAppC} /> : <App setShowApp={setShowAppC} />}
+      {loading ? <LoadingPage /> : 
+      <AbfragePage 
+      setShowApp={() => setShowApp("app")} 
+      setFlach={setFlach} 
+      länge={länge} 
+      setLänge={setLänge} 
+      breite={breite} 
+      setBreite={setBreite}
+      höhe={höhe}
+      setHöhe={setHöhe}
+      />}
     </>
   )
   // <CustomPage openApp={() => setShowAppC(true)} />
@@ -31,7 +41,8 @@ function AppSequence({ setShowAppC }) {
 }
 
 
-function AppFalseSequence({ setShowAppC }) {
+
+function LandingPagefunc({ setShowApp }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,27 +55,79 @@ function AppFalseSequence({ setShowAppC }) {
 
   return (
     <>
-      {loading ? <LandingPage openApp={() => setShowAppC(true)} /> : <LandingPage openApp={() => setShowAppC(true)} />}
+      {loading ? <LoadingPage /> : <LandingPage openAbfrage={() => setShowApp("custom")} />}
     </>
   )
 }
-*/
+
+function AppPageFunc({ setShowApp, flach, länge, setLänge, breite, setBreite, höhe, setHöhe }) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer)
+  }, []);
+
+  return (
+    <>
+      {loading ? <LoadingPage /> : <App 
+        setShowApp={() => setShowApp("landing")} 
+        setShowApp2={() => setShowApp("custom")} 
+        flach={flach}
+        länge={länge}
+        setLänge={setLänge}
+        breite={breite}
+        setBreite={setBreite}
+        höhe={höhe}
+        setHöhe={setHöhe}
+      />}
+    </>
+  )
+}
+
 
 function Root() {
-  const [showApp, setShowApp] = useState(false)
+  const [showApp, setShowApp] = useState("landing")
 
   const [länge, setLänge] = useState(15)
   const [breite, setBreite] = useState(7)
   const [höhe, setHöhe] = useState(13)
 
+  const [flach, setFlach] = useState(false)
+
   return (
     <StrictMode>
-      {showApp ? (
+      {showApp === "landing"  && (
         // <AppSequence setShowAppC={setShowApp} />
-        <App setShowApp={setShowApp} />
-      ) : (
-        // <AppFalseSequence setShowAppC={setShowApp} />
-        <AbfragePage />
+        // <App setShowApp={setShowApp} />
+        <LandingPagefunc setShowApp={setShowApp} />
+      )}
+      {showApp === "custom" && (
+        <CustomPageFunc 
+        setShowApp={setShowApp} 
+        setFlach={setFlach} 
+        länge={länge} 
+        setLänge={setLänge} 
+        breite={breite} 
+        setBreite={setBreite} 
+        höhe={höhe} 
+        setHöhe={setHöhe} 
+        />
+      )}
+      {showApp === "app" && (
+        <AppPageFunc 
+        setShowApp={setShowApp} 
+        flach={flach} 
+        länge={länge} 
+        setLänge={setLänge} 
+        breite={breite} 
+        setBreite={setBreite} 
+        höhe={höhe} 
+        setHöhe={setHöhe} 
+        />
       )}
     </StrictMode>
   );

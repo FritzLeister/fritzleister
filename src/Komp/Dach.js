@@ -10,7 +10,8 @@ export default function Dach({
     setSelectedObject, 
     setTürAttribute, 
     objs, 
-    objId
+    objId,
+    flach
 }) {
 
     const ref = useRef() 
@@ -19,7 +20,6 @@ export default function Dach({
     const yHelp2 = gebäudeHöhe <= 9 ? 0.5 : 0
     const breiteHelp = bodenBreite <= 19 ? 0.2 : 0
 
-    const flach = false // Dach flach oder nicht
 
     const x = koordinate[0]
     const y = koordinate[1] + (flach ? 1 : 0.9)*(gebäudeHöhe-9) + (flach ? 0 : yHelp - yHelp2)

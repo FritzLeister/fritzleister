@@ -19,7 +19,8 @@ export default function Halle({
     setTürAttribute, 
     setSelectedObject, 
     objs,
-    objId
+    objId,
+    flach
 }) {
 
     const [orbitKontrolle, setOrbitKontrolle] = useState(true)
@@ -63,6 +64,8 @@ export default function Halle({
         setTürAttribute={setTürAttribute}
         objs={objs}
         objId={objId}
+        flach={flach
+        }
         />
         
         {/* <Achsen /> */}
