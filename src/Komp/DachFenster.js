@@ -74,7 +74,7 @@ export default function DachFenster({
   )
 
   if (!obj) {
-    return null;
+    return null
   }
 
   return (

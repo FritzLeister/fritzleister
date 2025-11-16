@@ -1,30 +1,50 @@
 import "./styles.css";
-import Checkbox from '@mui/material/Checkbox';
-import { useState } from "react";
+import Checkbox from '@mui/material/Checkbox'
+import { useState } from "react"
 import MuiProgress from "./Komp/MuiProgress"
 
-import Box from '@mui/material/Box';
-import Slider from '@mui/material/Slider';
-import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box'
+import Slider from '@mui/material/Slider'
+import Typography from '@mui/material/Typography'
 
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
-const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
+const label = { inputProps: { 'aria-label': 'Checkbox demo' } }
 
-export default function AbfragePage({ setShowApp, setFlach, länge, setLänge, breite, setBreite, höhe, setHöhe }) {
+export default function AbfragePage({ 
+    setShowApp, 
+    setFlach, 
+    länge, 
+    setLänge, 
+    breite, 
+    setBreite, 
+    höhe, 
+    setHöhe,
+    hallenartSelection,
+    setHallenartSelection,
+    dachSelection,
+    setDachSelection,
+    setHallenSave,
+    hallenSave
+}) {
 
     const [actionState, setActionState] = useState(1)
-    const [hallenartSelection, setHallenartSelection] = useState("")
-    const [dachSelection, setDachSelection] = useState("")
-    const [bauweiseSelection, setBauweiseSelection] = useState("")
+
+    const [popUp, setPopUp] = useState(false)
 
     function handleAbschluss() {
         setHallenartSelection("industrie")
         setDachSelection("satteldach")
-        setBauweiseSelection("gedaemt")
         setShowApp(true)
     }
+
+    // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
+    const [hallenId, setHallenId] = useState(() => {
+        const maxId = hallenSave?.reduce((max, halle) => 
+            halle.id > max ? halle.id : max, 0);
+        return maxId + 1;
+    });
 
     return(
         <>
@@ -220,6 +240,18 @@ export default function AbfragePage({ setShowApp, setFlach, länge, setLänge, b
                             >
                                 <ArrowForwardIcon fontSize="large" />
                             </div>
+
+                            <div style={{
+                                position: 'absolute',
+                                top: 10,
+                                left: 10,
+                                cursor: "pointer",
+                            }}
+                            onClick={() => setShowApp('landing')}
+                            >
+                                <ArrowBackIcon fontSize="large" />
+                                
+                            </div>
                             </>
                         )
                     }
@@ -325,10 +357,10 @@ export default function AbfragePage({ setShowApp, setFlach, länge, setLänge, b
                             </div>
 
                             <div style={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            cursor: "pointer",
+                                position: 'absolute',
+                                top: 10,
+                                right: 10,
+                                cursor: "pointer",
                             }}
                             onClick={() => setActionState(4)}
                             >
@@ -357,6 +389,33 @@ export default function AbfragePage({ setShowApp, setFlach, länge, setLänge, b
                             <h2 style={{ fontWeight: 50, marginBottom: 20 }} >Super, vielen Dank!</h2>
 
                             <h2 style={{ fontWeight: 30, fontSize: 20 }}>Ihre Angaben helfen uns, die Konfiguration vorzubereiten.</h2>
+
+                            {popUp && (
+                                <h4
+                                className="text"
+                                style={{ marginBottom: "5px", fontWeight: 200, fontSize: 12 }}
+                                >Halle gespeichert!</h4>
+                            )}
+
+                            <button className="buttonDark" onClick={() => {
+                                setPopUp(true)
+                                if (hallenId < 8) setHallenSave(prev => {
+                                    const newObj = {
+                                        id: hallenId,
+                                        breite,
+                                        höhe,
+                                        länge,
+                                        dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
+                                        hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
+                                        name: ""
+                                    };
+                                    return [...prev, newObj]
+                                })
+                                setTimeout(() => (setHallenId(hallenId+1)), 100)
+                            }}
+                            >
+                                Konfiguration speichern!
+                            </button>
 
                             <button className="buttonDark" onClick={() => {
                                 if (dachSelection === "") setDachSelection("satteldach");

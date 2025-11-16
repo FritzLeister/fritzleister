@@ -4,9 +4,7 @@ import Wand from "./Komp/Wand"
 import Dach from "./Komp/Dach"
 import { OrbitControls } from "@react-three/drei"
 import { useState } from "react"
-import Achsen from "./Komp/Achsen"
 import Tür from "./Komp/Tür"
-import WandLüfter from "./Komp/WandLüfter"
 import { useLoader } from "@react-three/fiber"
 import { TextureLoader } from "three"
 import { useRef } from "react"
@@ -64,8 +62,7 @@ export default function Halle({
         setTürAttribute={setTürAttribute}
         objs={objs}
         objId={objId}
-        flach={flach
-        }
+        flach={flach}
         />
         
         {/* <Achsen /> */}

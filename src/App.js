@@ -11,7 +11,8 @@ import CustomPage from './CustomPage'
 
 export default function App({ 
     setShowApp, 
-    setShowApp2, 
+    setShowApp2,
+    setShowApp3,
     appSequence, 
     flach,
     länge,
@@ -19,7 +20,13 @@ export default function App({
     breite,
     setBreite,
     höhe,
-    setHöhe
+    setHöhe,
+    setHallenSave,
+    hallenartSelection,
+    setHallenartSelection,
+    dachSelection,
+    setDachSelection,
+    hallenSave
  }) {
 
     /*
@@ -29,6 +36,13 @@ export default function App({
     */
     
     const [koordinate, setKoordinate] = useState([0,0,0])
+
+    // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
+    const [hallenId, setHallenId] = useState(() => {
+        const maxId = hallenSave?.reduce((max, halle) => 
+            halle.id > max ? halle.id : max, 0);
+        return maxId + 1;
+    });
 
     const [türAttribute, setTürAttribute] = useState(false)
     const [selectedObject, setSelectedObject] = useState(null)
@@ -186,7 +200,7 @@ export default function App({
             padding: 18,
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
             color: "#000000ff",                            // besserer Kontrast
-            width: 400,
+            width: 480,
             height: 90,
             border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
             zIndex: 999,
@@ -221,8 +235,40 @@ export default function App({
                 textAlign: 'center'
             }}
             onClick={setShowApp2}>
-                <h2 className='navbar'>Edit</h2>
+                <h2 className='navbar'>Reset</h2>
             </div>
+
+            {/*
+            <div style={{
+                top: 3.5,
+                right: 164,
+                position: 'fixed',
+                borderRadius: 12,
+                padding: "5px",
+                border: "1px solid rgba(12, 8, 8, 0.2)",
+                height: 80,
+                width: 75,
+                textAlign: 'center'
+            }}
+            onClick={() => {
+                setHallenSave(prev => {
+                    const newObj = {
+                    id: hallenId,
+                    breite,
+                    höhe,
+                    länge,
+                    dachArt: dachSelection,
+                    hallenArt: hallenartSelection
+                    };
+                    return [...prev, newObj];
+                });
+
+                setTimeout(() => (setShowApp3(), setHallenId(hallenId + 1)), 100);
+            }}>
+
+                <h2 className='navbar'>Save</h2>
+            </div>
+            */}
 
             <img 
             src="/StartpunktDigitalLogo.png" 
@@ -245,7 +291,7 @@ export default function App({
             setTürAttribute={setTürAttribute}
             setSelectedObject={setSelectedObject}
             objs={objs}
-            flach={flach}
+            flach={dachSelection === "flachdach" ? true : false}
             />
             
 
@@ -314,7 +360,7 @@ export default function App({
                 value={selectedObject.value[0]}
                 onChange={newValue => handleOnChange(0, newValue)}
                 min={2}
-                max={selectedObject.type === "lüfter" ? breite : breite+5}
+                max={selectedObject.type === "lüfter" ? 5 : (selectedObject.type === "tür" ? breite+10 : breite+5)}
                 />
 
                 <SliderMui 
@@ -323,7 +369,7 @@ export default function App({
                 value={selectedObject.value[1]}
                 onChange={newValue => handleOnChange(1, newValue)}
                 min={3}
-                max={Math.round((selectedObject.type === "lüfter" ? 7 : (selectedObject.type === "tür" ? höhe-2 : breite/1.5)))}
+                max={Math.round((selectedObject.type === "lüfter" ? 5 : (selectedObject.type === "tür" ? höhe-2 : breite+2)))}
                 />
             </>
         )}

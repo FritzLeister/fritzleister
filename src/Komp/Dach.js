@@ -37,7 +37,6 @@ export default function Dach({
 
             {/* Dachplatten */}
             {/* Hinten */}
-            {/* Hieeerrr weitermachen!! */}
             <group
             position={[x, y+12 - (flach ? 3.2 : 0), z+6+(0.5*(bodenBreite-20))+breiteHelp]}
             rotation={[Math.PI * (flach ? 0 : 35) / 180, 0, 0]} 

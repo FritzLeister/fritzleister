@@ -1,13 +1,12 @@
-import { Center } from "@react-three/drei";
 import "./styles.css";
-import AbfragePage from "./AbfragePage";
 
-export default function LandingPage({ openAbfrage }) {
+export default function LandingPage({ 
+    setShowApp
+}) {
 
 
     return(
         <>
-
             <div
                 style={{
                 display: "flex",
@@ -21,9 +20,14 @@ export default function LandingPage({ openAbfrage }) {
                 
                 <h1>Hallenkonfigurator</h1>
                 
-                <button className="button" onClick={openAbfrage}>
-                    Los Geht´s!
-                </button>
+                <div>
+                    <button className="button" onClick={() => setShowApp("saved")}>
+                        Gespeichert
+                    </button>
+                    <button className="button" onClick={() => setShowApp("custom")}>
+                        Los Geht´s!
+                    </button>
+                </div>
                 
             </div>
         </>

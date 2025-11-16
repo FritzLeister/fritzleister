@@ -29,19 +29,27 @@ export default function WandLüfter({
     const { size, camera } = useThree() 
     const groupRef = useRef()
 
-    /*
-    const handleClick = () => {
-        setClickCount(prev => prev + 1)
-        if (clickCount===0) {
-            const findObj = objs.find(obj => obj.id === objId)
-            setSelectedObject(findObj)
-            setTürAttribute(true)
-        } else if (clickCount===1) {
-            setTürAttribute(false)
-            setClickCount(0)
-        }
+    // Git Copilot
+    const handleClick = (e) => {
+        // Prevent clicks on child meshes from bubbling and causing multiple events
+        if (e && e.stopPropagation) e.stopPropagation()
+
+        // Use functional updater to avoid reading stale `clickCount` and to
+        // deterministically toggle selection / attribute state.
+        setClickCount(prev => {
+            if (prev === 0) {
+                const findObj = objs.find(obj => obj.id === objId)
+                setSelectedObject(findObj)
+                setTürAttribute(true)
+                return 1
+            } else {
+                setTürAttribute(false)
+                setSelectedObject(null)
+                return 0
+            }
+        })
     }
-    */
+    
 
     const minY = lang ? -gebäudeHöhe+6.5 + (lüfterArgs[1]-5)/2 : -gebäudeHöhe+6.5 + (lüfterArgs[1]-5)/2
     const maxY = lang ? 0 - (lüfterArgs[1]-5)/2 : 0 - (lüfterArgs[1]-5)/2
@@ -82,7 +90,7 @@ export default function WandLüfter({
         <group
         ref={groupRef}
         position={[x, gridPosi.y, gridPosi.z]}
-        // onClick={handleClick}
+        onClick={handleClick}
         {...bind()}
         >
             {/* Hintergrund */}

@@ -38,6 +38,7 @@ h1 {
   cursor: pointer;
   transition: all 0.25s ease-out;
   font-size: large;
+  margin: 3px;
 }
 
 .button:hover {
@@ -57,6 +58,11 @@ h1 {
 	color:#000000;
 	line-height: 1.2;
   font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 3px;
+  margin-right: 3px;
+  
 }
 
 #sachen {
@@ -76,6 +82,11 @@ h2 {
   
 }
 
+h4 {
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-weight: 100;
+  margin-top: 0;
+}
 
 .label {
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
@@ -112,6 +123,7 @@ h2 {
  -webkit-user-select: none;
  touch-action: manipulation;
  will-change: transform;
+ margin-bottom: 3px;
 }
 
 .buttonDark:disabled {
