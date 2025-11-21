@@ -7,7 +7,6 @@ import LoadingPage from "./LoadingPage";
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
-import CustomPage from './CustomPage'
 
 export default function App({ 
     setShowApp, 
@@ -26,7 +25,9 @@ export default function App({
     setHallenartSelection,
     dachSelection,
     setDachSelection,
-    hallenSave
+    hallenSave,
+    objs,
+    setObjs
  }) {
 
     /*
@@ -39,15 +40,16 @@ export default function App({
 
     // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
     const [hallenId, setHallenId] = useState(() => {
-        const maxId = hallenSave?.reduce((max, halle) => 
-            halle.id > max ? halle.id : max, 0);
-        return maxId + 1;
+        const maxId = hallenSave?.reduce((max, halle) =>
+            (typeof halle?.id === 'number' && !Number.isNaN(halle.id) && halle.id > max) ? halle.id : max
+        , 0) ?? 0;
+        return Number(maxId) + 1;
     });
 
     const [türAttribute, setTürAttribute] = useState(false)
     const [selectedObject, setSelectedObject] = useState(null)
 
-    const [objs, setObjs] = useState([
+    // const [objs, setObjs] = useState([
         // value: [x,x,...] onChange: [x,x,...], type: , ggf.: rechts?
         /*
         {
@@ -128,7 +130,7 @@ export default function App({
             rechts: true // "lang"
         }
         */
-    ])
+    // ])
 
     /*
     function handleReset() {
@@ -218,7 +220,10 @@ export default function App({
                 marginLeft: 20,
                 color: "rgba(66, 39, 39, 0.2)"
             }}
-            onClick={setShowApp}
+            onClick={() => {
+                setObjs([])
+                setShowApp()
+            }}
             >
                 <h2 className='navbar'>Home</h2>
             </div>
@@ -234,11 +239,15 @@ export default function App({
                 width: 75,
                 textAlign: 'center'
             }}
-            onClick={setShowApp2}>
+            onClick={() => (
+                setShowApp2(),
+                setObjs([])
+                )
+            }>
                 <h2 className='navbar'>Reset</h2>
             </div>
 
-            {/*
+            
             <div style={{
                 top: 3.5,
                 right: 164,
@@ -253,22 +262,27 @@ export default function App({
             onClick={() => {
                 setHallenSave(prev => {
                     const newObj = {
-                    id: hallenId,
+                    id: Date.now(),
                     breite,
                     höhe,
                     länge,
-                    dachArt: dachSelection,
-                    hallenArt: hallenartSelection
+                    dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
+                    hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
+                    objs: Array.isArray(objs) ? objs.map(o => ({ ...o })) : [],
+                    name: ""
                     };
                     return [...prev, newObj];
                 });
 
-                setTimeout(() => (setShowApp3(), setHallenId(hallenId + 1)), 100);
+                setTimeout(() => {
+                    setShowApp3();
+                    setHallenId(prev => Number(prev) + 1);
+                }, 100);
             }}>
 
                 <h2 className='navbar'>Save</h2>
             </div>
-            */}
+            
 
             <img 
             src="/StartpunktDigitalLogo.png" 

@@ -41,9 +41,10 @@ export default function AbfragePage({
 
     // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
     const [hallenId, setHallenId] = useState(() => {
-        const maxId = hallenSave?.reduce((max, halle) => 
-            halle.id > max ? halle.id : max, 0);
-        return maxId + 1;
+        const maxId = hallenSave?.reduce((max, halle) =>
+            (typeof halle?.id === 'number' && !Number.isNaN(halle.id) && halle.id > max) ? halle.id : max
+        , 0) ?? 0;
+        return Number(maxId) + 1;
     });
 
     return(
@@ -397,25 +398,27 @@ export default function AbfragePage({
                                 >Halle gespeichert!</h4>
                             )}
 
+                            {/*
                             <button className="buttonDark" onClick={() => {
                                 setPopUp(true)
-                                if (hallenId < 8) setHallenSave(prev => {
-                                    const newObj = {
-                                        id: hallenId,
-                                        breite,
-                                        höhe,
-                                        länge,
-                                        dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
-                                        hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
-                                        name: ""
-                                    };
-                                    return [...prev, newObj]
-                                })
-                                setTimeout(() => (setHallenId(hallenId+1)), 100)
+                                    if (hallenId < 8) setHallenSave(prev => {
+                                        const newObj = {
+                                            id: Date.now(),
+                                            breite,
+                                            höhe,
+                                            länge,
+                                            dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
+                                            hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
+                                            name: ""
+                                        };
+                                        return [...prev, newObj]
+                                    })
+                                setTimeout(() => setHallenId(prev => Number(prev) + 1), 100)
                             }}
                             >
                                 Konfiguration speichern!
                             </button>
+                            */}
 
                             <button className="buttonDark" onClick={() => {
                                 if (dachSelection === "") setDachSelection("satteldach");

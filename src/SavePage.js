@@ -9,7 +9,8 @@ export default function SavePage({
     setHöhe,
     setHallenartSelection,
     setDachSelection,
-    hallenSave
+    hallenSave,
+    setObjs
 }) {
 
     const [schirm, setSchirm] = useState("preis")
@@ -50,6 +51,7 @@ export default function SavePage({
 
                         <div>
                             <button className="buttonDark" style={{ marginRight: "2.5px", width: 230 }} onClick={() => {
+                                setObjs([])
                                 setSchirm("kontakt")
                             }} >
                                 Preis Anfordern

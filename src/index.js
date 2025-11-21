@@ -97,7 +97,9 @@ function AppPageFunc({
   hallenartSelection,
   setHallenartSelection,
   dachSelection,
-  setDachSelection
+  setDachSelection,
+  objs,
+  setObjs
 }) {
 
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,8 @@ function AppPageFunc({
         setHallenartSelection={setHallenartSelection}
         dachSelection={dachSelection}
         setDachSelection={setDachSelection}
+        objs={objs}
+        setObjs={setObjs}
       />}
     </>
   )
@@ -144,9 +148,11 @@ function Root() {
   const [flach, setFlach] = useState(false)
   const [hallenartSelection, setHallenartSelection] = useState("")
   const [dachSelection, setDachSelection] = useState("")
-  
+
   // länge: ; breite: ; höhe: ; flach: ; dachSelection: ; hallenartSelection: ;
   const [hallenSave, setHallenSave] = useState([])
+  const [objs, setObjs] = useState([
+  ])
   
   useEffect(() => {
         console.log("hallenSave updated:", hallenSave);
@@ -154,8 +160,31 @@ function Root() {
 
 
   function deleteHalle(id) {
-    let newArr = hallenSave.filter(item => item.id !== id)
-    setHallenSave(newArr)
+    console.log("deleteHalle called with id:", id);
+    setHallenSave(prev => {
+      const next = prev.filter(item => item.id !== id);
+      // console.log("hallenSave after delete:", next);
+      return next;
+    })
+  }
+
+  // Hydrate saved objects into runtime-ready objects with handlers that use the
+  // root `setObjs`. This recreates `onChange` handlers so loaded objects are
+  // editable after being restored from a saved hall.
+  function hydrateObjs(savedArr) {
+    if (!Array.isArray(savedArr)) return [];
+    return savedArr.map(obj => {
+      const id = obj.id;
+      const value = Array.isArray(obj.value) ? [...obj.value] : obj.value;
+      return {
+        ...obj,
+        value,
+        onChange: [
+          (newWidth) => setObjs(current => current.map(o => o.id === id ? { ...o, value: [newWidth, o.value[1]] } : o)),
+          (newHeight) => setObjs(current => current.map(o => o.id === id ? { ...o, value: [o.value[0], newHeight] } : o))
+        ]
+      }
+    })
   }
   
 
@@ -202,6 +231,8 @@ function Root() {
         setDachSelection={setDachSelection}
         setHallenSave={setHallenSave}
         hallenSave={hallenSave}
+        objs={objs}
+        setObjs={setObjs}
         />
       )}
 
@@ -214,6 +245,7 @@ function Root() {
         setHallenartSelection={setHallenartSelection}
         setDachSelection={setDachSelection}
         hallenSave={hallenSave}
+        setObjs={setObjs}
         />
       )}
 
@@ -228,6 +260,9 @@ function Root() {
         setHallenartSelection={setHallenartSelection}
         setDachSelection={setDachSelection}
         deleteHalle={deleteHalle}
+        objs={objs}
+        setObjs={setObjs}
+        hydrateObjs={hydrateObjs}
         />
       )}
     </StrictMode>

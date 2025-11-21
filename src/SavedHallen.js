@@ -1,5 +1,7 @@
 import "./styles.css";
 import GespeicherteHallen from "./Komp/GespeicherteHallen";
+import "./styles.css";
+//import GespeicherteHallen from "./Komp/GespeicherteHallen";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useState } from "react";
 
@@ -12,7 +14,11 @@ export default function SavedHallen({
     setHallenartSelection,
     setDachSelection,
     deleteHalle,
-    setHallenSave
+    setHallenSave,
+    objs,
+    setObjs
+      ,
+      hydrateObjs
 }) {
 
   // Verwende slice nach Index: die ersten 4 Elemente oben, der Rest unten
@@ -22,10 +28,9 @@ export default function SavedHallen({
   const [nameEdit, setNameEdit] = useState(false)
 
   function editNameHalle(id, newName) {
-    const updated = hallenSave.map(item =>
-      item.id === id ? { ...item, name: newName } : item
-    );
-    setHallenSave(updated);
+    setHallenSave(prev => prev.map(item =>
+      item.id === id ? { ...item, name: typeof newName === 'string' ? newName.trim() : newName } : item
+    ));
   }
 
   return (
@@ -93,6 +98,10 @@ export default function SavedHallen({
                 editNameHalle={editNameHalle}
                 nameEdit={nameEdit}
                 setNameEdit={setNameEdit}
+                objs={objs}
+                setObjs={setObjs}
+                hydrateObjs={hydrateObjs}
+                hallenCount={Array.isArray(hallenSave) ? hallenSave.length : 0}
                 />
               ))}
             </div>
@@ -116,6 +125,10 @@ export default function SavedHallen({
                     editNameHalle={editNameHalle}
                     nameEdit={nameEdit}
                     setNameEdit={setNameEdit}
+                    objs={objs}
+                    setObjs={setObjs}
+                    hydrateObjs={hydrateObjs}
+                    hallenCount={Array.isArray(hallenSave) ? hallenSave.length : 0}
                   />
                 ))}
               </div>

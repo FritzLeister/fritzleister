@@ -16,7 +16,11 @@ export default function GespeicherteHallen({
     setDachSelection,
     deleteHalle,
     editNameHalle,
-    setNameEdit
+    setNameEdit,
+    objs,
+    setObjs,
+    hydrateObjs,
+    hallenCount
 }) {
 
     function handleClick() {
@@ -27,6 +31,13 @@ export default function GespeicherteHallen({
         setBreite(halle.breite)
         setHöhe(halle.höhe)
         setHallenartSelection(halle.hallenArt)
+        if (typeof setObjs === 'function') {
+            if (typeof hydrateObjs === 'function') {
+                setObjs(hydrateObjs(halle.objs))
+            } else {
+                setObjs(Array.isArray(halle.objs) ? halle.objs.map(o => ({ ...o })) : [])
+            }
+        }
         // Wieder App anzeigen
         setShowApp("app")
     }
@@ -43,6 +54,19 @@ export default function GespeicherteHallen({
     }
 
     const [output, setOutput] = useState(false)
+    const inputWidth = hallenCount === 4 ? "80px" : "100%";
+
+    function getWidthInput() {
+        if (hallenCount >= 4) {
+            return "80px"
+        } else if (hallenCount === 3) {
+            return "120px"
+        } else if (hallenCount === 2) {
+            return "160px"
+        } else if (hallenCount === 1) {
+            return "200px"
+        }
+    }
 
     return (
         <div
@@ -72,7 +96,7 @@ export default function GespeicherteHallen({
                 cursor: 'pointer',
                 zIndex: 1000
             }}
-            onClick={() => deleteHalle(halle.id)}
+            onClick={(e) => { e.stopPropagation(); console.log('Delete icon clicked for id', halle.id); deleteHalle(halle.id); }}
             >
                 <RemoveCircleOutlineIcon />
             </div>
@@ -108,8 +132,8 @@ export default function GespeicherteHallen({
             {output ? (
                 <div>
                     <input
-                    style={{ marginBottom: "10px", marginTop: "0px", height: "25px" }}
-                    placeholder='Hier neuen Titel eingeben...'
+                    style={{ marginBottom: "10px", marginTop: "0px", height: "25px", width: getWidthInput() }}
+                    placeholder='Titel...'
                     onKeyDown={(e) => {
                         if (e.key === "Enter") handleInputEnter();
                     }}
@@ -119,7 +143,7 @@ export default function GespeicherteHallen({
                     {/* <CheckCircleIcon style={{marginLeft: "5px"}} /> */}
                 </div>
             ):(
-                <h3 style={{ marginBottom: "10px", marginTop: "0px" }} className="text">{halle.name === "" ? `Halle ${index + 1}` : halle.name}</h3>
+                <h3 style={{ marginBottom: "10px", marginTop: "0px", width: getWidthInput(), height: "25px" }} className="text">{halle.name === "" ? `Halle ${index + 1}` : halle.name}</h3>
             )}
 
             <div>

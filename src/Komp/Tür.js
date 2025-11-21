@@ -18,7 +18,7 @@ export default function Tür({
 }) {
 
     const obj = objs.find(obj => obj.id === objId)
-    const türArgs = obj ? [obj.value[0], obj.value[1]] : [16,9]
+    const türArgs = obj ? [obj.value[0], obj.value[1]] : [10,4]
 
     const rechts = obj.rechts
     const lang = true
