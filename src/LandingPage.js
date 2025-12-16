@@ -16,7 +16,7 @@ export default function LandingPage({
                 height: "100vh",
                 }}
             >
-                <img src="/StartpunktDigitalLogo.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
+                <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
                 
                 <h1>Hallenkonfigurator</h1>
                 

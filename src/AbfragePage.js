@@ -177,7 +177,7 @@ export default function AbfragePage({
                     }}
                 >
 
-                    <img src="/StartpunktDigitalLogo.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
+                    <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
 
                     {actionState === 1 && (
                         <>
@@ -322,8 +322,8 @@ export default function AbfragePage({
                                     defaultValue={50} 
                                     aria-label="Default" 
                                     valueLabelDisplay="auto"
-                                    min={5} // Default Value 5 meter == value 22
-                                    max={23} // Max Value 23 Meter == value 40
+                                    min={6} // Default Value 5 meter == value 22
+                                    max={200} // Max Value 23 Meter == value 40
                                     value={länge} 
                                     onChange={(e, newValue) => setLänge(newValue)} />
                                 </Box>
@@ -338,21 +338,21 @@ export default function AbfragePage({
                                     valueLabelDisplay="auto" 
                                     value={breite}
                                     min={3} // Min Value 3 == value 18
-                                    max={10} // Max Value 10 == value 25
+                                    max={100} // Max Value 10 == value 25
                                     onChange={(e, newValue) => setBreite(newValue)} />
                                 </Box>
                             </div>
 
                             <div>
                                 <Box sx={{ width: 300 }}>
-                                    <Typography sx={{ marginBottom: 0 }} >Höhe (m)</Typography>
+                                    <Typography sx={{ marginBottom: 0 }} >Traufhöhe (m)</Typography>
                                     <Slider 
                                     defaultValue={50} 
                                     aria-label="Default" 
                                     valueLabelDisplay="auto" 
                                     value={höhe}
-                                    min={4} // Min Value 4 == value 7
-                                    max={17} // Max Value 17 == value 20
+                                    min={3} // Min Value 4 == value 7
+                                    max={30} // Max Value 17 == value 20
                                     onChange={(e, newValue) => setHöhe(newValue)} />
                                 </Box>
                             </div>

@@ -99,7 +99,9 @@ function AppPageFunc({
   dachSelection,
   setDachSelection,
   objs,
-  setObjs
+  setObjs,
+  editMenü,
+  setEditMenü
 }) {
 
   const [loading, setLoading] = useState(true);
@@ -132,6 +134,8 @@ function AppPageFunc({
         setDachSelection={setDachSelection}
         objs={objs}
         setObjs={setObjs}
+        editMenü={editMenü}
+        setEditMenü={setEditMenü}
       />}
     </>
   )
@@ -140,6 +144,8 @@ function AppPageFunc({
 
 function Root() {
   const [showApp, setShowApp] = useState("landing")
+
+  const [editMenü, setEditMenü] = useState('')
 
   const [länge, setLänge] = useState(15)
   const [breite, setBreite] = useState(7)
@@ -233,6 +239,8 @@ function Root() {
         hallenSave={hallenSave}
         objs={objs}
         setObjs={setObjs}
+        editMenü={editMenü}
+        setEditMenü={setEditMenü}
         />
       )}
 

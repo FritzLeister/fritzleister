@@ -75,7 +75,7 @@ export default function SavedHallen({
         >
             <ArrowBackIcon fontSize="large" />
         </div>
-        <img src="/StartpunktDigitalLogo.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
+        <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
         <h1 style={{ fontSize: 50 }}>Gespeicherte Hallen</h1>
 
 

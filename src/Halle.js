@@ -24,6 +24,7 @@ export default function Halle({
     const [orbitKontrolle, setOrbitKontrolle] = useState(true)
     const türObjs = objs.filter(obj => obj.type === "tür")
 
+    //const url = "pastellGrün.png"
     const url = "blaupause.jpg"
     const ref = useRef()
     const texture = useLoader(TextureLoader, url)

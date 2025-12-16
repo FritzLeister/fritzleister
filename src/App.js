@@ -7,6 +7,9 @@ import LoadingPage from "./LoadingPage";
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
+import { useLoader } from '@react-three/drei'
+import { TextureLoader } from 'three'
+import DarstellungUI from './Komp/DarstellungUI'
 
 export default function App({ 
     setShowApp, 
@@ -27,7 +30,9 @@ export default function App({
     setDachSelection,
     hallenSave,
     objs,
-    setObjs
+    setObjs,
+    editMenü,
+    setEditMenü
  }) {
 
     /*
@@ -190,6 +195,7 @@ export default function App({
         setTürAttribute(false)
     }
 
+
     return(
         <>
         <div style={{
@@ -206,7 +212,9 @@ export default function App({
             height: 90,
             border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
             zIndex: 999,
-            borderRadius: 12
+            borderRadius: 12,
+            display: 'flex',
+            alignItems: 'center'
         }}>
             <div 
             style={{
@@ -216,13 +224,25 @@ export default function App({
                 borderRadius: 12,
                 padding: "5px",
                 border: "1px solid rgba(59, 44, 44, 0.2)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                 height: 80,
                 marginLeft: 20,
-                color: "rgba(66, 39, 39, 0.2)"
+                color: "rgba(66, 39, 39, 0.2)",
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
             onClick={() => {
                 setObjs([])
                 setShowApp()
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
             }}
             >
                 <h2 className='navbar'>Home</h2>
@@ -235,15 +255,28 @@ export default function App({
                 borderRadius: 12,
                 padding: "5px",
                 border: "1px solid rgba(12, 8, 8, 0.2)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 height: 80,
                 width: 75,
-                textAlign: 'center'
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
             onClick={() => (
                 setShowApp2(),
                 setObjs([])
                 )
-            }>
+            }
+            onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
+                e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            }}
+            >
                 <h2 className='navbar'>Reset</h2>
             </div>
 
@@ -255,9 +288,13 @@ export default function App({
                 borderRadius: 12,
                 padding: "5px",
                 border: "1px solid rgba(12, 8, 8, 0.2)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 height: 80,
                 width: 75,
-                textAlign: 'center'
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
             onClick={() => {
                 setHallenSave(prev => {
@@ -278,21 +315,35 @@ export default function App({
                     setShowApp3();
                     setHallenId(prev => Number(prev) + 1);
                 }, 100);
-            }}>
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
+                e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            }}
+            >
 
                 <h2 className='navbar'>Save</h2>
             </div>
             
 
             <img 
-            src="/StartpunktDigitalLogo.png" 
+            // src="/StartpunktDigitalLogo.png" 
+            src='/LogoPerthel.png'
             alt="Logo"
-            style={{ width: 200, zIndex: 1000, }} 
+            style={{ width: 200, zIndex: 1000 }} 
             />
         </div>
         
 
-        <Canvas camera={{position: [0,30,-50]}} className='canvasOverlay'>
+        <Canvas 
+        camera={{position: [0,30,-50]}} 
+        className='canvasOverlay'
+        // style={{backgroundImage: "url(/himmel.jpg)", backgroundSize: "cover", backgroundPosition: "center"}}
+        >
             <directionalLight position={[5,5,5]} intensity={1} />
             <ambientLight intensity={0.6} />
 
@@ -314,8 +365,8 @@ export default function App({
 
         <div style={{
             position: "fixed",
-            top: 15,
-            left: 15,
+            top: 120,
+            right: 20,
             background: "rgba(255, 255, 255, 0.15)", // halbtransparent
             backdropFilter: "blur(10px)",             // Blur-Effekt
             WebkitBackdropFilter: "blur(10px)",       // Safari-Support
@@ -390,7 +441,11 @@ export default function App({
         </div>
 
 
-        <Add addObj={addObj} />
+        <Add addObj={addObj} editMenü={editMenü} setEditMenü={setEditMenü} />
+        <DarstellungUI
+            editMenü={editMenü}
+            setEditMenü={setEditMenü}
+        />
 
         </>
     )

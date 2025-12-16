@@ -9,9 +9,19 @@ import DoorFrontIcon from '@mui/icons-material/DoorFront';
 import WindowOutlinedIcon from '@mui/icons-material/WindowOutlined';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import ViewWeekOutlinedIcon from '@mui/icons-material/ViewWeekOutlined';
+
+import StraightenIcon from '@mui/icons-material/Straighten';
+import HouseSidingIcon from '@mui/icons-material/HouseSiding';
+import GavelIcon from '@mui/icons-material/Gavel';
+import SquareFootIcon from '@mui/icons-material/SquareFoot';
+import AppsIcon from '@mui/icons-material/Apps';
+
 import { useState } from 'react';
 
-export default function Add({ addObj }) {
+import UiButton from './UiButton';
+import UiButtonEdit from './UiButtonEdit';
+
+export default function Add({ addObj, editMenü, setEditMenü }) {
     
   const [newId, setNewId] = useState(1);
 
@@ -42,9 +52,9 @@ export default function Add({ addObj }) {
   { icon: <ViewWeekOutlinedIcon />, name: 'Lüfter Hinten', func: () => handleAddLüfter(false) }
   ];
 
+  /*
   return (
     <>
-
       <Box sx={{ height: 2, transform: 'translateZ(0px)', flexGrow: 1 }}>
         <SpeedDial
           ariaLabel="SpeedDial basic example"
@@ -67,4 +77,92 @@ export default function Add({ addObj }) {
       </Box>
     </>
   );
+  */
+
+  return(
+    <>
+      <div style={{
+            position: "fixed",
+            top: 20,
+            left: 20,
+            background: "rgba(255, 255, 255, 0.15)", // halbtransparent
+            backdropFilter: "blur(10px)",             // Blur-Effekt
+            WebkitBackdropFilter: "blur(10px)",       // Safari-Support
+            borderRadius: 12,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
+            color: "#000000ff",                            // besserer Kontrast
+            width: 250,
+            height: 472.5, // 500 : 250
+            border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
+            zIndex: 999,
+            // visibility: türAttribute ? "inherit" : "hidden"
+        }}>
+          {/* Abmessungen */}
+          <UiButton 
+          icon={<StraightenIcon 
+          fontSize='medium'/>} 
+          name={'Abmessungen'} 
+          onClick={() => setEditMenü(editMenü === 'Abmessungen' ? '' : 'Abmessungen')} 
+          isActive={editMenü === 'Abmessungen'}
+          />
+
+          <UiButton
+          icon={<AppsIcon fontSize='medium' />}
+          name={'Felder'}
+          onClick={() => setEditMenü(editMenü === 'Felder' ? '' : 'Felder')}
+          isActive={editMenü === 'Felder'}
+          />
+
+          {/* Verkleidung */}
+          <UiButton 
+          icon={<HouseSidingIcon fontSize='medium'/>} 
+          name={'Verkleidung'} 
+          onClick={() => setEditMenü(editMenü === 'Verkleidung' ? '' : 'Verkleidung')}
+          isActive={editMenü === 'Verkleidung'}
+          />
+
+          {/* Öffnungen */}
+          <UiButton 
+          icon={<DoorFrontIcon fontSize='medium'/>} 
+          name={'Öffnungen'}
+          onClick={() => setEditMenü(editMenü === 'Öffnungen' ? '' : 'Öffnungen')}
+          isActive={editMenü === 'Öffnungen'}
+          />
+
+          {/* Zubehör */}
+          <UiButton 
+          icon={<ViewWeekIcon fontSize='medium'/>} 
+          name={'Zubehör'} 
+          onClick={() => setEditMenü(editMenü === 'Zubehör' ? '' : 'Zubehör')}
+          isActive={editMenü === 'Zubehör'}
+          />
+
+          {/* Konstruktion */}
+          <UiButton 
+          icon={<SquareFootIcon fontSize='medium' />}
+          name={'Konstruktion'}
+          onClick={() => setEditMenü(editMenü === 'Konstruktion' ? '' : 'Konstruktion')}
+          isActive={editMenü === 'Konstruktion'}
+          />
+
+          {/* Angebot (Andersfarbig) */}
+          <UiButton 
+          icon={<GavelIcon fontSize='medium'/>} 
+          name={'Angebot'} 
+          onClick={() => setEditMenü(editMenü === 'Angebot' ? '' : 'Angebot')}
+          isActive={editMenü === 'Angebot'}
+          />
+
+
+        </div>
+
+        {editMenü === 'Abmessungen' && <UiButtonEdit name={"Abmessungen"} height={0} /> }
+        {/* editMenü === 'Felder' && <UiButtonEdit name={'Felder'} height={1} /> */ }
+        {editMenü === 'Verkleidung' && <UiButtonEdit name={"Verkleidung"} height={2} /> }
+        {editMenü === 'Öffnungen' && <UiButtonEdit name={"Öffnungen"} height={3} /> }
+        {editMenü === 'Zubehör' && <UiButtonEdit name={"Zubehör"} height={4} /> }
+        {editMenü === 'Konstruktion' && <UiButtonEdit name={"Konstruktion"} height={5} /> }
+        {editMenü === 'Angebot' && <UiButtonEdit name={"Angebot"} height={6} /> }
+    </>
+  )
 }

@@ -1,0 +1,1123 @@
+import React, { useState } from 'react';
+import '../styles.css';
+import MuiNumberfield from './MuiNumberfield';
+import MuiSelect from './MuiSelect';
+import MuiTextfeld from './MuiTextfeld';
+import { Center } from '@react-three/drei';
+
+export default function UiButtonEdit({ 
+    height, 
+    name, 
+}) {
+
+    const [dachArt, setDachArt] = useState('satteldach')
+    
+    // Abmessungs-States
+    const [breite, setBreite] = useState(3)
+    const [länge, setLänge] = useState(6)
+    const [traufhöhe, setTraufhöhe] = useState(3)
+    const [dachneigung, setDachneigung] = useState(0)
+    const [sockelhöhe, setSockelhöhe] = useState(0)
+    const [dachAusrichtung, setDachAusrichtung] = useState('Rechts')
+
+    // "Arbeits" - States (Verkleidung)
+    const [wandGeometrieVorgaben, setWandGeometrieVorgaben] = useState('verkleidete-wand')
+    const [isolierung, setIsolierung] = useState('isoliert')
+    const [paneeltyp, setPaneeltyp] = useState('trapez')
+    const [wandOrientierung, setWandOrientierung] = useState('vertikal')
+    const [farbSchema, setFarbSchema] = useState('einfarbig')
+    const [außenFarbe, setAußenFarbe] = useState('?')
+    const [außenFarbeMuster, setAußenFarbeMuster] = useState('!')
+    const [musterVerortung, setMusterVerortung] = useState('4, 5')
+    const [dachIsolierung, setDachIsolierung] = useState('isoliert')
+    const [dachPaneeltyp, setDachPaneeltyp] = useState('trapez')
+    const [dachAußenFarbe, setDachAußenFarbe] = useState('?')
+    const [dachPvcName, setDachPvcName] = useState('PVC-Folie')
+    const [pvcName, setPvcName] = useState('PVC-Folie')
+
+    // "Arbeits" - States (Öffnungen)
+    const [fensterFarbe, setFensterFarbe] = useState('?')
+    const [türFarbe, setTürFarbe] = useState('?')
+    const [schiebeTorFarbe, setSchiebeTorFarbe] = useState('?')
+    const [rollTorFarbe, setRollTorFarbe] = useState('?')
+    const [sektionalTorFarbe, setSektionalTorFarbe] = useState('?')
+
+    const [türFarbeInnen, setTürFarbeInnen] = useState('?')
+    const [sektionalTorFarbeInnen, setSektionalTorFarbeInnen] = useState('?')
+
+    // 'Arbeits' - States (Angebot)
+    const [gebäudeZweck, setGebäudeZweck] = useState('Produktionshalle')
+    const [bauBeginn, setBauBeginn] = useState(new Date().getFullYear())
+    const [anwerbungKunden, setAnwerbungKunden] = useState('Soziale-Medien')
+        // 760 Beispielzahl: Größe muss größer sein als 750m2
+    const [größeGebäudeM2, setGrößeGebäudeM2] = useState(760)
+
+    // 'Arbeits' - States (Konstruktion)
+    const [bodenplatteFarbe, setBodenplatteFarbe] = useState('?')
+    const [rahmenFarbe, setRahmenFarbe] = useState('?')
+    const [sekundärKonstruktionsFarbe, setSekundärKonstruktionsFarbe] = useState('?')
+    const [sekundärHolzKonstruktionsFarbe, setSekundärHolzKonstruktionsFarbe] = useState('?')
+
+    // 'Arbeits' - States (Zubehör)
+    const [zubehörFarbe, setZubehörFarbe] = useState('?')
+    const [kantenFarbe, setKantenFarbe] = useState('?')
+    const [kranKapazität, setKranKapazität] = useState(1)
+
+    function abmessungsUI() {
+        return(
+            <>
+                {/* Abmessungen */}
+                <div style={{marginLeft: '15px'}}>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "8px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px"
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className='text' style={{ fontWeight: 200}}>Breite</span>
+                            <span className='text' style={{ fontSize: 12}}>3-100</span>
+                        </div>
+                        <MuiNumberfield label={'Meter'} min={3} max={100} state={breite} setState={setBreite} />
+                    </div>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "8px", 
+                        justifyContent: 'space-between',
+                        marginRight: "15px" 
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className='text' style={{ fontWeight: 200}}>Länge</span>
+                            <span className='text' style={{ fontSize: 12 }}>6-200</span>
+                        </div>
+                        <MuiNumberfield label={'Meter'} min={6} max={200} state={länge} setState={setLänge} />
+                    </div>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "15px", 
+                        justifyContent: 'space-between',
+                        marginRight: "15px"
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className='text' style={{ fontWeight: 200}}>Traufhöhe</span>
+                            <span className='text' style={{ fontSize: 12 }}>3-30</span>
+                        </div>
+                        <MuiNumberfield label={'Meter'} min={3} max={30} state={traufhöhe} setState={setTraufhöhe} />
+                    </div>
+                </div>
+
+                {/* Dach */}
+                <div style={{
+                    margin: "8px",
+                    paddingBottom: "4px",
+                    borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
+                }}>
+                    <p className='text' style={{ fontSize: 17, }}>
+                        Dach
+                    </p>
+                </div>
+                <div style={{marginLeft: '15px'}}>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "8px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px"
+                    }}>
+                        <p className='text' style={{ fontWeight: 200}}>Dachart</p>
+                        <MuiSelect
+                            option1={'Flachdach'}
+                            value1={'flachdach'}
+                            option2={'Satteldach'}
+                            value2={'satteldach'}
+                            option3={'Pultdach'}
+                            value3={'pultdach'}
+                            state={dachArt}
+                            setState={setDachArt}
+                        />
+                    </div>
+                    {dachArt === 'pultdach' && (
+                        <>
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px"
+                            }}>
+                                <p className='text' style={{ fontWeight: 200}}>Dachausrichtung</p>
+                                <MuiSelect
+                                    option1={'Links'}
+                                    value1={'Links'}
+                                    option2={'Rechts'}
+                                    value2={'´Rechts'}
+                                    state={dachAusrichtung}
+                                    setState={setDachAusrichtung}
+                                />
+                            </div>
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between',
+                                marginRight: "15px" 
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Dachneigung</span>
+                                </div>
+                                <MuiNumberfield label={'%'} min={0} max={200} state={dachneigung} setState={setDachneigung} />
+                            </div>
+                        </>
+                    )}
+
+                </div>
+            </>
+        )
+    }
+
+    function verkleidungUI() {
+
+        return(
+
+            <div style={{ margin: '15px' }}>
+                <div>
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Wandgeometrie-Vorgaben:</p>
+                    <div style={{ margin: '5px'}}>
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200}}>Einstellung</span>
+                            <MuiSelect
+                                option1={'Verkleidete Wand'}
+                                value1={'verkleidete-wand'}
+                                option2={'Verkleidete Wand mit Sockel'}
+                                value2={'verkleidete-wand-mit-sockel'}
+                                label={'Wand'}
+                                state={wandGeometrieVorgaben}
+                                setState={setWandGeometrieVorgaben}
+                            />
+                        </div>
+
+                        {wandGeometrieVorgaben === 'verkleidete-wand-mit-sockel' && (
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "12px", 
+                                justifyContent: 'space-between',
+                                marginRight: "15px" 
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Sockelhöhe</span>
+                                </div>
+                                <MuiNumberfield label={'Meter'} min={0} max={3} state={sockelhöhe} setState={setSockelhöhe} />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Wandverkleidungs-Vorgaben */}
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px", marginTop: '8px' }}>Wandverkleidungs-Vorgaben:</p>
+                    <div style={{ margin: '5px'}}>
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "8px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200}}>Isolierung</span>
+                            <MuiSelect
+                                option1={'Isoliert'}
+                                value1={'isoliert'}
+                                option2={'Nicht Isoliert'}
+                                value2={'nicht-isoliert'}
+                                label={'Wand'}
+                                state={isolierung}
+                                setState={setIsolierung}
+                            />
+                        </div>
+                        
+                        {isolierung === "nicht-isoliert" && (
+                            <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "8px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                            }}>
+                                <span className='text' style={{ fontWeight: 200}}>Paneeltyp</span>
+                                <MuiSelect
+                                    option1={'Trapez'}
+                                    value1={'trapez'}
+                                    option2={'Wellplatte'}
+                                    value2={'wellplatte'}
+                                    option3={'PVC-Folie'}
+                                    value3={'pvc-folie'}
+                                    option4={'Holzverkleidung'}
+                                    value4={'holzverkleidung'}
+                                    label={'Wand'}
+                                    state={paneeltyp}
+                                    setState={setPaneeltyp}
+                                />
+                            </div>
+                        )}
+                        
+                        {/* Gebäudeverkleidung */}
+                        <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px' }}>Gebäudeverkleidung:</p>
+
+                        {(paneeltyp === 'pvc-folie' && isolierung === 'nicht-isoliert') && (
+                            <>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '5px'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Name</span>
+                                </div>
+                                <MuiTextfeld
+                                label={'Muster'}
+                                state={pvcName}
+                                setState={setPvcName}
+                                />
+                            </div>
+
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '5px'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Breite</span>
+                                    <span className='text' style={{ fontSize: 12}}>500-6000</span>
+                                </div>
+                                <MuiNumberfield label={'mm'} min={500} max={6000} />
+                            </div>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '5px'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Dicke</span>
+                                    <span className='text' style={{ fontSize: 12}}>1-10</span>
+                                </div>
+                                <MuiNumberfield label={'mm'} min={1} max={10} />
+                            </div>
+
+                            </>
+
+                        )}
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "8px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                            marginLeft: '5px'
+                        }}>
+                            <span className='text' style={{ fontWeight: 200}}>Orientierung</span>
+                            <MuiSelect
+                            option1={'Vertikal'}
+                            value1={'vertikal'}
+                            option2={'Horizontal'}
+                            value2={'horizontal'}
+                            label={'Wand'}
+                            state={wandOrientierung}
+                            setState={setWandOrientierung}
+                            />
+                        </div>
+
+                        <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px', marginLeft: '10px' }}>Farbschema:</p>
+
+                        {(isolierung === "nicht-isoliert" && paneeltyp !== "holzverkleidung") && (
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '10px'
+                            }}>
+                                <span className='text' style={{ fontWeight: 200}}>Farbschema</span>
+                                <MuiSelect
+                                option1={'Einfarbig'}
+                                value1={'einfarbig'}
+                                option2={'Musterfarbe'}
+                                value2={'musterfarbe'}
+                                option3={'Musterfarbe bei'}
+                                value3={'musterfarbe-bei'}
+                                option4={'Gleichmäßige Streifen'}
+                                value4={'gleichmäßige-streifen'}
+                                option5={'Jede zweite Platte'}
+                                value5={'jede-zweite-platte'}
+                                label={'Farbe'}
+                                state={farbSchema}
+                                setState={setFarbSchema}
+                                />
+                            </div>
+                        )}
+
+                        {farbSchema === 'musterfarbe-bei' && (
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '10px'
+                            }}>
+                                <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '28px' }}>Farbe Außenseite Muster</span>
+                                <MuiTextfeld
+                                label={'Muster'}
+                                state={musterVerortung}
+                                setState={setMusterVerortung}
+                                />
+                            </div>
+                        )}
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "8px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                            marginLeft: '10px'
+                        }}>
+                            <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '25px' }}>Außenfarbe</span>
+                            <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={außenFarbe}
+                            setState={setAußenFarbe}
+                            />
+                        </div>
+
+                        {(farbSchema === 'musterfarbe'
+                        || 
+                        farbSchema === 'musterfarbe-bei' 
+                        ||
+                        farbSchema === 'gleichmäßige-streifen' 
+                        ||
+                        farbSchema === 'jede-zweite-platte') && (
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '10px'
+                            }}>
+                                <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '28px' }}>Farbe Außenseite Muster</span>
+                                <MuiSelect
+                                option1={'!'}
+                                value1={'!'}
+                                option2={'?'}
+                                value2={'?'}
+                                label={'Farbe'}
+                                state={außenFarbeMuster}
+                                setState={setAußenFarbeMuster}
+                                />
+                            </div>
+                        )}
+                    
+                    {/* Dachverkleidungsvorgaben */}
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px", marginTop: '12px' }}>Dachverkleidungsvorgaben:</p>
+                    <div style={{ margin: '5px' }}>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "8px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200}}>Isolierung</span>
+                            <MuiSelect
+                                option1={'Isoliert'}
+                                value1={'isoliert'}
+                                option2={'Nicht Isoliert'}
+                                value2={'nicht-isoliert'}
+                                label={'Wand'}
+                                state={dachIsolierung}
+                                setState={setDachIsolierung}
+                            />
+                        </div>
+
+                        {dachIsolierung === "nicht-isoliert" && (
+                            <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "8px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                            }}>
+                                <span className='text' style={{ fontWeight: 200}}>Paneeltyp</span>
+                                <MuiSelect
+                                    option1={'Trapez'}
+                                    value1={'trapez'}
+                                    option2={'Wellplatte'}
+                                    value2={'wellplatte'}
+                                    option3={'PVC-Folie'}
+                                    value3={'pvc-folie'}
+                                    label={'Wand'}
+                                    state={dachPaneeltyp}
+                                    setState={setDachPaneeltyp}
+                                />
+                            </div>
+                        )}
+
+                        {/* Gebäudeverkleidung Dach */}
+                        <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px' }}>Gebäudeverkleidung:</p>
+
+                        {dachPaneeltyp === 'pvc-folie' && (
+                            <>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '5px'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Name</span>
+                                </div>
+                                <MuiTextfeld
+                                label={'Muster'}
+                                state={dachPvcName}
+                                setState={setDachPvcName}
+                                />
+                            </div>
+
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '5px'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Breite</span>
+                                    <span className='text' style={{ fontSize: 12}}>500-6000</span>
+                                </div>
+                                <MuiNumberfield label={'mm'} min={500} max={6000} />
+                            </div>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '5px'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Dicke</span>
+                                    <span className='text' style={{ fontSize: 12}}>1-10</span>
+                                </div>
+                                <MuiNumberfield label={'mm'} min={1} max={10} />
+                            </div>
+
+                            </>
+
+                        )}
+
+                        <div style={{ margin: '5px' }}>
+                            <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px' }}>Farbschema:</p>
+                        
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '10px'
+                            }}>
+                                <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '25px' }}>Außenfarbe</span>
+                                <MuiSelect
+                                option1={'!'}
+                                value1={'!'}
+                                option2={'?'}
+                                value2={'?'}
+                                label={'Farbe'}
+                                state={dachAußenFarbe}
+                                setState={setDachAußenFarbe}
+                                />
+                            </div>
+                        </div>
+
+
+                    </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    function öffnungenUI() {
+        return(
+            <div style={{marginLeft: '15px'}}>
+                <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Farbe der Öffnung:</p>
+
+                <div style={{ margin: '5px'}}>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Fensterfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={fensterFarbe}
+                            setState={setFensterFarbe}
+                            />
+                    </div>
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Türfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={türFarbe}
+                            setState={setTürFarbe}
+                        />
+                    </div>
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Schiebetorfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={schiebeTorFarbe}
+                            setState={setSchiebeTorFarbe}
+                        />
+                    </div>
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Rolltorfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={rollTorFarbe}
+                            setState={setRollTorFarbe}
+                        />
+                    </div>
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Sektionaltorfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={sektionalTorFarbe}
+                            setState={setSektionalTorFarbe}
+                        />
+                    </div>
+
+                </div>
+
+                <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Farbe der Öffnung (innen):</p>
+                <div style={{ margin: '5px'}}>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Türfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={türFarbeInnen}
+                            setState={setTürFarbeInnen}
+                        />
+                    </div>
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '10px', 
+                        alignItems: 'center', 
+                        marginBottom: "12px", 
+                        justifyContent: 'space-between', 
+                        marginRight: "15px",
+                    }}>
+                        <span className='text' style={{ fontWeight: 200}}>Sektionaltorfarbe</span>
+                        <MuiSelect
+                            option1={'!'}
+                            value1={'!'}
+                            option2={'?'}
+                            value2={'?'}
+                            label={'Farbe'}
+                            state={sektionalTorFarbeInnen}
+                            setState={setSektionalTorFarbeInnen}
+                        />
+                    </div>
+
+                </div>
+
+            </div>
+        )
+    }
+
+    function angebotUI() {
+
+        return(
+            <>
+                <div style={{marginLeft: '15px'}}>
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Anfrage senden:</p>
+
+                    <div style={{ margin: '5px'}}>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200}}>Gebäudezweck</span>
+                            <MuiSelect
+                                option1={'Produktionshalle'}
+                                value1={'Produktionshalle'}
+                                option2={'Landwirtschaftliche Halle'}
+                                value2={'Landwirtschaftliche-Halle'}
+                                option3={'Verwaltungshalle'}
+                                value3={'Verwaltungshalle'}
+                                option4={'Lagerhalle'}
+                                value4={'Lagerhalle'}
+                                option5={'Sporthalle'}
+                                value5={'Sporthalle'}
+                                option6={'Automobilsalon'}
+                                value6={'Automobilsalon'}
+                                label={'Zweck'}
+                                state={gebäudeZweck}
+                                setState={setGebäudeZweck}
+                            />
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200}}>Beginn der Bauarbeiten</span>
+                            <MuiSelect
+                                option1={new Date().getFullYear()}
+                                value1={new Date().getFullYear()}
+                                option2={new Date().getFullYear()+1}
+                                value2={new Date().getFullYear()+1}
+                                option3={new Date().getFullYear()+2}
+                                value3={new Date().getFullYear()+2}
+                                option4={new Date().getFullYear()+3}
+                                value4={new Date().getFullYear()+3}
+                                label={'Jahr'}
+                                state={bauBeginn}
+                                setState={setBauBeginn}
+                            />
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'center',
+                            marginBottom: "12px",
+                            justifyContent: 'space-between',
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200 }}>Woher kennen Sie uns?</span>
+                            <MuiSelect
+                                option1={'Soziale Medien'}
+                                value1={'Soziale-Medien'}
+                                option2={'Google'}
+                                value2={'Google'}
+                                option3={'Radio'}
+                                value3={'Radio'}
+                                option4={'Presse'}
+                                value4={'Presse'}
+                                option5={'Ich kenne Sie!'}
+                                value5={'Ich-kenne-Sie'}
+                                option6={'Empfehlung'}
+                                value6={'Empfehlung'}
+                                option7={'Andere'}
+                                value7={'Andere'}
+                                label={'Bitte wählen'}
+                                state={anwerbungKunden}
+                                setState={setAnwerbungKunden}
+                            />
+                        </div>
+
+                        {größeGebäudeM2 < 750 || größeGebäudeM2 === '?' && (
+                            <>
+                                <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Mind. Größe des Gebäudes muss 750m² betragen.</p>
+                                <div style={{ 
+                                    display: 'flex', 
+                                    gap: '10px', 
+                                    alignItems: 'center', 
+                                    marginBottom: "12px", 
+                                    justifyContent: 'space-between', 
+                                    marginRight: "15px",
+                                }}>
+                                    <span className='text' style={{ fontWeight: 200 }}>Aktuelle Größe in m²: </span>
+                                    <p className='text' style={{ fontWeight: 200 }}>{größeGebäudeM2}</p>
+                                </div>
+                            </>
+                        )}
+
+                        {größeGebäudeM2 >= 750 && (
+                            <>
+                                <div 
+                                    style={{
+                                        borderRadius: 12,
+                                        padding: "5px",
+                                        border: "1px solid rgba(59, 44, 44, 0.2)",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                        height: 70,
+                                        margin: 20,
+                                        marginRight: 35,
+                                        color: "rgba(66, 39, 39, 0.2)",
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: 'lightyellow',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+
+                                    <h2 className='navbar' style={{ marginTop: 40 }}>Anfrage senden!</h2>
+
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </>
+        )
+    }
+
+    function konstruktionUI() {
+
+        return(
+            <>
+                <div style={{marginLeft: '15px'}}>
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Farben Konfiguration:</p>
+
+                    <div style={{ margin: '5px'}}>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Bodenplatte</span>
+                            <MuiSelect
+                                option1={'?'}
+                                value1={'?'}
+                                option2={'!'}
+                                value2={'!'}
+                                label={'Farbe'}
+                                state={bodenplatteFarbe}
+                                setState={setBodenplatteFarbe}
+                            />
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Rahmenfarbe</span>
+                            <MuiSelect
+                                option1={'?'}
+                                value1={'?'}
+                                option2={'!'}
+                                value2={'!'}
+                                label={'Farbe'}
+                                state={rahmenFarbe}
+                                setState={setRahmenFarbe}
+                            />
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Sekundärkonstruktionsfarbe</span>
+                            <MuiSelect
+                                option1={'?'}
+                                value1={'?'}
+                                option2={'! '}
+                                value2={'!'}
+                                label={'Farbe'}
+                                state={sekundärKonstruktionsFarbe}
+                                setState={setSekundärKonstruktionsFarbe}
+                            />
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Sekundärholzkonstruktionfarbe</span>
+                            <MuiSelect
+                                option1={'?'}
+                                value1={'?'}
+                                option2={'!'}
+                                value2={'!'}
+                                label={'Farbe'}
+                                state={sekundärHolzKonstruktionsFarbe}
+                                setState={setSekundärHolzKonstruktionsFarbe}
+                            />
+                        </div>
+
+                    </div>
+
+                </div>
+            </>
+        )
+    }
+
+    function zubehörUI() {
+
+        return(
+            <>
+                <div style={{marginLeft: '15px'}}>
+
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Zubehör:</p>
+                    <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200 }}>Farbe des Zubehörs</span>
+                            <MuiSelect
+                                option1={'?'}
+                                value1={'?'}
+                                option2={'!'}
+                                value2={'!'}
+                                label={'Farbe'}
+                                state={zubehörFarbe}
+                                setState={setZubehörFarbe}
+                            />
+                    </div>
+
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Kante:</p>
+                    <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200 }}>Kantenfarbe</span>
+                            <MuiSelect
+                                option1={'?'}
+                                value1={'?'}
+                                option2={'!'}
+                                value2={'!'}
+                                label={'Farbe'}
+                                state={kantenFarbe}
+                                setState={setKantenFarbe}
+                            />
+                    </div>
+
+                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Hallenkran:</p>
+                    <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "12px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "15px",
+                        }}>
+                            <span className='text' style={{ fontWeight: 200 }}>Kapazität der Kranstrecke 0 - </span>
+                            <MuiNumberfield 
+                            state={kranKapazität}
+                            setState={setKranKapazität}
+                            min={1}
+                            max={99}
+                            label='Tonnen'
+                            />
+                    </div>
+
+                </div>
+
+            </>
+        )
+    }
+
+    return(
+        <>
+            <div style={{
+            position: "fixed",
+            top: 20 + (69*height),
+            left: 280,
+            background: "rgba(255, 255, 255, 0.15)", // halbtransparent
+            backdropFilter: "blur(10px)",             // Blur-Effekt
+            WebkitBackdropFilter: "blur(10px)",       // Safari-Support
+            borderRadius: 12,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
+            color: "#000000ff",                            // besserer Kontrast
+            width: 440,
+            // Dynamische Höhe: passt sich dem Inhalt an
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
+            zIndex: 999,
+            // visibility: türAttribute ? "inherit" : "hidden"
+            }}>
+                <div style={{
+                    margin: "8px",
+                    paddingBottom: "4px",
+                    borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
+                }}>
+                    <p className='text' style={{ fontSize: 17 }}>
+                        {name}
+                    </p>
+                </div>
+                <div style={{ marginTop: "10px" }}>
+                    {name === "Abmessungen" && (
+                        abmessungsUI()
+                    )}
+                    {name === 'Verkleidung' && (
+                        verkleidungUI()
+                    )}
+                    {name === 'Öffnungen' && (
+                        öffnungenUI()
+                    )}
+                    {name === 'Angebot' && (
+                        angebotUI()
+                    )}
+                    {name === 'Konstruktion' && (
+                        konstruktionUI()
+                    )}
+                    {name === 'Zubehör' && (
+                        zubehörUI()
+                    )}
+                </div>
+            </div>
+        </>
+    )
+}
