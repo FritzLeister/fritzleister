@@ -147,9 +147,9 @@ function Root() {
 
   const [editMenü, setEditMenü] = useState('')
 
-  const [länge, setLänge] = useState(15)
-  const [breite, setBreite] = useState(7)
-  const [höhe, setHöhe] = useState(13)
+  const [länge, setLänge] = useState(70)
+  const [breite, setBreite] = useState(30)
+  const [höhe, setHöhe] = useState(6)
 
   const [flach, setFlach] = useState(false)
   const [hallenartSelection, setHallenartSelection] = useState("")

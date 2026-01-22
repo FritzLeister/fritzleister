@@ -41,7 +41,78 @@ export default function App({
     const [gebäudeHöhe, setGebäudeHöhe] = useState(15)
     */
     
-    const [koordinate, setKoordinate] = useState([0,0,0])
+    const [koordinate, setKoordinate] = useState([0,0.3,0])
+
+    // Abmessungs-States (aus UiButtonEdit)
+    const [dachArt, setDachArt] = useState('satteldach')
+    const [traufhöhe, setTraufhöhe] = useState(3)
+    const [dachneigung, setDachneigung] = useState(5)
+    const [sockelhöhe, setSockelhöhe] = useState(2)
+    const [dachAusrichtung, setDachAusrichtung] = useState('Rechts')
+    const [diffTraufFirst, setDiffTraufFirst] = useState(4)
+
+    // "Arbeits" - States (Verkleidung) aus UiButtonEdit
+    const [wandGeometrieVorgaben, setWandGeometrieVorgaben] = useState('verkleidete-wand-mit-sockel')
+    const [isolierung, setIsolierung] = useState('isoliert')
+    const [paneeltyp, setPaneeltyp] = useState('trapez')
+    const [wandOrientierung, setWandOrientierung] = useState('vertikal')
+    const [farbSchema, setFarbSchema] = useState('einfarbig')
+    const [außenFarbe, setAußenFarbe] = useState('?')
+    const [außenFarbeMuster, setAußenFarbeMuster] = useState('!')
+    const [musterVerortung, setMusterVerortung] = useState('4, 5')
+    const [dachIsolierung, setDachIsolierung] = useState('isoliert')
+    const [dachPaneeltyp, setDachPaneeltyp] = useState('trapez')
+    const [dachAußenFarbe, setDachAußenFarbe] = useState('?')
+    const [dachPvcName, setDachPvcName] = useState('PVC-Folie')
+    const [pvcName, setPvcName] = useState('PVC-Folie')
+
+    // "Arbeits" - States (Öffnungen) aus UiButtonEdit
+    const [fensterFarbe, setFensterFarbe] = useState('?')
+    const [türFarbe, setTürFarbe] = useState('?')
+    const [schiebeTorFarbe, setSchiebeTorFarbe] = useState('?')
+    const [rollTorFarbe, setRollTorFarbe] = useState('?')
+    const [sektionalTorFarbe, setSektionalTorFarbe] = useState('?')
+    const [türFarbeInnen, setTürFarbeInnen] = useState('?')
+    const [sektionalTorFarbeInnen, setSektionalTorFarbeInnen] = useState('?')
+
+    // 'Arbeits' - States (Angebot) aus UiButtonEdit
+    const [gebäudeZweck, setGebäudeZweck] = useState('Produktionshalle')
+    const [bauBeginn, setBauBeginn] = useState(new Date().getFullYear())
+    const [anwerbungKunden, setAnwerbungKunden] = useState('Soziale-Medien')
+    const [größeGebäudeM2, setGrößeGebäudeM2] = useState(760)
+
+    // 'Arbeits' - States (Konstruktion) aus UiButtonEdit
+    const [bodenplatteFarbe, setBodenplatteFarbe] = useState('?')
+    const [rahmenFarbe, setRahmenFarbe] = useState('?')
+    const [sekundärKonstruktionsFarbe, setSekundärKonstruktionsFarbe] = useState('?')
+    const [sekundärHolzKonstruktionsFarbe, setSekundärHolzKonstruktionsFarbe] = useState('?')
+
+    // 'Arbeits' - States (Zubehör) aus UiButtonEdit
+    const [zubehörFarbe, setZubehörFarbe] = useState('?')
+    const [kantenFarbe, setKantenFarbe] = useState('?')
+    const [kranKapazität, setKranKapazität] = useState(1)
+
+    // Darstellungs-States
+    const [kantenAnzeigen, setKantenAnzeigen] = useState(true); // fertig
+    const [oberflächenAnzeigen, setOberflächenAnzeigen] = useState(true); // fertig
+    const [abmessungenAnzeigen, setAbmessungenAnzeigen] = useState(true); // fertig
+    const [plattenAnzeigen, setPlattenAnzeigen] = useState(true); // fertig
+    const [massivwändeAnzeigen, setMassivwändeAnzeigen] = useState(true); // fertig
+    const [öffnungenAnzeigen, setÖffnungenAnzeigen] = useState(true); // gibt ja noch keine lol
+    const [rahmenAnzeigen, setRahmenAnzeigen] = useState(true); // fertig
+    const [pfettenAnzeigen, setPfettenAnzeigen] = useState(true); // fertig
+    const [wandriegelAnzeigen, setWandriegelAnzeigen] = useState(true); // fertig
+    const [kantteileAnzeigen, setKantteileAnzeigen] = useState(true); // fertig
+    const [zubehörAnzeigen, setZubehörAnzeigen] = useState(true); // idk
+    const [bodenplatteAnzeigen, setBodenplatteAnzeigen] = useState(true); // fertig
+    const [volumenAnzeigen, setVolumenAnzeigen] = useState(true); // idk
+    const [straßenAnzeigen, setStraßenAnzeigen] = useState(true); // idk
+    const [strukturelleKomponentenAnzeigen, setStrukturelleKomponentenAnzeigen] = useState(true); // idk
+    const [dekorationenAnzeigen, setDekorationenAnzeigen] = useState(true); // idk
+    const [gebäudeformAnzeigen, setGebäudeformAnzeigen] = useState(true);
+    const [anschleppungenAnzeigen, setAnschleppungenAnzeigen] = useState(true);
+    const [sekundärstrukturAnzeigen, setSekundärstrukturAnzeigen] = useState(true); // idk 
+    const [kreuzverbändeAnzeigen, setKreuzverbändeAnzeigen] = useState(true); // idk
 
     // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
     const [hallenId, setHallenId] = useState(() => {
@@ -340,23 +411,44 @@ export default function App({
         
 
         <Canvas 
-        camera={{position: [0,30,-50]}} 
+        camera={{position: [0,30,50]}} 
         className='canvasOverlay'
         // style={{backgroundImage: "url(/himmel.jpg)", backgroundSize: "cover", backgroundPosition: "center"}}
         >
             <directionalLight position={[5,5,5]} intensity={1} />
-            <ambientLight intensity={0.6} />
+            <ambientLight intensity={0.9} />
 
             
             <Halle 
-            bodenLänge={länge+17}
-            bodenBreite={breite+15}
-            gebäudeHöhe={höhe+3}
+            bodenLänge={länge*2.5} // +17
+            bodenBreite={breite*2.5} // +15
+            gebäudeHöhe={höhe*2.5} // +3
             koordinate={koordinate}
             setTürAttribute={setTürAttribute}
             setSelectedObject={setSelectedObject}
             objs={objs}
             flach={dachSelection === "flachdach" ? true : false}
+            originalBreite={breite}
+            setEditMenü={setEditMenü}
+            editMenü={editMenü}
+
+            kantenAnzeigen={kantenAnzeigen}
+            oberflächenAnzeigen={oberflächenAnzeigen}
+            abmessungenAnzeigen={abmessungenAnzeigen}
+            plattenAnzeigen={plattenAnzeigen}
+            massivwändeAnzeigen={massivwändeAnzeigen}
+            rahmenAnzeigen={rahmenAnzeigen}
+            pfettenAnzeigen={pfettenAnzeigen}
+            wandriegelAnzeigen={wandriegelAnzeigen}
+            kantteileAnzeigen={kantteileAnzeigen}
+            bodenplatteAnzeigen={bodenplatteAnzeigen}
+
+            dachArt={dachArt}
+            diffTraufFirst={diffTraufFirst}
+            pultdachHöheDifferenz={dachneigung}
+            sockelhöhe={sockelhöhe}
+            wandGeometrieVorgaben={wandGeometrieVorgaben}
+            außenFarbe={außenFarbe}
             />
             
 
@@ -440,12 +532,141 @@ export default function App({
         )}
         </div>
 
+        {/* Ui Innen */}
+        
+        <Add
+        addObj={addObj} 
+        editMenü={editMenü} 
+        setEditMenü={setEditMenü}
+        breite={breite}
+        setBreite={setBreite}
+        länge={länge}
+        setLänge={setLänge}
+        höhe={höhe}
+        setHöhe={setHöhe}
+        dachArt={dachArt}
+        setDachArt={setDachArt}
+        traufhöhe={traufhöhe}
+        setTraufhöhe={setTraufhöhe}
+        dachneigung={dachneigung}
+        setDachneigung={setDachneigung}
+        sockelhöhe={sockelhöhe}
+        setSockelhöhe={setSockelhöhe}
+        dachAusrichtung={dachAusrichtung}
+        setDachAusrichtung={setDachAusrichtung}
+        diffTraufFirst={diffTraufFirst}
+        setDiffTraufFirst={setDiffTraufFirst}
+        wandGeometrieVorgaben={wandGeometrieVorgaben}
+        setWandGeometrieVorgaben={setWandGeometrieVorgaben}
+        isolierung={isolierung}
+        setIsolierung={setIsolierung}
+        paneeltyp={paneeltyp}
+        setPaneeltyp={setPaneeltyp}
+        wandOrientierung={wandOrientierung}
+        setWandOrientierung={setWandOrientierung}
+        farbSchema={farbSchema}
+        setFarbSchema={setFarbSchema}
+        außenFarbe={außenFarbe}
+        setAußenFarbe={setAußenFarbe}
+        außenFarbeMuster={außenFarbeMuster}
+        setAußenFarbeMuster={setAußenFarbeMuster}
+        musterVerortung={musterVerortung}
+        setMusterVerortung={setMusterVerortung}
+        dachIsolierung={dachIsolierung}
+        setDachIsolierung={setDachIsolierung}
+        dachPaneeltyp={dachPaneeltyp}
+        setDachPaneeltyp={setDachPaneeltyp}
+        dachAußenFarbe={dachAußenFarbe}
+        setDachAußenFarbe={setDachAußenFarbe}
+        dachPvcName={dachPvcName}
+        setDachPvcName={setDachPvcName}
+        pvcName={pvcName}
+        setPvcName={setPvcName}
+        fensterFarbe={fensterFarbe}
+        setFensterFarbe={setFensterFarbe}
+        türFarbe={türFarbe}
+        setTürFarbe={setTürFarbe}
+        schiebeTorFarbe={schiebeTorFarbe}
+        setSchiebeTorFarbe={setSchiebeTorFarbe}
+        rollTorFarbe={rollTorFarbe}
+        setRollTorFarbe={setRollTorFarbe}
+        sektionalTorFarbe={sektionalTorFarbe}
+        setSektionalTorFarbe={setSektionalTorFarbe}
+        türFarbeInnen={türFarbeInnen}
+        setTürFarbeInnen={setTürFarbeInnen}
+        sektionalTorFarbeInnen={sektionalTorFarbeInnen}
+        setSektionalTorFarbeInnen={setSektionalTorFarbeInnen}
+        gebäudeZweck={gebäudeZweck}
+        setGebäudeZweck={setGebäudeZweck}
+        bauBeginn={bauBeginn}
+        setBauBeginn={setBauBeginn}
+        anwerbungKunden={anwerbungKunden}
+        setAnwerbungKunden={setAnwerbungKunden}
+        größeGebäudeM2={größeGebäudeM2}
+        setGrößeGebäudeM2={setGrößeGebäudeM2}
+        bodenplatteFarbe={bodenplatteFarbe}
+        setBodenplatteFarbe={setBodenplatteFarbe}
+        rahmenFarbe={rahmenFarbe}
+        setRahmenFarbe={setRahmenFarbe}
+        sekundärKonstruktionsFarbe={sekundärKonstruktionsFarbe}
+        setSekundärKonstruktionsFarbe={setSekundärKonstruktionsFarbe}
+        sekundärHolzKonstruktionsFarbe={sekundärHolzKonstruktionsFarbe}
+        setSekundärHolzKonstruktionsFarbe={setSekundärHolzKonstruktionsFarbe}
+        zubehörFarbe={zubehörFarbe}
+        setZubehörFarbe={setZubehörFarbe}
+        kantenFarbe={kantenFarbe}
+        setKantenFarbe={setKantenFarbe}
+        kranKapazität={kranKapazität}
+        setKranKapazität={setKranKapazität}
+        abmessungenAnzeigen={abmessungenAnzeigen}
+        setAbmessungenAnzeigen={setAbmessungenAnzeigen}
+        />
 
-        <Add addObj={addObj} editMenü={editMenü} setEditMenü={setEditMenü} />
         <DarstellungUI
             editMenü={editMenü}
             setEditMenü={setEditMenü}
+            kantenAnzeigen={kantenAnzeigen}
+            setKantenAnzeigen={setKantenAnzeigen}
+            oberflächenAnzeigen={oberflächenAnzeigen}
+            setOberflächenAnzeigen={setOberflächenAnzeigen}
+            abmessungenAnzeigen={abmessungenAnzeigen}
+            setAbmessungenAnzeigen={setAbmessungenAnzeigen}
+            plattenAnzeigen={plattenAnzeigen}
+            setPlattenAnzeigen={setPlattenAnzeigen}
+            massivwändeAnzeigen={massivwändeAnzeigen}
+            setMassivwändeAnzeigen={setMassivwändeAnzeigen}
+            öffnungenAnzeigen={öffnungenAnzeigen}
+            setÖffnungenAnzeigen={setÖffnungenAnzeigen}
+            rahmenAnzeigen={rahmenAnzeigen}
+            setRahmenAnzeigen={setRahmenAnzeigen}
+            pfettenAnzeigen={pfettenAnzeigen}
+            setPfettenAnzeigen={setPfettenAnzeigen}
+            wandriegelAnzeigen={wandriegelAnzeigen}
+            setWandriegelAnzeigen={setWandriegelAnzeigen}
+            kantteileAnzeigen={kantteileAnzeigen}
+            setKantteileAnzeigen={setKantteileAnzeigen}
+            zubehörAnzeigen={zubehörAnzeigen}
+            setZubehörAnzeigen={setZubehörAnzeigen}
+            bodenplatteAnzeigen={bodenplatteAnzeigen}
+            setBodenplatteAnzeigen={setBodenplatteAnzeigen}
+            volumenAnzeigen={volumenAnzeigen}
+            setVolumenAnzeigen={setVolumenAnzeigen}
+            straßenAnzeigen={straßenAnzeigen}
+            setStraßenAnzeigen={setStraßenAnzeigen}
+            strukturelleKomponentenAnzeigen={strukturelleKomponentenAnzeigen}
+            setStrukturelleKomponentenAnzeigen={setStrukturelleKomponentenAnzeigen}
+            dekorationenAnzeigen={dekorationenAnzeigen}
+            setDekorationenAnzeigen={setDekorationenAnzeigen}
+            gebäudeformAnzeigen={gebäudeformAnzeigen}
+            setGebäudeformAnzeigen={setGebäudeformAnzeigen}
+            anschleppungenAnzeigen={anschleppungenAnzeigen}
+            setAnschleppungenAnzeigen={setAnschleppungenAnzeigen}
+            sekundärstrukturAnzeigen={sekundärstrukturAnzeigen}
+            setSekundärstrukturAnzeigen={setSekundärstrukturAnzeigen}
+            kreuzverbändeAnzeigen={kreuzverbändeAnzeigen}
+            setKreuzverbändeAnzeigen={setKreuzverbändeAnzeigen}
         />
+        
 
         </>
     )

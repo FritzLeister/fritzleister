@@ -24,7 +24,9 @@ export default function DarstellungsButton({ label, state, setState, onClick }) 
 
                 }}
                 onClick={() => {
-                    setState(!state)
+                    if (setState) {
+                        setState(prev => !prev)
+                    }
                     if (onClick && typeof onClick === 'function') {
                         onClick()
                     }

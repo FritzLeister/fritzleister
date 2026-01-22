@@ -1,28 +1,50 @@
 import DarstellungsButton from "./DarstellungsButton";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 
-export default function DarstellungUI({ editMenü, setEditMenü }) {
-
-    const [kantenAnzeigen, setKantenAnzeigen] = useState(true);
-    const [oberflächenAnzeigen, setOberflächenAnzeigen] = useState(true);
-    const [abmessungenAnzeigen, setAbmessungenAnzeigen] = useState(true);
-    const [plattenAnzeigen, setPlattenAnzeigen] = useState(true);
-    const [massivwändeAnzeigen, setMassivwändeAnzeigen] = useState(true);
-    const [öffnungenAnzeigen, setÖffnungenAnzeigen] = useState(true);
-    const [rahmenAnzeigen, setRahmenAnzeigen] = useState(true);
-    const [pfettenAnzeigen, setPfettenAnzeigen] = useState(true);
-    const [wandriegelAnzeigen, setWandriegelAnzeigen] = useState(true);
-    const [kantteileAnzeigen, setKantteileAnzeigen] = useState(true);
-    const [zubehörAnzeigen, setZubehörAnzeigen] = useState(true);
-    const [bodenplatteAnzeigen, setBodenplatteAnzeigen] = useState(true);
-    const [volumenAnzeigen, setVolumenAnzeigen] = useState(true);
-    const [straßenAnzeigen, setStraßenAnzeigen] = useState(true);
-    const [strukturelleKomponentenAnzeigen, setStrukturelleKomponentenAnzeigen] = useState(true);
-    const [dekorationenAnzeigen, setDekorationenAnzeigen] = useState(true);
-    const [gebäudeformAnzeigen, setGebäudeformAnzeigen] = useState(true);
-    const [anschleppungenAnzeigen, setAnschleppungenAnzeigen] = useState(true);
-    const [sekundärstrukturAnzeigen, setSekundärstrukturAnzeigen] = useState(true);
-    const [kreuzverbändeAnzeigen, setKreuzverbändeAnzeigen] = useState(true);
+export default function DarstellungUI({ 
+    editMenü, 
+    setEditMenü,
+    kantenAnzeigen,
+    setKantenAnzeigen,
+    oberflächenAnzeigen,
+    setOberflächenAnzeigen,
+    abmessungenAnzeigen,
+    setAbmessungenAnzeigen,
+    plattenAnzeigen,
+    setPlattenAnzeigen,
+    massivwändeAnzeigen,
+    setMassivwändeAnzeigen,
+    öffnungenAnzeigen,
+    setÖffnungenAnzeigen,
+    rahmenAnzeigen,
+    setRahmenAnzeigen,
+    pfettenAnzeigen,
+    setPfettenAnzeigen,
+    wandriegelAnzeigen,
+    setWandriegelAnzeigen,
+    kantteileAnzeigen,
+    setKantteileAnzeigen,
+    zubehörAnzeigen,
+    setZubehörAnzeigen,
+    bodenplatteAnzeigen,
+    setBodenplatteAnzeigen,
+    volumenAnzeigen,
+    setVolumenAnzeigen,
+    straßenAnzeigen,
+    setStraßenAnzeigen,
+    strukturelleKomponentenAnzeigen,
+    setStrukturelleKomponentenAnzeigen,
+    dekorationenAnzeigen,
+    setDekorationenAnzeigen,
+    gebäudeformAnzeigen,
+    setGebäudeformAnzeigen,
+    anschleppungenAnzeigen,
+    setAnschleppungenAnzeigen,
+    sekundärstrukturAnzeigen,
+    setSekundärstrukturAnzeigen,
+    kreuzverbändeAnzeigen,
+    setKreuzverbändeAnzeigen
+}) {
 
     // Bestimme welche Buttons angezeigt werden basierend auf editMenü - mit useMemo
     const showButton = useMemo(() => {
@@ -31,6 +53,7 @@ export default function DarstellungUI({ editMenü, setEditMenü }) {
             'Felder': ['Abmessungen', 'Gebäudeform', 'Öffnungen', 'Anschleppungen', 'Bodenplatte', 'Volumen', 'Straßen', 'Strukturelle Komponenten', 'Dekorationen'],
             'Verkleidung': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Öffnungen': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
+            'Öffnungen-Auswahl': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Zubehör': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Kantteile', 'Zubehör', 'Bodenplatte', 'Volumen', 'Straßen', 'Strukturelle Komponenten', 'Dekorationen'],
             'Konstruktion': ['Abmessungen', 'Öffnungen', 'Rahmen', 'Kreuzverbände', 'Pfetten', 'Wandriegel', 'Bodenplatte'],
             'Angebot': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Rahmen', 'Pfetten', 'Wandriegel', 'Kantteile', 'Zubehör', 'Bodenplatte', 'Volumen', 'Straßen', 'Strukturelle Komponenten', 'Dekorationen'],
@@ -248,21 +271,21 @@ export default function DarstellungUI({ editMenü, setEditMenü }) {
                     />
                 )}
 
-                {showButton('Sekundärstruktur') && (
+                {/* {showButton('Sekundärstruktur') && (
                     <DarstellungsButton 
                         label={'Sekundärstruktur'}
                         state={sekundärstrukturAnzeigen}
                         setState={setSekundärstrukturAnzeigen}
                     />
-                )}
+                )} */}
 
-                {showButton('Kreuzverbände') && (
+                {/* {showButton('Kreuzverbände') && (
                     <DarstellungsButton 
                         label={'Kreuzverbände'}
                         state={kreuzverbändeAnzeigen}
                         setState={setKreuzverbändeAnzeigen}
                     />
-                )}
+                )} */}
 
             </div>
         </div>

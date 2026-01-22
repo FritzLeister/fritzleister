@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles.css';
 import MuiNumberfield from './MuiNumberfield';
 import MuiSelect from './MuiSelect';
@@ -7,61 +7,122 @@ import { Center } from '@react-three/drei';
 
 export default function UiButtonEdit({ 
     height, 
-    name, 
+    name,
+    // Abmessungs-Props (aus App.js)
+    breite,
+    setBreite,
+    länge,
+    setLänge,
+    höhe,
+    setHöhe,
+    dachArt,
+    setDachArt,
+    traufhöhe,
+    setTraufhöhe,
+    dachneigung,
+    setDachneigung,
+    sockelhöhe,
+    setSockelhöhe,
+    dachAusrichtung,
+    setDachAusrichtung,
+    diffTraufFirst,
+    setDiffTraufFirst,
+    // Verkleidungs-Props (aus App.js)
+    wandGeometrieVorgaben,
+    setWandGeometrieVorgaben,
+    isolierung,
+    setIsolierung,
+    paneeltyp,
+    setPaneeltyp,
+    wandOrientierung,
+    setWandOrientierung,
+    farbSchema,
+    setFarbSchema,
+    außenFarbe,
+    setAußenFarbe,
+    außenFarbeMuster,
+    setAußenFarbeMuster,
+    musterVerortung,
+    setMusterVerortung,
+    dachIsolierung,
+    setDachIsolierung,
+    dachPaneeltyp,
+    setDachPaneeltyp,
+    dachAußenFarbe,
+    setDachAußenFarbe,
+    dachPvcName,
+    setDachPvcName,
+    pvcName,
+    setPvcName,
+    // Öffnungs-Props (aus App.js)
+    fensterFarbe,
+    setFensterFarbe,
+    türFarbe,
+    setTürFarbe,
+    schiebeTorFarbe,
+    setSchiebeTorFarbe,
+    rollTorFarbe,
+    setRollTorFarbe,
+    sektionalTorFarbe,
+    setSektionalTorFarbe,
+    türFarbeInnen,
+    setTürFarbeInnen,
+    sektionalTorFarbeInnen,
+    setSektionalTorFarbeInnen,
+    // Angebots-Props (aus App.js)
+    gebäudeZweck,
+    setGebäudeZweck,
+    bauBeginn,
+    setBauBeginn,
+    anwerbungKunden,
+    setAnwerbungKunden,
+    größeGebäudeM2,
+    setGrößeGebäudeM2,
+    // Konstruktions-Props (aus App.js)
+    bodenplatteFarbe,
+    setBodenplatteFarbe,
+    rahmenFarbe,
+    setRahmenFarbe,
+    sekundärKonstruktionsFarbe,
+    setSekundärKonstruktionsFarbe,
+    sekundärHolzKonstruktionsFarbe,
+    setSekundärHolzKonstruktionsFarbe,
+    // Zubehör-Props (aus App.js)
+    zubehörFarbe,
+    setZubehörFarbe,
+    kantenFarbe,
+    setKantenFarbe,
+    kranKapazität,
+    setKranKapazität,
+    // Darstellungs-Props (aus App.js)
+    abmessungenAnzeigen,
+    setAbmessungenAnzeigen,
 }) {
 
-    const [dachArt, setDachArt] = useState('satteldach')
-    
-    // Abmessungs-States
-    const [breite, setBreite] = useState(3)
-    const [länge, setLänge] = useState(6)
-    const [traufhöhe, setTraufhöhe] = useState(3)
-    const [dachneigung, setDachneigung] = useState(0)
-    const [sockelhöhe, setSockelhöhe] = useState(0)
-    const [dachAusrichtung, setDachAusrichtung] = useState('Rechts')
+    // Wenn sich länge, breite, höhe oder dachArt ändert, kurz abmessungenAnzeigen toggling
+    useEffect(() => {
+        if (abmessungenAnzeigen) {
+            setAbmessungenAnzeigen(false);
+            const timeout = setTimeout(() => {
+                setAbmessungenAnzeigen(true);
+            }, 10);
+            return () => clearTimeout(timeout);
+        }
+    }, [länge, breite, höhe, dachArt]);
 
-    // "Arbeits" - States (Verkleidung)
-    const [wandGeometrieVorgaben, setWandGeometrieVorgaben] = useState('verkleidete-wand')
-    const [isolierung, setIsolierung] = useState('isoliert')
-    const [paneeltyp, setPaneeltyp] = useState('trapez')
-    const [wandOrientierung, setWandOrientierung] = useState('vertikal')
-    const [farbSchema, setFarbSchema] = useState('einfarbig')
-    const [außenFarbe, setAußenFarbe] = useState('?')
-    const [außenFarbeMuster, setAußenFarbeMuster] = useState('!')
-    const [musterVerortung, setMusterVerortung] = useState('4, 5')
-    const [dachIsolierung, setDachIsolierung] = useState('isoliert')
-    const [dachPaneeltyp, setDachPaneeltyp] = useState('trapez')
-    const [dachAußenFarbe, setDachAußenFarbe] = useState('?')
-    const [dachPvcName, setDachPvcName] = useState('PVC-Folie')
-    const [pvcName, setPvcName] = useState('PVC-Folie')
+    // Setze sockelhöhe auf 0, wenn "Verkleidete Wand" ohne Sockel gewählt wird
+    useEffect(() => {
+        if (wandGeometrieVorgaben === 'verkleidete-wand') {
+            setSockelhöhe(0);
+        }
+    }, [wandGeometrieVorgaben]);
 
-    // "Arbeits" - States (Öffnungen)
-    const [fensterFarbe, setFensterFarbe] = useState('?')
-    const [türFarbe, setTürFarbe] = useState('?')
-    const [schiebeTorFarbe, setSchiebeTorFarbe] = useState('?')
-    const [rollTorFarbe, setRollTorFarbe] = useState('?')
-    const [sektionalTorFarbe, setSektionalTorFarbe] = useState('?')
-
-    const [türFarbeInnen, setTürFarbeInnen] = useState('?')
-    const [sektionalTorFarbeInnen, setSektionalTorFarbeInnen] = useState('?')
-
-    // 'Arbeits' - States (Angebot)
-    const [gebäudeZweck, setGebäudeZweck] = useState('Produktionshalle')
-    const [bauBeginn, setBauBeginn] = useState(new Date().getFullYear())
-    const [anwerbungKunden, setAnwerbungKunden] = useState('Soziale-Medien')
-        // 760 Beispielzahl: Größe muss größer sein als 750m2
-    const [größeGebäudeM2, setGrößeGebäudeM2] = useState(760)
-
-    // 'Arbeits' - States (Konstruktion)
-    const [bodenplatteFarbe, setBodenplatteFarbe] = useState('?')
-    const [rahmenFarbe, setRahmenFarbe] = useState('?')
-    const [sekundärKonstruktionsFarbe, setSekundärKonstruktionsFarbe] = useState('?')
-    const [sekundärHolzKonstruktionsFarbe, setSekundärHolzKonstruktionsFarbe] = useState('?')
-
-    // 'Arbeits' - States (Zubehör)
-    const [zubehörFarbe, setZubehörFarbe] = useState('?')
-    const [kantenFarbe, setKantenFarbe] = useState('?')
-    const [kranKapazität, setKranKapazität] = useState(1)
+    // Setze Wandfarbe auf Holzfarbe, wenn Holzverkleidung gewählt wird
+    useEffect(() => {
+        if (paneeltyp === 'holzverkleidung') {
+            setAußenFarbe('#9f764e');
+        }
+    }, [paneeltyp]);
 
     function abmessungsUI() {
         return(
@@ -108,7 +169,7 @@ export default function UiButtonEdit({
                             <span className='text' style={{ fontWeight: 200}}>Traufhöhe</span>
                             <span className='text' style={{ fontSize: 12 }}>3-30</span>
                         </div>
-                        <MuiNumberfield label={'Meter'} min={3} max={30} state={traufhöhe} setState={setTraufhöhe} />
+                        <MuiNumberfield label={'Meter'} min={3} max={30} state={höhe} setState={setHöhe} />
                     </div>
                 </div>
 
@@ -145,6 +206,7 @@ export default function UiButtonEdit({
                     </div>
                     {dachArt === 'pultdach' && (
                         <>
+                            {/*
                             <div style={{ 
                                 display: 'flex', 
                                 gap: '10px', 
@@ -158,11 +220,12 @@ export default function UiButtonEdit({
                                     option1={'Links'}
                                     value1={'Links'}
                                     option2={'Rechts'}
-                                    value2={'´Rechts'}
+                                    value2={'Rechts'}
                                     state={dachAusrichtung}
                                     setState={setDachAusrichtung}
                                 />
                             </div>
+                            */}
                             <div style={{ 
                                 display: 'flex', 
                                 gap: '10px', 
@@ -172,9 +235,29 @@ export default function UiButtonEdit({
                                 marginRight: "15px" 
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span className='text' style={{ fontWeight: 200}}>Dachneigung</span>
+                                    <span className='text' style={{ fontWeight: 200}}>Differenz aus First- und Traufhöhe</span>
+                                    <span className='text' style={{ fontSize: 12 }}>1-20</span>
                                 </div>
-                                <MuiNumberfield label={'%'} min={0} max={200} state={dachneigung} setState={setDachneigung} />
+                                <MuiNumberfield label={'m'} min={0} max={200} state={dachneigung} setState={setDachneigung} />
+                            </div>
+                        </>
+                    )}
+
+                    {dachArt == 'satteldach' && (
+                        <>
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between',
+                                marginRight: "15px" 
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Differenz aus First- und Traufhöhe</span>
+                                    <span className='text' style={{ fontSize: 12 }}>1-20</span>
+                                </div>
+                                <MuiNumberfield label={'m'} min={1} max={20} state={diffTraufFirst} setState={setDiffTraufFirst} />
                             </div>
                         </>
                     )}
@@ -223,8 +306,9 @@ export default function UiButtonEdit({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Sockelhöhe</span>
+                                    <span className='text' style={{ fontSize: 12 }}>1-3</span>
                                 </div>
-                                <MuiNumberfield label={'Meter'} min={0} max={3} state={sockelhöhe} setState={setSockelhöhe} />
+                                <MuiNumberfield label={'Meter'} min={1} max={3} state={sockelhöhe} setState={setSockelhöhe} />
                             </div>
                         )}
                     </div>

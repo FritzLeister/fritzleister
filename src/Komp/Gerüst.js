@@ -1,79 +1,114 @@
+import { useState } from "react"
+import Pfetten from "./GerüstKomp/Pfetten"
+import Rahmen from "./GerüstKomp/Rahmen"
+import WandRiegel from "./GerüstKomp/WandRiegel"
+import Kantteile from "./GerüstKomp/Kantteile"
+import { Triangle } from "three"
 
 
-export default function Gerüst({ bodenLänge, bodenBreite, gebäudeHöhe, koordinate }) {
+export default function Gerüst({
+    bodenLänge, 
+    bodenBreite, 
+    gebäudeHöhe, 
+    koordinate,
+    stahlRahmen,
+    pfetten,
+    wandRiegel,
+    kantTeile,
+    zusatzHöheMitte,
+    dachArt,
+    pultdachHöheDifferenz,
+    kantenAnzeigen,
+    oberflächenAnzeigen,
+    sockelHöhe
+}) {
 
     const bodenDicke = 0.3
+
+    const abstandFaktor = 18
 
     const x = koordinate[0]
     const y = koordinate[1] - 0.35 + 0.5*(gebäudeHöhe-9)
     const z = koordinate[2]
 
+    console.log("Gerüst", bodenBreite)
+
     return(
         <>
 
         {/* Boden */}
-        <mesh position={[x, y-(gebäudeHöhe-9) / 2, z]}>
+        {/* <mesh position={[x, y-(gebäudeHöhe-9) / 2, z]}>
             <boxGeometry args={[bodenLänge, bodenDicke, bodenBreite]} />
             <meshStandardMaterial color={"#888888"} />
-        </mesh>
+        </mesh> */}
 
-        {/* Stelzen */}
-        
-        <mesh position={[x+9+(0.5*(bodenLänge-20)), y+4.5, z+6.5+(0.5*(bodenBreite-15))]}>
-            <boxGeometry args={[0.5, gebäudeHöhe, 0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
+        {stahlRahmen && (
+            <Rahmen
+                x={x}
+                y={y}
+                z={z}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                gebäudeHöhe={gebäudeHöhe}
+                abstandFaktor={abstandFaktor}
+                zusatzHöheMitte={zusatzHöheMitte}
+                dachArt={dachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                frame={kantenAnzeigen}
+                oberfläche={oberflächenAnzeigen}
+                color={'#6a93b0'}
+            />
+        )}
 
-        <mesh position={[x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-            <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
+        {pfetten && (
+            <Pfetten 
+                x={x}
+                y={y}
+                z={z}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                gebäudeHöhe={gebäudeHöhe}
+                pfettenAbstand={4}
+                zusatzHöheMitte={zusatzHöheMitte}
+                dachArt={dachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                frame={kantenAnzeigen}
+                oberfläche={oberflächenAnzeigen}
+            />
+        )}
+    
+        {wandRiegel && (
+            <WandRiegel
+                x={x}
+                y={y}
+                z={z}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                gebäudeHöhe={gebäudeHöhe}
+                pfettenAbstand={3}
+                zusatzHöheMitte={zusatzHöheMitte}
+                dachArt={dachArt}
+                frame={kantenAnzeigen}
+                oberfläche={oberflächenAnzeigen}
+            /> 
+        )}
 
-        <mesh position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-            <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        <mesh position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z+6.5+(0.5*(bodenBreite-15))]}>
-            <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        {/* Verbindungsstücke */}
-        <mesh position={[x+9+(0.5*(bodenLänge-20)),y+8.75+(gebäudeHöhe-9) / 2,z]}>
-            <boxGeometry args={[0.5,0.5,13+(1*(bodenBreite-15))]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        <mesh position={[x-9-(0.5*(bodenLänge-20)),y+8.75+(gebäudeHöhe-9) / 2,z]}>
-            <boxGeometry args={[0.5,0.5,13+(1*(bodenBreite-15))]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-        
-        <mesh position={[x,y+8.75+(gebäudeHöhe-9) / 2,z]}>
-            <boxGeometry args={[18+(1*(bodenLänge-20)),0.5,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        <mesh position={[x,y+8.75+(gebäudeHöhe-9) / 2,z+6.5+(0.5*(bodenBreite-15))]}>
-            <boxGeometry args={[18+(1*(bodenLänge-20)),0.5,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        <mesh position={[x,y+8.75+(gebäudeHöhe-9) / 2,z-6.5-(0.5*(bodenBreite-15))]}>
-            <boxGeometry args={[18+(1*(bodenLänge-20)),0.5,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        <mesh position={[x-9-(0.5*(bodenLänge-20)),y+5,z]}>
-            <boxGeometry args={[0.5,gebäudeHöhe-0.5,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
-
-        <mesh position={[x+9+(0.5*(bodenLänge-20)),y+5,z]}>
-            <boxGeometry args={[0.5,gebäudeHöhe-0.5,0.5]} />
-            <meshStandardMaterial color={"#9e9e94"} />
-        </mesh>
+        {kantTeile && (
+            <Kantteile
+                x={x}
+                y={y}
+                z={z}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                gebäudeHöhe={gebäudeHöhe}
+                sockelHöhe={sockelHöhe}
+                zusatzHöheMitte={zusatzHöheMitte}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                dachArt={dachArt}
+                frame={kantenAnzeigen}
+                oberfläche={oberflächenAnzeigen}
+            />
+        )}
 
         </>
     )
