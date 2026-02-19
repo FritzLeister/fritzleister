@@ -16,16 +16,25 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
 import AppsIcon from '@mui/icons-material/Apps';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import UiButton from './UiButton';
 import UiButtonEdit from './UiButtonEdit';
 import ÖffnungenUi from './ÖffnungenKomp/ÖffnungUi'
+import LeerÖffnungBearbeiten from './ÖffnungenKomp/LeerÖffnungBearbeiten'
+import WandFensterBearbeiten from './ÖffnungenKomp/WandFensterBearbeiten'
+import TürÖffnungBearbeiten from './ÖffnungenKomp/TürÖffnungBearbeiten'
+import SektionalTorBearbeiten from './ÖffnungenKomp/SektionalTorBearbeiten'
+import SchiebeTürBearbeiten from './ÖffnungenKomp/SchiebeTürBearbeiten'
 
 export default function Add({ 
     addObj, 
     editMenü, 
     setEditMenü,
+    clickedButtonPos,
+    selectedObject,
+    objs,
+    setObjs,
     // Abmessungs-Props
     breite,
     setBreite,
@@ -509,7 +518,13 @@ export default function Add({
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
-        {editMenü === 'Öffnungen-Auswahl' && <ÖffnungenUi wand={true} />}
+        {editMenü === 'Öffnungen-Auswahl' && <ÖffnungenUi wand={true} lang={clickedButtonPos?.lang ?? true} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeHöhe={höhe} />}
+        {editMenü === 'Öffnungen-Dach-Auswahl' && <ÖffnungenUi wand={false} lang={false} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeHöhe={höhe} />}
+        {editMenü === 'LeerÖffnung-Bearbeiten' && selectedObject?.type === 'leeröffnung' && <LeerÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'Fenster-Bearbeiten' && selectedObject?.type === 'fenster' && <WandFensterBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'Tür-Bearbeiten' && selectedObject?.type === 'tür-öffnung' && <TürÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'SektionalTor-Bearbeiten' && <SektionalTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'Schiebetür-Bearbeiten' && selectedObject?.type === 'schiebetür' && <SchiebeTürBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
 
         {editMenü === 'Zubehör' && <UiButtonEdit 
             name={"Zubehör"} 
@@ -597,6 +612,7 @@ export default function Add({
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
+
         {editMenü === 'Konstruktion' && <UiButtonEdit 
             name={"Konstruktion"} 
             height={5} 

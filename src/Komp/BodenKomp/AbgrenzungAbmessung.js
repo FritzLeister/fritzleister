@@ -71,20 +71,17 @@ export default function AbgrenzungAbmessung({
         }
         
         // Erstelle Maßlinien zwischen den Abgrenzungen
-        const wandStart = xLinks - 1
-        const wandEnde = xRechts + 0.75
-        const allePunkte = [wandStart, ...balkenPositionen, wandEnde]
-        
-        for (let i = 0; i < allePunkte.length - 1; i++) {
-            const startX = allePunkte[i]
-            const endX = allePunkte[i + 1]
+        if (längeInMeter < 9 && balkenPositionen.length === 2) {
+            // Nur eine Maßlinie zwischen den beiden Balken
+            const startX = balkenPositionen[0]
+            const endX = balkenPositionen[1]
             const abstandInEinheiten = endX - startX
             const abstandInMeter = (abstandInEinheiten / 2.5).toFixed(2)
             const zPosition = rechts ? (zHinten - 7) : (zVorne + 7)
             
             maßlinien.push(
                 <MaßLinie
-                    key={`feld-${wandTyp}-${i}`}
+                    key={`feld-${wandTyp}-0`}
                     start={[startX - x, 0, zPosition - z]}
                     end={[endX - x, 0, zPosition - z]}
                     offset={0}
@@ -93,6 +90,31 @@ export default function AbgrenzungAbmessung({
                     koordinate={[x, 0, z]}
                 />
             )
+        } else {
+            // Normale Maßlinien für alle Segmente
+            const wandStart = xLinks - 1
+            const wandEnde = xRechts + 0.75
+            const allePunkte = [wandStart, ...balkenPositionen, wandEnde]
+            
+            for (let i = 0; i < allePunkte.length - 1; i++) {
+                const startX = allePunkte[i]
+                const endX = allePunkte[i + 1]
+                const abstandInEinheiten = endX - startX
+                const abstandInMeter = (abstandInEinheiten / 2.5).toFixed(2)
+                const zPosition = rechts ? (zHinten - 7) : (zVorne + 7)
+                
+                maßlinien.push(
+                    <MaßLinie
+                        key={`feld-${wandTyp}-${i}`}
+                        start={[startX - x, 0, zPosition - z]}
+                        end={[endX - x, 0, zPosition - z]}
+                        offset={0}
+                        label={`${abstandInMeter} m`}
+                        color="#577b9e"
+                        koordinate={[x, 0, z]}
+                    />
+                )
+            }
         }
         
         balkenPositionen.forEach((balkenX, idx) => {
@@ -158,20 +180,17 @@ export default function AbgrenzungAbmessung({
         }
         
         // Erstelle Maßlinien zwischen den Abgrenzungen
-        const wandStart = zHinten - 1
-        const wandEnde = zVorne + 0.85
-        const allePunkte = [wandStart, ...balkenPositionen, wandEnde]
-        
-        for (let i = 0; i < allePunkte.length - 1; i++) {
-            const startZ = allePunkte[i]
-            const endZ = allePunkte[i + 1]
+        if (breiteInMeter < 9 && balkenPositionen.length === 2) {
+            // Nur eine Maßlinie zwischen den beiden Balken
+            const startZ = balkenPositionen[0]
+            const endZ = balkenPositionen[1]
             const abstandInEinheiten = endZ - startZ
             const abstandInMeter = (abstandInEinheiten / 2.5).toFixed(2)
             const xPosition = rechts ? xLinks : xRechts
             
             maßlinien.push(
                 <MaßLinie
-                    key={`feld-${wandTyp}-${i}`}
+                    key={`feld-${wandTyp}-0`}
                     start={[xPosition - x, 0, startZ - z]}
                     end={[xPosition - x, 0, endZ - z]}
                     offset={rechts ? 6 : -6}
@@ -180,6 +199,31 @@ export default function AbgrenzungAbmessung({
                     koordinate={[x, 0, z]}
                 />
             )
+        } else {
+            // Normale Maßlinien für alle Segmente
+            const wandStart = zHinten - 1
+            const wandEnde = zVorne + 0.85
+            const allePunkte = [wandStart, ...balkenPositionen, wandEnde]
+            
+            for (let i = 0; i < allePunkte.length - 1; i++) {
+                const startZ = allePunkte[i]
+                const endZ = allePunkte[i + 1]
+                const abstandInEinheiten = endZ - startZ
+                const abstandInMeter = (abstandInEinheiten / 2.5).toFixed(2)
+                const xPosition = rechts ? xLinks : xRechts
+                
+                maßlinien.push(
+                    <MaßLinie
+                        key={`feld-${wandTyp}-${i}`}
+                        start={[xPosition - x, 0, startZ - z]}
+                        end={[xPosition - x, 0, endZ - z]}
+                        offset={rechts ? 6 : -6}
+                        label={`${abstandInMeter} m`}
+                        color="#577b9e"
+                        koordinate={[x, 0, z]}
+                    />
+                )
+            }
         }
         
         balkenPositionen.forEach((balkenZ, idx) => {

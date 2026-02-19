@@ -5,6 +5,9 @@ import Dach from "./Komp/Dach"
 import { OrbitControls } from "@react-three/drei"
 import { useState } from "react"
 import Tür from "./Komp/Tür"
+import LeerÖffnung from "./Komp/ÖffnungenKomp/LeerÖffnung"
+import WandFenster from "./Komp/ÖffnungenKomp/WandFenster"
+import DachLeeröffnung from "./Komp/ÖffnungenKomp/DachLeeröffnung"
 import { useLoader } from "@react-three/fiber"
 import { TextureLoader, TextureUtils } from "three"
 import { useRef } from "react"
@@ -13,6 +16,9 @@ import Bodenplatte from "./Komp/Bodenplatte"
 import Achsen from "./Komp/Achsen"
 import HallenÜbersicht from "./Komp/HallenÜbersicht"
 import AbgrenzungAbmessung from "./Komp/BodenKomp/AbgrenzungAbmessung"
+import TürÖffnung from "./Komp/ÖffnungenKomp/TürÖffnung"
+import SektionalTor from "./Komp/ÖffnungenKomp/SektionalTor"
+import SchiebeTür from "./Komp/ÖffnungenKomp/SchiebeTür"
 
 export default function Halle({ 
     bodenLänge, 
@@ -27,6 +33,7 @@ export default function Halle({
     originalBreite,
     setEditMenü,
     editMenü,
+    setClickedButtonPos,
     kantenAnzeigen,
     oberflächenAnzeigen,
     abmessungenAnzeigen,
@@ -46,7 +53,12 @@ export default function Halle({
 }) {
 
     const [orbitKontrolle, setOrbitKontrolle] = useState(true)
-    const türObjs = objs.filter(obj => obj.type === "tür")
+    const türObjs = objs.filter(obj => obj.type === "tür-öffnung")
+    const leeröffnungen = objs.filter(obj => obj.type === "leeröffnung" && (obj.lang === true || obj.lang === undefined))
+    const wandFenster = objs.filter(obj => obj.type === "fenster")
+    const sektionalTore = objs.filter(obj => obj.type === "sektionaltor")
+    const schiebetüren = objs.filter(obj => obj.type === "schiebetür")
+    const dachLeeröffnungen = objs.filter(obj => obj.type === "leeröffnung" && obj.lang === false)
 
     // Flachdach wird wie Satteldach behandelt, aber mit diffTraufFirst = 0
     const effektiveDachArt = dachArt === 'flachdach' ? 'satteldach' : dachArt
@@ -118,6 +130,7 @@ export default function Halle({
         abgrenzung={true} // unterteilung der Wände
         originalBreite={originalBreite}
         setEditMenü={setEditMenü}
+        setClickedButtonPos={setClickedButtonPos}
         editMenü={editMenü}
         kantenAnzeigen={kantenAnzeigen}
         oberflächenAnzeigen={oberflächenAnzeigen}
@@ -146,6 +159,7 @@ export default function Halle({
         zusatzHöheMitte={effektiveDiffTraufFirst}
         setEditMenü={setEditMenü}
         editMenü={editMenü}
+        setClickedButtonPos={setClickedButtonPos}
         oberflächenAnzeigen={oberflächenAnzeigen}
         plattenAnzeigen={plattenAnzeigen}
         pultdachHöheDifferenz={pultdachHöheDifferenz-10}
@@ -155,17 +169,114 @@ export default function Halle({
         {/* <Achsen /> */}
 
         {türObjs.map((obj, index) => (
-            <Tür
-            gebäudeHöhe={gebäudeHöhe}
-            position={koordinate}
-            bodenBreite={bodenBreite}
-            bodenLänge={bodenLänge}
-            setSelectedObject={setSelectedObject}
-            setOrbitKontrolle={setOrbitKontrolle}
-            setTürAttribute={setTürAttribute}
-            key={obj.id}
-            objId={obj.id}
-            objs={objs}
+            <TürÖffnung
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                setEditMenü={setEditMenü}
+                key={obj.id}
+                objId={obj.id}
+                objs={objs}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+            />
+        ))}
+
+        {leeröffnungen.map(obj => (
+            <LeerÖffnung
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+            />
+        ))}
+
+        {wandFenster.map(obj => (
+            <WandFenster
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+            />
+        ))}
+
+        {sektionalTore.map(obj => (
+            <SektionalTor
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+            />
+        ))}
+
+        {schiebetüren.map(obj => (
+            <SchiebeTür
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+            />
+        ))}
+
+        {dachLeeröffnungen.map(obj => (
+            <DachLeeröffnung
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                zusatzHöheMitte={effektiveDiffTraufFirst}
+                vorne={obj.vorne ?? true}
             />
         ))}
         {/* </> */}

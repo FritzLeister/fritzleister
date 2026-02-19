@@ -27,6 +27,7 @@ export default function Wand({
     originalBreite,
     setEditMenü,
     editMenü,
+    setClickedButtonPos,
     kantenAnzeigen,
     oberflächenAnzeigen,
     plattenAnzeigen,
@@ -315,7 +316,7 @@ export default function Wand({
             {langeWand(false)}
             {kurzeWand(true)}
             {kurzeWand(false)}
-            {abgrenzung && (editMenü === "Felder" || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl") && (
+            {abgrenzung && (editMenü === "Felder" || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl") && (
                 <>
                     <Abgrenzung
                         koordinate={koordinate}
@@ -377,7 +378,7 @@ export default function Wand({
                         wandTyp="kurzRechts"
                         originalBreite={originalBreite}
                     />
-                    {(editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl") && (
+                    {(editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl") && (
                         <>
                         <AddButtonWand
                             koordinate={koordinate}
@@ -391,6 +392,7 @@ export default function Wand({
                             balkenAbstand={balkenAbstand}
                             wandTyp="langVorne"
                             setEditMenü={setEditMenü}
+                            setClickedButtonPos={setClickedButtonPos}
                         />
                         <AddButtonWand
                             koordinate={koordinate}
@@ -404,6 +406,7 @@ export default function Wand({
                             balkenAbstand={balkenAbstand}
                             wandTyp="langHinten"
                             setEditMenü={setEditMenü}
+                            setClickedButtonPos={setClickedButtonPos}
                         />
                         <AddButtonWand
                             koordinate={koordinate}
@@ -417,6 +420,7 @@ export default function Wand({
                             balkenAbstand={balkenAbstand}
                             wandTyp="kurzLinks"
                             setEditMenü={setEditMenü}
+                            setClickedButtonPos={setClickedButtonPos}
                         />
                         <AddButtonWand
                             koordinate={koordinate}
@@ -430,6 +434,7 @@ export default function Wand({
                             balkenAbstand={balkenAbstand}
                             wandTyp="kurzRechts"
                             setEditMenü={setEditMenü}
+                            setClickedButtonPos={setClickedButtonPos}
                         />
                         </>
                     )}

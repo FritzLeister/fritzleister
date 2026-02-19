@@ -12,7 +12,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
     const viertelLänge = useMemo(() => bodenLänge / 4, [bodenLänge])
     
     // Zusätzlicher Offset wenn Felder-Modus aktiv ist
-    const zOffset = editMenü === 'Felder' ? 2 : 0
+    const zOffset = editMenü === 'Felder' ? 2.5 : 0
 
     return (
         <>
@@ -32,7 +32,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, halbBreite]}
                 end={[0, 0, halbBreite]}
                 offset={4 * abstand}
-                label={`${(halbLänge).toFixed(2)/2.5} m`}
+                label={`${(halbLänge/2.5).toFixed(2)} m`}
                 color="#34495e"
                 koordinate={[koordinate[0], 0, koordinate[2]+5.5+zOffset]}
             />
@@ -42,7 +42,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[0, 0, halbBreite]}
                 end={[halbLänge, 0, halbBreite]}
                 offset={4 * abstand}
-                label={`${(halbLänge).toFixed(2)/2.5} m`}
+                label={`${(halbLänge/2.5).toFixed(2)} m`}
                 color="#34495e"
                 koordinate={[koordinate[0], 0, koordinate[2]+5.5+zOffset]}
             />
@@ -52,7 +52,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, halbBreite]}
                 end={[-viertelLänge, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -62,7 +62,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-viertelLänge, 0, halbBreite]}
                 end={[0, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -72,7 +72,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[0, 0, halbBreite]}
                 end={[viertelLänge, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -82,7 +82,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[viertelLänge, 0, halbBreite]}
                 end={[halbLänge, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -92,7 +92,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, -halbBreite]}
                 end={[-halbLänge, 0, halbBreite]}
                 offset={8 * abstand}
-                label={`${breiteInMeter.toFixed(2)/2.5} m`}
+                label={`${breiteInMeter.toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0]-1-zOffset, 0, koordinate[2]]}
                 labelOffset={[1, 0, 0]}
@@ -103,7 +103,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, 0]}
                 end={[-halbLänge, 0, halbBreite]}
                 offset={4 * abstand}
-                label={`${(halbBreite).toFixed(2)/2.5} m`}
+                label={`${(halbBreite/2.5).toFixed(2)} m`}
                 color="#34495e"
                 koordinate={[koordinate[0]-2-zOffset, 0, koordinate[2]]}
                 labelOffset={[1, 0, 0]}
@@ -114,7 +114,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, -halbBreite]}
                 end={[-halbLänge, 0, 0]}
                 offset={4 * abstand}
-                label={`${(halbBreite).toFixed(2)/2.5} m`}
+                label={`${(halbBreite/2.5).toFixed(2)} m`}
                 color="#34495e"
                 koordinate={[koordinate[0]-2-zOffset, 0, koordinate[2]]}
                 labelOffset={[1, 0, 0]}
@@ -128,7 +128,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, halbBreite]}
                 end={[halbLänge, 0, halbBreite]}
                 offset={8 * abstand}
-                label={`${längeInMeter} m`}
+                label={`${längeInMeter.toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -138,7 +138,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, halbBreite]}
                 end={[0, 0, halbBreite]}
                 offset={4 * abstand}
-                label={`${(halbLänge).toFixed(2)/2.5} m`}
+                label={`${(halbLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+5.5+zOffset]}
             />
@@ -148,7 +148,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[0, 0, halbBreite]}
                 end={[halbLänge, 0, halbBreite]}
                 offset={4 * abstand}
-                label={`${(halbLänge).toFixed(2)/2.5} m`}
+                label={`${(halbLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+5.5+zOffset]}
             />
@@ -158,7 +158,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, halbBreite]}
                 end={[-viertelLänge, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -168,7 +168,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-viertelLänge, 0, halbBreite]}
                 end={[0, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -178,7 +178,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[0, 0, halbBreite]}
                 end={[viertelLänge, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -188,7 +188,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[viertelLänge, 0, halbBreite]}
                 end={[halbLänge, 0, halbBreite]}
                 offset={2 * abstand}
-                label={`${(viertelLänge).toFixed(2)/2.5} m`}
+                label={`${(viertelLänge/2.5).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0], 0, koordinate[2]+4.5+zOffset]}
             />
@@ -198,7 +198,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, -halbBreite]}
                 end={[-halbLänge, 0, halbBreite]}
                 offset={8 * abstand}
-                label={`${breiteInMeter.toFixed(2)/2.5} m`}
+                label={`${(breiteInMeter).toFixed(2)} m`}
                 color="#2c3e50"
                 koordinate={[koordinate[0]-1-zOffset, 0, koordinate[2]]}
                 labelOffset={[1, 0, 0]}
@@ -209,7 +209,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, 0]}
                 end={[-halbLänge, 0, halbBreite]}
                 offset={4 * abstand}
-                label={`${(halbBreite).toFixed(2)/2.5} m`}
+                label={`${(halbBreite/2.5).toFixed(2)} m`}
                 color="#34495e"
                 koordinate={[koordinate[0]-2-zOffset, 0, koordinate[2]]}
                 labelOffset={[1, 0, 0]}
@@ -220,7 +220,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 start={[-halbLänge, 0, -halbBreite]}
                 end={[-halbLänge, 0, 0]}
                 offset={4 * abstand}
-                label={`${(halbBreite).toFixed(2)/2.5} m`}
+                label={`${(halbBreite/2.5).toFixed(2)} m`}
                 color="#34495e"
                 koordinate={[koordinate[0]-2-zOffset, 0, koordinate[2]]}
                 labelOffset={[1, 0, 0]}

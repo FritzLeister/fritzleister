@@ -11,6 +11,7 @@ export default function AddButtonDach({
     pultdachHöheDifferenz,
     zusatzHöheMitte,
     balkenAbstand,
+    setEditMenü
 }) {
     const [hoveredButton, setHoveredButton] = useState(null)
     const x = koordinate[0]

@@ -13,6 +13,7 @@ export default function AddButtonWand({
     balkenAbstand,
     wandTyp, // 'langVorne', 'langHinten', 'kurzLinks', 'kurzRechts'
     setEditMenü,
+    setClickedButtonPos,
 }) {
     const [hoveredButton, setHoveredButton] = useState(null)
     const x = koordinate[0]
@@ -65,7 +66,11 @@ export default function AddButtonWand({
                         rotation={[0, 0, 0]}
                         onPointerOver={() => setHoveredButton(buttonId)}
                         onPointerOut={() => setHoveredButton(null)}
-                        onClick={() => setEditMenü(prev => prev === "Öffnungen-Auswahl" ? null : "Öffnungen-Auswahl")}
+                        onClick={() => {
+
+                            setClickedButtonPos({ x: buttonX, z: buttonZ, rechts: rechts, lang: true });
+                            setEditMenü(prev => prev === "Öffnungen-Auswahl" ? null : "Öffnungen-Auswahl");
+                        }}
                     >
                         <circleGeometry args={[1.5, 32]} />
                         <meshStandardMaterial 
@@ -139,7 +144,10 @@ export default function AddButtonWand({
                     rotation={[Math.PI / 2, Math.PI / 2, 0]}
                     onPointerOver={() => setHoveredButton(buttonId)}
                     onPointerOut={() => setHoveredButton(null)}
-                    onClick={() => setEditMenü(prev => prev === "Öffnungen-Auswahl" ? null : "Öffnungen-Auswahl")}
+                    onClick={() => {
+                        setClickedButtonPos({ x: buttonX, z: buttonZ, rechts, lang: false });
+                        setEditMenü(prev => prev === "Öffnungen-Auswahl" ? null : "Öffnungen-Auswahl");
+                    }}
                 >
                     <circleGeometry args={[1.5, 32]} />
                     <meshStandardMaterial 
@@ -204,7 +212,10 @@ export default function AddButtonWand({
                         rotation={[Math.PI / 2, Math.PI / 2, 0]}
                         onPointerOver={() => setHoveredButton(buttonId)}
                         onPointerOut={() => setHoveredButton(null)}
-                        onClick={() => setEditMenü(prev => prev === "Öffnungen-Auswahl" ? null : "Öffnungen-Auswahl")}
+                        onClick={() => {
+                            setClickedButtonPos({ x: buttonX, z: buttonZ, rechts, lang: false });
+                            setEditMenü(prev => prev === "Öffnungen-Auswahl" ? null : "Öffnungen-Auswahl");
+                        }}
                     >
                         <circleGeometry args={[1.5, 32]} />
                         <meshStandardMaterial 

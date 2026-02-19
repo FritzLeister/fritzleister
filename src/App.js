@@ -114,6 +114,9 @@ export default function App({
     const [sekundärstrukturAnzeigen, setSekundärstrukturAnzeigen] = useState(true); // idk 
     const [kreuzverbändeAnzeigen, setKreuzverbändeAnzeigen] = useState(true); // idk
 
+    // State für die geklickte Button-Position
+    const [clickedButtonPos, setClickedButtonPos] = useState(null);
+
     // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
     const [hallenId, setHallenId] = useState(() => {
         const maxId = hallenSave?.reduce((max, halle) =>
@@ -235,7 +238,7 @@ export default function App({
         ));
     }
 
-    function addObj(value, type, id, rechts) {
+    function addObj(value, type, id, rechts, startPos = null, lang = true, extraData = {}) {
         const newObj = {
             value: value,
             onChange: [
@@ -252,11 +255,14 @@ export default function App({
             ],
             type: type,
             id: id,
-            rechts: rechts
+            rechts: rechts,
+            startPos: startPos,
+            lang: lang,
+            vorne: startPos?.vorne ?? true,
+            posSegment: 'mittig',
+            ...extraData
         }
         setObjs(objs => [...objs, newObj])
-        // setSelectedObject(newObj);
-        // setTürAttribute(true);
     }
 
     function deleteObj(id) {
@@ -431,6 +437,7 @@ export default function App({
             originalBreite={breite}
             setEditMenü={setEditMenü}
             editMenü={editMenü}
+            setClickedButtonPos={setClickedButtonPos}
 
             kantenAnzeigen={kantenAnzeigen}
             oberflächenAnzeigen={oberflächenAnzeigen}
@@ -538,6 +545,10 @@ export default function App({
         addObj={addObj} 
         editMenü={editMenü} 
         setEditMenü={setEditMenü}
+        clickedButtonPos={clickedButtonPos}
+        selectedObject={selectedObject}
+        objs={objs}
+        setObjs={setObjs}
         breite={breite}
         setBreite={setBreite}
         länge={länge}

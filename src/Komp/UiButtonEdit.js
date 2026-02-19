@@ -238,7 +238,7 @@ export default function UiButtonEdit({
                                     <span className='text' style={{ fontWeight: 200}}>Differenz aus First- und Traufhöhe</span>
                                     <span className='text' style={{ fontSize: 12 }}>1-20</span>
                                 </div>
-                                <MuiNumberfield label={'m'} min={0} max={200} state={dachneigung} setState={setDachneigung} />
+                                <MuiNumberfield label={'m'} min={0} max={20} state={dachneigung} setState={setDachneigung} />
                             </div>
                         </>
                     )}

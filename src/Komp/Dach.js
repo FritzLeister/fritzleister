@@ -17,12 +17,13 @@ export default function Dach({
     dachArt = 'satteldach',
     pultdachHöheDifferenz = 0,
     zusatzHöheMitte = 5,
-    balkenAbstand = 40,  // Verwende balkenAbstand statt anzahlDachplatten
+    balkenAbstand = 40,
     oberflächenAnzeigen = true,
     kantenAnzeigen = true,
     showButtons = true,
     setEditMenü,
     editMenü,
+    setClickedButtonPos,
     plattenAnzeigen = true,
     color = 'grey'
 }) {
@@ -93,7 +94,7 @@ export default function Dach({
             )
             
             // Button für diese Dachplatte
-            if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl")) {
+            if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl")) {
                 const buttonId = `pultdach-${i}`
                 const isHovered = hoveredButton === buttonId
                 
@@ -104,6 +105,10 @@ export default function Dach({
                         rotation={[rotation - Math.PI / 2, 0, 0]}
                         onPointerOver={() => setHoveredButton(buttonId)}
                         onPointerOut={() => setHoveredButton(null)}
+                        onClick={() => {
+                            setClickedButtonPos({ x: plattenX, z: zMitte, rechts: true, lang: false, vorne: true })
+                            setEditMenü('Öffnungen-Dach-Auswahl')
+                        }}
                     >
                         <mesh>
                             <circleGeometry args={[1.5, 32]} />
@@ -186,7 +191,7 @@ export default function Dach({
             )
             
             // Button für vordere Dachplatte
-            if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl")) {
+            if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl")) {
                 const buttonIdVorne = `satteldach-vorne-${i}`
                 const isHoveredVorne = hoveredButton === buttonIdVorne
                 
@@ -197,6 +202,10 @@ export default function Dach({
                         rotation={[rotationVorne - Math.PI / 2, 0, 0]}
                         onPointerOver={() => setHoveredButton(buttonIdVorne)}
                         onPointerOut={() => setHoveredButton(null)}
+                        onClick={() => {
+                            setClickedButtonPos({ x: plattenX, z: zMitteVorne, rechts: true, lang: false, vorne: true })
+                            setEditMenü('Öffnungen-Dach-Auswahl')
+                        }}
                     >
                         <mesh>
                             <circleGeometry args={[1.5, 32]} />
@@ -240,7 +249,7 @@ export default function Dach({
             )
             
             // Button für hintere Dachplatte
-            if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl")) {
+            if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl")) {
                 const buttonIdHinten = `satteldach-hinten-${i}`
                 const isHoveredHinten = hoveredButton === buttonIdHinten
                 
@@ -251,6 +260,10 @@ export default function Dach({
                         rotation={[rotationHinten - Math.PI / 2, 0, 0]}
                         onPointerOver={() => setHoveredButton(buttonIdHinten)}
                         onPointerOut={() => setHoveredButton(null)}
+                        onClick={() => {
+                            setClickedButtonPos({ x: plattenX, z: zMitteHinten, rechts: true, lang: false, vorne: false })
+                            setEditMenü('Öffnungen-Dach-Auswahl')
+                        }}
                     >
                         <mesh>
                             <circleGeometry args={[1.5, 32]} />
