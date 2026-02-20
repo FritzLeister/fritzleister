@@ -26,6 +26,10 @@ import WandFensterBearbeiten from './ÖffnungenKomp/WandFensterBearbeiten'
 import TürÖffnungBearbeiten from './ÖffnungenKomp/TürÖffnungBearbeiten'
 import SektionalTorBearbeiten from './ÖffnungenKomp/SektionalTorBearbeiten'
 import SchiebeTürBearbeiten from './ÖffnungenKomp/SchiebeTürBearbeiten'
+import RollTorBearbeiten from './ÖffnungenKomp/RollTorBearbeiten'
+import TransparentesPaneelBearbeiten from './ÖffnungenKomp/TransparentesPaneelBearbeiten'
+import LaderampeBearbeiten from './ÖffnungenKomp/LaderampeBearbeiten'
+import LichtKuppelBearbeiten from './ÖffnungenKomp/LichtKuppelBearbeiten'
 
 export default function Add({ 
     addObj, 
@@ -525,6 +529,10 @@ export default function Add({
         {editMenü === 'Tür-Bearbeiten' && selectedObject?.type === 'tür-öffnung' && <TürÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
         {editMenü === 'SektionalTor-Bearbeiten' && <SektionalTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
         {editMenü === 'Schiebetür-Bearbeiten' && selectedObject?.type === 'schiebetür' && <SchiebeTürBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'Rolltor-Bearbeiten' && selectedObject?.type === 'rolltor' && <RollTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'TransparentesPaneel-Bearbeiten' && selectedObject?.type === 'transparentespaneel' && <TransparentesPaneelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'Laderampe-Bearbeiten' && selectedObject?.type === 'laderampe' && <LaderampeBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
+        {editMenü === 'Lichtkuppel-Bearbeiten' && selectedObject?.type === 'kleinlichtskuppel' && <LichtKuppelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeBreite={breite} />}
 
         {editMenü === 'Zubehör' && <UiButtonEdit 
             name={"Zubehör"} 

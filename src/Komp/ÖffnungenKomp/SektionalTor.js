@@ -50,10 +50,10 @@ export default function SektionalTor({
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
     const [isHovered, setIsHovered] = useState(false)
 
-    const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2
-    const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2
-    const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2
-    const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2
+    const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2 + 1.5
+    const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2 - 1.5
+    const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2 + 1.5
+    const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2 - 1.5
     const minY = position[1] + (openingArgs[1] / 2) + 0.5 - 4
     const maxY = position[1] + wandHöhe - (openingArgs[1] / 2) - 1 - 4 + 1
 

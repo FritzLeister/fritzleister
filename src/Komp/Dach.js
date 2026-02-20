@@ -106,7 +106,9 @@ export default function Dach({
                         onPointerOver={() => setHoveredButton(buttonId)}
                         onPointerOut={() => setHoveredButton(null)}
                         onClick={() => {
-                            setClickedButtonPos({ x: plattenX, z: zMitte, rechts: true, lang: false, vorne: true })
+                            // Für Pultdach: position bestimmt vorne/hinten (höher = vorne, tiefer = hinten)
+                            const isDachVorne = zMitte > z
+                            setClickedButtonPos({ x: plattenX, z: zMitte, rechts: true, lang: false, vorne: isDachVorne })
                             setEditMenü('Öffnungen-Dach-Auswahl')
                         }}
                     >

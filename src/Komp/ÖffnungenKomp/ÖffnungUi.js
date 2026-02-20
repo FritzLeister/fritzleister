@@ -16,6 +16,12 @@ export default function ÖffnungUi({
     gebäudeBreite,
     gebäudeHöhe
 }) {
+    const getLaderampeStartLängeByTyp = (typ) => {
+        if (typ === 'laderaum') return 1
+        if (typ === 'verladehütte') return 4
+        return 3
+    }
+
 
     // Arbeits - State:
     const [öffnungsName, setÖffnungsName] = useState('Neues Objekt')
@@ -97,7 +103,7 @@ export default function ÖffnungUi({
     // Laderampe-UI State
     const [laderampeBreite, setLaderampeBreite] = useState(3.5)
     const [laderampeHöhe, setLaderampeHöhe] = useState(4.5)
-    const [laderampeLänge, setLaderampeLänge] = useState(2)
+    const [laderampeLänge, setLaderampeLänge] = useState(getLaderampeStartLängeByTyp('ladehaus'))
     const [laderampeRampenhöhe, setLaderampeRampenhöhe] = useState(0.8)
     const [laderampePosSegment, setLaderampePosSegment] = useState('mittig')
     const [laderampeTyp, setLaderampeTyp] = useState('ladehaus')
@@ -113,6 +119,11 @@ export default function ÖffnungUi({
     const [laderampeFarbe, setLaderampeFarbe] = useState('Weiß')
     const [laderampeFüllFarbe, setLaderampeFüllFarbe] = useState('Weiß')
     const [laderampeVerkleidungFarbe, setLaderampeVerkleidungFarbe] = useState('Weiß')
+
+    const handleLaderampeTypChange = (newTyp) => {
+        setLaderampeTyp(newTyp)
+        setLaderampeLänge(getLaderampeStartLängeByTyp(newTyp))
+    }
 
     // Klein Lichtkuppel-UI State
     const [kleinLichtkuppelBreiteX, setKleinLichtkuppelBreiteX] = useState(1)
@@ -2010,7 +2021,8 @@ export default function ÖffnungUi({
                                 <button
                                     onClick={() => {
                                         addObj([transparentesPaneelBreite, transparentesPaneelHöhe], 'transparentespaneel', newId, rechts, clickedButtonPos, lang, {
-                                            posSegment: transparentesPaneelPosSegment
+                                            posSegment: transparentesPaneelPosSegment,
+                                            vorne: clickedButtonPos?.vorne ?? true
                                         })
                                         setNewId(id => id + 1)
                                         setSelectedType('')
@@ -2094,7 +2106,7 @@ export default function ÖffnungUi({
                                     value3={'verladehütte'}
                                     label={'Typ'}
                                     state={laderampeTyp}
-                                    setState={setLaderampeTyp}
+                                    setState={handleLaderampeTypChange}
                                 />
                             </div>
 
@@ -2184,7 +2196,7 @@ export default function ÖffnungUi({
 
                             <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Sektionaltor:</p>
 
-                            <div style={{ 
+                            {/* <div style={{ 
                                 display: 'flex', 
                                 gap: '10px', 
                                 alignItems: 'center', 
@@ -2202,7 +2214,7 @@ export default function ÖffnungUi({
                                     state={laderampeTransparenteFüllung}
                                     setState={setLaderampeTransparenteFüllung}
                                 />
-                            </div>
+                            </div> */}
 
                             {laderampeTransparenteFüllung === 'ja' && (
                                 <>
@@ -2593,7 +2605,8 @@ export default function ÖffnungUi({
                                 <button
                                     onClick={() => {
                                         addObj([öffnungsBreite + 13, öffnungsHöhe + 13], 'leeröffnung', newId, rechts, clickedButtonPos, lang, {
-                                            posSegment: 'mittig'
+                                            posSegment: 'mittig',
+                                            vorne: clickedButtonPos?.vorne ?? true
                                         })
                                         setNewId(id => id + 1)
                                         setSelectedType('')
@@ -2662,7 +2675,7 @@ export default function ÖffnungUi({
 
                             <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position:</p>
 
-                            <div style={{ 
+                            {/* <div style={{ 
                                 display: 'flex', 
                                 gap: '10px', 
                                 alignItems: 'center', 
@@ -2682,7 +2695,7 @@ export default function ÖffnungUi({
                                     state={kleinLichtkuppelDistanzX} 
                                     setState={setKleinLichtkuppelDistanzX} 
                                 />
-                            </div>
+                            </div> */}
 
                             <div style={{ 
                                 display: 'flex', 
@@ -2706,7 +2719,7 @@ export default function ÖffnungUi({
                                 />
                             </div>
 
-                            <div style={{ 
+                            {/* <div style={{ 
                                 display: 'flex', 
                                 gap: '10px', 
                                 alignItems: 'center', 
@@ -2726,7 +2739,7 @@ export default function ÖffnungUi({
                                     state={kleinLichtkuppelDistanzY} 
                                     setState={setKleinLichtkuppelDistanzY} 
                                 />
-                            </div>
+                            </div> */}
 
                             <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

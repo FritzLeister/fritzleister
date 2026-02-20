@@ -62,6 +62,10 @@ export default function DarstellungUI({
             'Tür-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Sektionaltor-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Schiebetür-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
+            'Rolltor-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
+            'TransparentesPaneel-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
+            'Laderampe-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
+            'Lichtkuppel-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Konstruktion': ['Abmessungen', 'Öffnungen', 'Rahmen', 'Kreuzverbände', 'Pfetten', 'Wandriegel', 'Bodenplatte'],
             'Angebot': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Rahmen', 'Pfetten', 'Wandriegel', 'Kantteile', 'Zubehör', 'Bodenplatte', 'Volumen', 'Straßen', 'Strukturelle Komponenten', 'Dekorationen'],
         };

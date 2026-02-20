@@ -19,6 +19,11 @@ import AbgrenzungAbmessung from "./Komp/BodenKomp/AbgrenzungAbmessung"
 import TürÖffnung from "./Komp/ÖffnungenKomp/TürÖffnung"
 import SektionalTor from "./Komp/ÖffnungenKomp/SektionalTor"
 import SchiebeTür from "./Komp/ÖffnungenKomp/SchiebeTür"
+import RollTor from "./Komp/ÖffnungenKomp/RollTor"
+import TransparentesPaneel from "./Komp/ÖffnungenKomp/TransparentesPaneel"
+import DachTransparentesPaneel from "./Komp/ÖffnungenKomp/DachTransparentesPaneel"
+import Laderampe from "./Komp/ÖffnungenKomp/Laderampe"
+import LichtKuppel from "./Komp/ÖffnungenKomp/LichtKuppel"
 
 export default function Halle({ 
     bodenLänge, 
@@ -58,7 +63,12 @@ export default function Halle({
     const wandFenster = objs.filter(obj => obj.type === "fenster")
     const sektionalTore = objs.filter(obj => obj.type === "sektionaltor")
     const schiebetüren = objs.filter(obj => obj.type === "schiebetür")
+    const rolltore = objs.filter(obj => obj.type === "rolltor")
+    const laderampen = objs.filter(obj => obj.type === "laderampe")
+    const transparentePaneeleWand = objs.filter(obj => obj.type === "transparentespaneel" && (obj.lang === true || obj.lang === undefined))
+    const transparentePaneeleDach = objs.filter(obj => obj.type === "transparentespaneel" && obj.lang === false)
     const dachLeeröffnungen = objs.filter(obj => obj.type === "leeröffnung" && obj.lang === false)
+    const lichtkuppeln = objs.filter(obj => obj.type === "kleinlichtskuppel")
 
     // Flachdach wird wie Satteldach behandelt, aber mit diffTraufFirst = 0
     const effektiveDachArt = dachArt === 'flachdach' ? 'satteldach' : dachArt
@@ -218,6 +228,7 @@ export default function Halle({
                 setEditMenü={setEditMenü}
                 oberflächenAnzeigen={oberflächenAnzeigen}
                 kantenAnzeigen={kantenAnzeigen}
+                sockelhöhe={sockelhöhe}
                 dachArt={effektiveDachArt}
                 pultdachHöheDifferenz={pultdachHöheDifferenz}
             />
@@ -237,8 +248,6 @@ export default function Halle({
                 setEditMenü={setEditMenü}
                 oberflächenAnzeigen={oberflächenAnzeigen}
                 kantenAnzeigen={kantenAnzeigen}
-                dachArt={effektiveDachArt}
-                pultdachHöheDifferenz={pultdachHöheDifferenz}
             />
         ))}
 
@@ -259,8 +268,107 @@ export default function Halle({
             />
         ))}
 
+        {rolltore.map(obj => (
+            <RollTor
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+            />
+        ))}
+
+        {laderampen.map(obj => (
+            <Laderampe
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+            />
+        ))}
+
+        {transparentePaneeleWand.map(obj => (
+            <TransparentesPaneel
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+            />
+        ))}
+
+        {transparentePaneeleDach.map(obj => (
+            <DachTransparentesPaneel
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                zusatzHöheMitte={effektiveDiffTraufFirst}
+                vorne={obj.vorne ?? true}
+            />
+        ))}
+
         {dachLeeröffnungen.map(obj => (
             <DachLeeröffnung
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                zusatzHöheMitte={effektiveDiffTraufFirst}
+                vorne={obj.vorne ?? true}
+            />
+        ))}
+
+        {lichtkuppeln.map(obj => (
+            <LichtKuppel
                 key={obj.id}
                 gebäudeHöhe={gebäudeHöhe}
                 position={koordinate}

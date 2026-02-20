@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Transparente Öffnung für Dach (mit Winkelrotation)
@@ -60,7 +60,7 @@ export default function DachLeeröffnung({
         const zLänge = Math.abs(zEnd - zStart)
 
         const yStart = traufhöhe - 4
-        const yEnd = traufhöhe + 6.2 + pultdachHöheDifferenz
+        const yEnd = traufhöhe - 4 + pultdachHöheDifferenz
         const yDiff = yEnd - yStart
 
         rotation = -Math.atan2(yDiff, zLänge)
@@ -128,27 +128,89 @@ export default function DachLeeröffnung({
     // Satteldach: Öffnung darf nicht über die Firstkante (z) ragen
     if (dachArt === 'satteldach') {
         if (vorne) {
-            // Gegenseite begrenzen
-            minZ = zHinten + (openingArgs[1] / 2) + 1
-            maxZ = z - (openingArgs[1] / 2) - 1
-        } else {
+            // Vordere Seite: von First (z = oben) bis Traufe (zVorne = unten)
             minZ = z - (openingArgs[1] / 2) + 1
             maxZ = zVorne - (openingArgs[1] / 2) - 1
+        } else {
+            // Hintere Seite: von Traufe (zHinten = unten) bis First (z = oben)
+            minZ = zHinten + (openingArgs[1] / 2) - 1
+            maxZ = z - (openingArgs[1] / 2) + 1
         }
     }
 
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
+            window.activeDachPaneelId = objId
             setSelectedObject(found)
             setEditMenü('LeerÖffnung-Bearbeiten')
         }
     }
 
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (window.activeDachPaneelId !== objId) return
+
+            const gridSize = 3
+            const step = gridSize
+
+            setGridPosi(prev => {
+                let newX = prev.x
+                let newZ = prev.z
+
+                switch (event.key) {
+                    case 'ArrowLeft':
+                        if (vorne) {
+                            newX = prev.x - step
+                        } else {
+                            newX = prev.x + step
+                        }
+                        newX = Math.max(minX, Math.min(maxX, newX))
+                        event.preventDefault()
+                        break
+                    case 'ArrowRight':
+                        if (vorne) {
+                            newX = prev.x + step
+                        } else {
+                            newX = prev.x - step
+                        }
+                        newX = Math.max(minX, Math.min(maxX, newX))
+                        event.preventDefault()
+                        break
+                    case 'ArrowUp':
+                        if (vorne) {
+                            newZ = prev.z - step
+                        } else {
+                            newZ = prev.z + step
+                        }
+                        newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        event.preventDefault()
+                        break
+                    case 'ArrowDown':
+                        if (vorne) {
+                            newZ = prev.z + step
+                        } else {
+                            newZ = prev.z - step
+                        }
+                        newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        event.preventDefault()
+                        break
+                    default:
+                        return prev
+                }
+
+                return { x: newX, z: newZ }
+            })
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [objId, minX, maxX, minZ, maxZ, vorne])
+
     const bind = useDrag(({ offset: [offsetX, offsetY], first, last }) => {
         if (!obj) return
 
-        const scale = 50 / size.width
+        const scale = 30 / size.width
         
         // X-Achse (entlang des Dachs) - Richtung abhängig von vorne
         let newX = vorne ? x + (offsetX * scale) : x - (offsetX * scale)
@@ -158,6 +220,7 @@ export default function DachLeeröffnung({
         setGridPosi({ x: newX, z: gridPosi.z })
 
         if (first) {
+            window.activeDachPaneelId = objId
             setOrbitKontrolle(false)
             camera.position.set(0, 80, vorne ? 140 : -140)
         }
