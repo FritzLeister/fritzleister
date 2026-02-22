@@ -47,6 +47,9 @@ export default function DachLeeröffnung({
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ })
     const [isHovered, setIsHovered] = useState(false)
 
+    const skaliertBreite = openingArgs[0] * 2.5
+    const skaliertHöhe = openingArgs[1] * 2.5
+
     // Berechne Dach-Parameter je nach Dachtyp und Seite (vorne/hinten)
     // Die Öffnung wird direkt an der Dachfläche verankert
     let rotation = 0
@@ -95,14 +98,14 @@ export default function DachLeeröffnung({
             const zEnd = zHinten - 1
             const zLänge = Math.abs(zEnd - zStart)
 
-            const yStart = traufhöhe + zusatzHöheMitte - 11
-            const yEnd = traufhöhe - 11
+            const yStart = traufhöhe + zusatzHöheMitte - 4
+            const yEnd = traufhöhe - 4
             const yDiff = yEnd - yStart
 
             rotation = Math.atan2(yDiff, zLänge)
             
             // Y-Position basierend auf Z-Position interpolieren
-            const zNormalized = (gridPosi.z - zStart) / zLänge
+            const zNormalized = (zStart - gridPosi.z) / zLänge
             finalY = yStart + (yDiff * zNormalized)
             finalZ = gridPosi.z
             finalX = gridPosi.x
@@ -120,28 +123,41 @@ export default function DachLeeröffnung({
     }
 
     // Grenzen für Bewegung - beachte die Breite und Höhe der Öffnung
-    const minX = xLinks + (openingArgs[0] / 2) + 1
-    const maxX = xRechts - (openingArgs[0] / 2) - 1
-    let minZ = zHinten + (openingArgs[1] / 2) + 1
-    let maxZ = zVorne - (openingArgs[1] / 2) - 1
+    const minX = xLinks + (skaliertBreite / 2)
+    const maxX = xRechts - (skaliertBreite / 2)
+    let minZ = zHinten + (skaliertHöhe / 2)
+    let maxZ = zVorne - (skaliertHöhe / 2)
 
     // Satteldach: Öffnung darf nicht über die Firstkante (z) ragen
     if (dachArt === 'satteldach') {
         if (vorne) {
             // Vordere Seite: von First (z = oben) bis Traufe (zVorne = unten)
-            minZ = z - (openingArgs[1] / 2) + 1
-            maxZ = zVorne - (openingArgs[1] / 2) - 1
+            minZ = z + (skaliertHöhe / 2)
+            maxZ = zVorne - (skaliertHöhe / 2)
         } else {
             // Hintere Seite: von Traufe (zHinten = unten) bis First (z = oben)
-            minZ = zHinten + (openingArgs[1] / 2) - 1
-            maxZ = z - (openingArgs[1] / 2) + 1
+            minZ = zHinten + (skaliertHöhe / 2)
+            maxZ = z - (skaliertHöhe / 2)
         }
     }
+
+    useEffect(() => {
+        setGridPosi((prev) => {
+            const clampedX = Math.max(minX, Math.min(maxX, prev.x))
+            const clampedZ = Math.max(minZ, Math.min(maxZ, prev.z))
+
+            if (clampedX === prev.x && clampedZ === prev.z) {
+                return prev
+            }
+
+            return { x: clampedX, z: clampedZ }
+        })
+    }, [minX, maxX, minZ, maxZ])
 
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
-            window.activeDachPaneelId = objId
+            window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
             setSelectedObject(found)
             setEditMenü('LeerÖffnung-Bearbeiten')
         }
@@ -149,7 +165,8 @@ export default function DachLeeröffnung({
 
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (window.activeDachPaneelId !== objId) return
+            const active = window.activeArrowControl
+            if (!active || active.kind !== 'dach-leeroeffnung' || active.id !== objId) return
 
             const gridSize = 3
             const step = gridSize
@@ -207,25 +224,31 @@ export default function DachLeeröffnung({
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [objId, minX, maxX, minZ, maxZ, vorne])
 
-    const bind = useDrag(({ offset: [offsetX, offsetY], first, last }) => {
+    const bind = useDrag(({ movement: [mx], first, last, memo }) => {
         if (!obj) return
 
         const scale = 30 / size.width
+        let start = memo
+        if (first || !start) {
+            start = { x: gridPosi.x }
+        }
         
         // X-Achse (entlang des Dachs) - Richtung abhängig von vorne
-        let newX = vorne ? x + (offsetX * scale) : x - (offsetX * scale)
+        let newX = vorne ? start.x + (mx * scale) : start.x - (mx * scale)
         newX = Math.max(minX, Math.min(maxX, newX))
         
         // Z-Position bleibt konstant
         setGridPosi({ x: newX, z: gridPosi.z })
 
         if (first) {
-            window.activeDachPaneelId = objId
+            window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
             setOrbitKontrolle(false)
             camera.position.set(0, 80, vorne ? 140 : -140)
         }
 
         if (last) setOrbitKontrolle(true)
+
+        return start
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -247,7 +270,7 @@ export default function DachLeeröffnung({
             {/* halbtransparentes Glas - durchsichtige Öffnung */}
             {oberflächenAnzeigen && (
                 <mesh position={[0, 0, 0]}>
-                    <boxGeometry args={[openingArgs[0], openingArgs[1], 1]} />
+                    <boxGeometry args={[skaliertBreite, skaliertHöhe, 1]} />
                     <meshStandardMaterial
                         color="#87CEEB"
                         transparent
@@ -264,7 +287,7 @@ export default function DachLeeröffnung({
             {/* feine Umrandung */}
             {kantenAnzeigen && (
                 <lineSegments position={[0, 0, 0]}>
-                    <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(openingArgs[0], openingArgs[1], 1)]} />
+                    <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(skaliertBreite, skaliertHöhe, 1)]} />
                     <lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
                 </lineSegments>
             )}

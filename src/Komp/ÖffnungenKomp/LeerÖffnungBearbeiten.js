@@ -1,18 +1,32 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 
-export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite }) {
+export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
+    const internerMaßstab = 2.5
+    const istLangeWand = selectedObject?.lang ?? true
+    const maxÖffnungsBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
+    const maxÖffnungsHöhe = gebäudeHöhe
+
+    const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
+
     // Pre-füllen mit aktuellen Werten
-    const [öffnungsBreite, setÖffnungsBreite] = useState(selectedObject?.value[0] ?? 12)
-    const [öffnungsHöhe, setÖffnungsHöhe] = useState(selectedObject?.value[1] ?? 8)
+    const [öffnungsBreite, setÖffnungsBreite] = useState(() => clampValue((selectedObject?.value[0] ?? 12) / internerMaßstab, 1, maxÖffnungsBreite))
+    const [öffnungsHöhe, setÖffnungsHöhe] = useState(() => clampValue((selectedObject?.value[1] ?? 8) / internerMaßstab, 1, maxÖffnungsHöhe))
     const [posSegment, setPosSegment] = useState(selectedObject?.posSegment ?? 'mittig')
+
+    useEffect(() => {
+        setÖffnungsBreite((prev) => clampValue(prev, 1, maxÖffnungsBreite))
+        setÖffnungsHöhe((prev) => clampValue(prev, 1, maxÖffnungsHöhe))
+    }, [maxÖffnungsBreite, maxÖffnungsHöhe])
 
     const handleUpdate = () => {
         if (selectedObject) {
+            const sichereBreite = clampValue(öffnungsBreite, 1, maxÖffnungsBreite)
+            const sichereHöhe = clampValue(öffnungsHöhe, 1, maxÖffnungsHöhe)
             setObjs(objs => objs.map(obj => 
                 obj.id === selectedObject.id 
-                    ? { ...obj, value: [öffnungsBreite, öffnungsHöhe], posSegment }
+                    ? { ...obj, value: [sichereBreite * internerMaßstab, sichereHöhe * internerMaßstab], posSegment }
                     : obj
             ))
             setEditMenü(null)
@@ -69,14 +83,14 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                        <span className='text' style={{ fontSize: 12}}>1-{gebäudeBreite}</span>
+                        <span className='text' style={{ fontSize: 12}}>1-{maxÖffnungsBreite}</span>
                     </div>
                     <MuiNumberfield 
                         label={'m'} 
                         min={1} 
-                        max={gebäudeBreite} 
+                        max={maxÖffnungsBreite} 
                         state={öffnungsBreite} 
-                        setState={(value) => setÖffnungsBreite(value + 13)} 
+                        setState={(value) => setÖffnungsBreite(value)} 
                     />
                 </div>
 
@@ -89,15 +103,15 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
                     marginRight: "15px"
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                        <span className='text' style={{ fontSize: 12}}>1-{gebäudeHöhe}</span>
+                        <span className='text' style={{ fontWeight: 200 }}>Höhe</span>
+                        <span className='text' style={{ fontSize: 12 }}>1-{maxÖffnungsHöhe}</span>
                     </div>
                     <MuiNumberfield 
                         label={'m'} 
                         min={1} 
-                        max={gebäudeHöhe} 
+                        max={maxÖffnungsHöhe} 
                         state={öffnungsHöhe} 
-                        setState={(value) => setÖffnungsHöhe(value+13)} 
+                        setState={(value) => setÖffnungsHöhe(value)} 
                     />
                 </div>
 

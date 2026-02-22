@@ -137,6 +137,7 @@ export default function LichtKuppel({
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {
+			window.activeArrowControl = { kind: 'dach-lichtkuppel', id: objId }
 			setSelectedObject(found)
 			setEditMenü('Lichtkuppel-Bearbeiten')
 		}
@@ -144,7 +145,8 @@ export default function LichtKuppel({
 
 	useEffect(() => {
 		const handleKeyDown = (event) => {
-			if (window.activeDachPaneelId !== objId) return
+			const active = window.activeArrowControl
+			if (!active || active.kind !== 'dach-lichtkuppel' || active.id !== objId) return
 
 			const gridSize = 3
 			const step = gridSize
@@ -202,21 +204,27 @@ export default function LichtKuppel({
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [objId, minX, maxX, minZ, maxZ, vorne])
 
-	const bind = useDrag(({ offset: [offsetX, offsetY], first, last }) => {
+	const bind = useDrag(({ movement: [moveX, moveY], first, last, memo }) => {
 		const scale = 400 / size.width
 		const gridSize = 0.6
 
-		let newX = vorne ? x + (offsetX * scale) : x - (offsetX * scale)
+		if (first) {
+			memo = { startX: gridPosi.x, startZ: gridPosi.z }
+		}
+
+		let newX = vorne
+			? memo.startX + (moveX * scale)
+			: memo.startX - (moveX * scale)
 		newX = Math.round(newX / gridSize) * gridSize
 		newX = Math.max(minX, Math.min(maxX, newX))
 
-		let newZ = gridPosi.z
+		let newZ = memo.startZ
 		const zScale = 10 / size.width
 
 		if (vorne) {
-			newZ = gridPosi.z + (offsetY * zScale)
+			newZ = memo.startZ + (moveY * zScale)
 		} else {
-			newZ = gridPosi.z - (offsetY * zScale)
+			newZ = memo.startZ - (moveY * zScale)
 		}
 
 		newZ = Math.round(newZ / gridSize) * gridSize
@@ -225,7 +233,7 @@ export default function LichtKuppel({
 		setGridPosi({ x: newX, z: newZ })
 
 		if (first) {
-			window.activeDachPaneelId = objId
+			window.activeArrowControl = { kind: 'dach-lichtkuppel', id: objId }
 			setIsActive(true)
 			setOrbitKontrolle(false)
 			camera.position.set(0, 125, vorne ? 40 : -40)
@@ -234,6 +242,8 @@ export default function LichtKuppel({
 		if (last) {
 			setOrbitKontrolle(true)
 		}
+
+		return memo
 	})
 
 	const borderColor = isHovered ? '#5aa7ff' : '#000000'

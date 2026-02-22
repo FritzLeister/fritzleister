@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Tür für Wände – basiert auf WandFenster Logik
@@ -54,41 +54,102 @@ export default function TürÖffnung({
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
     const [isHovered, setIsHovered] = useState(false)
 
+    const skaliertBreite = openingArgs[0] * 2.5
+    const skaliertHöhe = openingArgs[1] * 2.5
+    const halbeTürBreite = skaliertBreite / 2
+    const randPuffer = 0.1
+
+    const langeWandMin = xLinks - 1
+    const langeWandMax = xRechts + 1
+
+    const kurzeWandMin = zHinten - 1
+    const kurzeWandMax = zVorne + 1
+
     // Grenzen für lange Wände (X-Achse)
-    const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2
-    const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2
+    const minX = langeWandMin + halbeTürBreite + randPuffer
+    const maxX = langeWandMax - halbeTürBreite - randPuffer
 
     // Grenzen für kurze Wände (Z-Achse)
-    const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2
-    const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2
+    const minZ = kurzeWandMin + halbeTürBreite + randPuffer
+    const maxZ = kurzeWandMax - halbeTürBreite - randPuffer
 
     // Grenzen für Y-Achse (vertikal auf der Wand)
     // minY: ab wo die Massivwand aufhört
     // maxY: bis zum Dachansatz
     // +4 Offset wird bei der Position addiert, daher abziehen
-    const minY = position[1] + (openingArgs[1] / 2) + 0.5 - 4
-    const maxY = position[1] + wandHöhe - (openingArgs[1] / 2) - 1 - 4 + 1
+    const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
+    const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
 
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
+            window.activeArrowControl = { kind: 'wand-tuer', id: objId }
             setSelectedObject(found)
             setEditMenü('Tür-Bearbeiten')
         }
     }
 
-    const bind = useDrag(({ offset: [dragOffsetX, dragOffsetY], first, last }) => {
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            const active = window.activeArrowControl
+            if (!active || active.kind !== 'wand-tuer' || active.id !== objId) return
+
+            const stepHorizontal = 3
+
+            setGridPosi((prev) => {
+                let newX = prev.x
+                let newZ = prev.z
+
+                switch (event.key) {
+                    case 'ArrowLeft':
+                        if (lang) {
+                            newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+                            newX = Math.max(minX, Math.min(maxX, newX))
+                        } else {
+                            newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        }
+                        event.preventDefault()
+                        break
+                    case 'ArrowRight':
+                        if (lang) {
+                            newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+                            newX = Math.max(minX, Math.min(maxX, newX))
+                        } else {
+                            newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        }
+                        event.preventDefault()
+                        break
+                    default:
+                        return prev
+                }
+
+                return { x: newX, z: newZ, y: prev.y }
+            })
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [objId, lang, rechts, minX, maxX, minZ, maxZ])
+
+    const bind = useDrag(({ movement: [dragMoveX], first, last, memo }) => {
         const scale = 80 / size.width
         console.log(obj)
+
+        if (first) {
+            memo = { startX: gridPosi.x, startZ: gridPosi.z }
+        }
 
         if (lang) {
             // Lange Wand: X-Achse bewegen (Richtung abhängig von rechts)
             const dragMultiplier = rechts ? -1 : 1
-            let newX = Math.round(dragMultiplier * dragOffsetX * scale) + x
+            let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
             newX = Math.max(minX, Math.min(maxX, newX))
             setGridPosi({ x: newX, z: gridPosi.z, y: gridPosi.y })
 
             if (first) {
+                window.activeArrowControl = { kind: 'wand-tuer', id: objId }
                 setOrbitKontrolle(false)
                 const dir = rechts ? -1 : 1
                 // camera.position.set(0, 40, dir * 180)
@@ -96,11 +157,12 @@ export default function TürÖffnung({
         } else {
             // Kurze Wand: Z-Achse bewegen (Richtung abhängig von rechts)
             const dragMultiplier = rechts ? 1 : -1
-            let newZ = Math.round(dragMultiplier * dragOffsetX * scale) + position[2]
+            let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
             newZ = Math.max(minZ, Math.min(maxZ, newZ))
             setGridPosi({ x: gridPosi.x, z: newZ, y: gridPosi.y })
 
             if (first) {
+                window.activeArrowControl = { kind: 'wand-tuer', id: objId }
                 setOrbitKontrolle(false)
                 const dir = rechts ? -1 : 1
                 // camera.position.set(dir * 180, 40, 0)
@@ -108,6 +170,8 @@ export default function TürÖffnung({
         }
 
         if (last) setOrbitKontrolle(true)
+
+        return memo
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -119,8 +183,8 @@ export default function TürÖffnung({
     const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
     const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
     
-    const breite = openingArgs[0] * 1.9
-    const höhe = openingArgs[1] * 0.9
+    const breite = skaliertBreite
+    const höhe = skaliertHöhe
     const isDoubleDoor = obj?.doppeltür === 'ja'
     const doubleGap = 0
     const leafWidth = isDoubleDoor ? (breite - doubleGap) / 2 : breite

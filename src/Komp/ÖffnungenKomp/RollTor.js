@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 
@@ -52,45 +52,114 @@ export default function RollTor({
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
 	const [isHovered, setIsHovered] = useState(false)
 
-	const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2
-	const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2
-	const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2
-	const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2
-	const minY = position[1] + (openingArgs[1] / 2) + 0.5 - 4
-	const maxY = position[1] + wandHöhe - (openingArgs[1] / 2) - 1 - 4 + 1
+	const skaliertBreite = openingArgs[0] * 2.5
+	const skaliertHöhe = openingArgs[1] * 2.5
+	const rollkastenBreiteFürGrenzen = skaliertBreite + 0.3
+	const motorBreiteFürGrenzen = 0.26
+	const halbeRolltorBreite = Math.max(
+		skaliertBreite / 2,
+		rollkastenBreiteFürGrenzen / 2 + motorBreiteFürGrenzen - 0.02
+	)
+	const randPuffer = 0.1
+
+	const langeWandMin = xLinks - 1
+	const langeWandMax = xRechts + 1
+
+	const kurzeWandMin = zHinten - 1
+	const kurzeWandMax = zVorne + 1
+
+	const minX = langeWandMin + halbeRolltorBreite + randPuffer
+	const maxX = langeWandMax - halbeRolltorBreite - randPuffer
+	const minZ = kurzeWandMin + halbeRolltorBreite + randPuffer
+	const maxZ = kurzeWandMax - halbeRolltorBreite - randPuffer
+	const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
+	const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
 
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {
+			window.activeArrowControl = { kind: 'wand-rolltor', id: objId }
 			setSelectedObject(found)
 			setEditMenü('Rolltor-Bearbeiten')
 		}
 	}
 
-	const bind = useDrag(({ offset: [dragOffsetX], first, last }) => {
+	useEffect(() => {
+		const handleKeyDown = (event) => {
+			const active = window.activeArrowControl
+			if (!active || active.kind !== 'wand-rolltor' || active.id !== objId) return
+
+			const stepHorizontal = 3
+
+			setGridPosi((prev) => {
+				let newX = prev.x
+				let newZ = prev.z
+
+				switch (event.key) {
+					case 'ArrowLeft':
+						if (lang) {
+							newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+							newX = Math.max(minX, Math.min(maxX, newX))
+						} else {
+							newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = Math.max(minZ, Math.min(maxZ, newZ))
+						}
+						event.preventDefault()
+						break
+					case 'ArrowRight':
+						if (lang) {
+							newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+							newX = Math.max(minX, Math.min(maxX, newX))
+						} else {
+							newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = Math.max(minZ, Math.min(maxZ, newZ))
+						}
+						event.preventDefault()
+						break
+					default:
+						return prev
+				}
+
+				return { x: newX, z: newZ, y: prev.y }
+			})
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [objId, lang, rechts, minX, maxX, minZ, maxZ])
+
+	const bind = useDrag(({ movement: [dragMoveX], first, last, memo }) => {
 		const scale = 80 / size.width
+
+		if (first) {
+			memo = { startX: gridPosi.x, startZ: gridPosi.z }
+		}
 
 		if (lang) {
 			const dragMultiplier = rechts ? -1 : 1
-			let newX = Math.round(dragMultiplier * dragOffsetX * scale) + x
+			let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
 			newX = Math.max(minX, Math.min(maxX, newX))
 			setGridPosi({ x: newX, z: gridPosi.z, y: gridPosi.y })
 
 			if (first) {
+				window.activeArrowControl = { kind: 'wand-rolltor', id: objId }
 				setOrbitKontrolle(false)
 			}
 		} else {
 			const dragMultiplier = rechts ? 1 : -1
-			let newZ = Math.round(dragMultiplier * dragOffsetX * scale) + position[2]
+			let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
 			newZ = Math.max(minZ, Math.min(maxZ, newZ))
 			setGridPosi({ x: gridPosi.x, z: newZ, y: gridPosi.y })
 
 			if (first) {
+				window.activeArrowControl = { kind: 'wand-rolltor', id: objId }
 				setOrbitKontrolle(false)
 			}
 		}
 
 		if (last) setOrbitKontrolle(true)
+
+		return memo
 	})
 
 	const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -101,8 +170,8 @@ export default function RollTor({
 	const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
 	const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
 
-	const breite = torBreite
-	const höhe = torHöhe
+	const breite = skaliertBreite
+	const höhe = skaliertHöhe
 	const finalY = position[1] + 0.2 + (höhe / 2)
 
 	const colorMap = {
@@ -132,7 +201,7 @@ export default function RollTor({
 	const rollkastenFeinOffset = öffnet === 'innen' ? 0.35 : -0.35
 	const rollkastenFinalZ = rollkastenZ + rollkastenFeinOffset
 	const rollkastenY = höhe / 2 + rollkastenHöhe / 2 - 0.02
-	const reflektorZ = normalSign * (tiefe / 2 + 0.22)
+	const reflektorZ = tiefe / 2 + 0.22
 
 	const motorBreite = 0.26
 	const motorHöhe = 0.32
@@ -140,6 +209,11 @@ export default function RollTor({
 	const motorX = motorPlatzierung === 'links'
 		? -rollkastenBreite / 2 - motorBreite / 2 + 0.02
 		: rollkastenBreite / 2 + motorBreite / 2 - 0.02
+
+	let rolltorRotation = [0, 0, 0]
+	if (lang && rechts) rolltorRotation = [0, Math.PI, 0]
+	if (!lang && rechts) rolltorRotation = [0, -Math.PI / 2, 0]
+	if (!lang && !rechts) rolltorRotation = [0, Math.PI / 2, 0]
 
 	return (
 		<group
@@ -149,7 +223,7 @@ export default function RollTor({
 			onClick={handleClick}
 			onPointerOver={() => setIsHovered(true)}
 			onPointerOut={() => setIsHovered(false)}
-			rotation={lang ? [0, 0, 0] : [0, Math.PI * 90 / 180, 0]}
+			rotation={rolltorRotation}
 		>
 			{oberflächenAnzeigen && (
 				<>

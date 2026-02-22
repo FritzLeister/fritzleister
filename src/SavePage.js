@@ -11,10 +11,11 @@ export default function SavePage({
     setHallenartSelection,
     setDachSelection,
     hallenSave,
-    setObjs
+    setObjs,
+    initialSchirm = "preis"
 }) {
 
-    const [schirm, setSchirm] = useState("preis")
+    const [schirm, setSchirm] = useState(initialSchirm)
 
     return(
         <>

@@ -9,6 +9,16 @@ export default function AnfrageFormular({
     setHallenartSelection
 }) {
 
+    function handleSubmit(e) {
+        e.preventDefault();
+        setSchirm("ende");
+        setBreite(30);
+        setLänge(70);
+        setHöhe(6);
+        setDachSelection("");
+        setHallenartSelection("");
+    }
+
     return(
         <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", padding: "20px" }}>
@@ -36,6 +46,7 @@ export default function AnfrageFormular({
                     }}
                     >
                         <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 0 }} />
+                        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
                         
                         <h2 style={{ fontSize: 40, marginBottom: 20 }}>Kontaktformular</h2>
 
@@ -51,7 +62,7 @@ export default function AnfrageFormular({
 
                             <p style={{ marginTop: 0 }}>
                                 <p className="label">USt.-IdNr.</p>
-                                <input type="text" style={{ width: '100%', boxSizing: 'border-box' }}></input>
+                                <input type="text" required style={{ width: '100%', boxSizing: 'border-box' }}></input>
                             </p>
 
                             <p style={{ marginTop: 0 }}>
@@ -85,7 +96,7 @@ export default function AnfrageFormular({
 
                             <p style={{ marginTop: 0 }}>
                                 <p className="label">GPS-Koordinaten</p>
-                                <input type="text" style={{ width: '100%', boxSizing: 'border-box' }}></input>
+                                <input type="text" required style={{ width: '100%', boxSizing: 'border-box' }}></input>
                             </p>
 
                             <p style={{ marginTop: 0 }}>
@@ -118,16 +129,10 @@ export default function AnfrageFormular({
                             ></textarea>
                         </p>
 
-                        <button type="submit" className="buttonDark" onClick={() => (
-                            setSchirm("ende"),
-                            setBreite(7),
-                            setLänge(15),
-                            setHöhe(13),
-                            setDachSelection(""),
-                            setHallenartSelection("")
-                            )} style={{ height: 10 }}>
+                        <button type="submit" className="buttonDark" style={{ height: 10 }}>
                             Anfrage senden
                         </button>
+                        </form>
 
                     </div>
                 </div>

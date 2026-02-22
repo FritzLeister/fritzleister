@@ -1,7 +1,7 @@
 
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 import Reflektor from './Reflektor'
@@ -57,45 +57,118 @@ export default function WandFenster({
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
     const [isHovered, setIsHovered] = useState(false)
 
+    const skaliertBreite = openingArgs[0] * 2.5
+    const skaliertHöhe = openingArgs[1] * 2.5
+    const halbeFensterBreite = skaliertBreite / 2
+    const randPuffer = 0.1
+
+    const langeWandMin = xLinks
+    const langeWandMax = xRechts
+
+    const kurzeWandMin = zHinten
+    const kurzeWandMax = zVorne
+
     // Grenzen für lange Wände (X-Achse)
-    const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2
-    const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2
+    const minX = langeWandMin + halbeFensterBreite + randPuffer
+    const maxX = langeWandMax - halbeFensterBreite - randPuffer
 
     // Grenzen für kurze Wände (Z-Achse)
-    const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2
-    const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2
+    const minZ = kurzeWandMin + halbeFensterBreite + randPuffer
+    const maxZ = kurzeWandMax - halbeFensterBreite - randPuffer
 
     // Grenzen für Y-Achse (vertikal auf der Wand)
     // minY: ab wo die Massivwand aufhört
     // maxY: bis zum Dachansatz
     // +4 Offset wird bei der Position addiert, daher abziehen
-    const minY = position[1] + (openingArgs[1] / 2) + 0.5 - 4
-    const maxY = position[1] + wandHöhe - (openingArgs[1] / 2) - 1 - 4 + 1
+    const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
+    const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
 
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
+            window.activeArrowControl = { kind: 'wand-fenster', id: objId }
             setSelectedObject(found)
             setEditMenü('Fenster-Bearbeiten')
         }
     }
 
-    const bind = useDrag(({ offset: [dragOffsetX, dragOffsetY], first, last }) => {
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            const active = window.activeArrowControl
+            if (!active || active.kind !== 'wand-fenster' || active.id !== objId) return
+
+            const stepHorizontal = 3
+            const stepVertical = 0.25
+
+            setGridPosi((prev) => {
+                let newX = prev.x
+                let newZ = prev.z
+                let newY = prev.y
+
+                switch (event.key) {
+                    case 'ArrowLeft':
+                        if (lang) {
+                            newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+                            newX = Math.max(minX, Math.min(maxX, newX))
+                        } else {
+                            newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        }
+                        event.preventDefault()
+                        break
+                    case 'ArrowRight':
+                        if (lang) {
+                            newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+                            newX = Math.max(minX, Math.min(maxX, newX))
+                        } else {
+                            newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        }
+                        event.preventDefault()
+                        break
+                    case 'ArrowUp':
+                        newY = prev.y + stepVertical
+                        newY = Math.max(minY, Math.min(maxY, newY))
+                        event.preventDefault()
+                        break
+                    case 'ArrowDown':
+                        newY = prev.y - stepVertical
+                        newY = Math.max(minY, Math.min(maxY, newY))
+                        event.preventDefault()
+                        break
+                    default:
+                        return prev
+                }
+
+                return { x: newX, z: newZ, y: newY }
+            })
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY])
+
+    const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
         const scale = 80 / size.width
         const scaleY = scale * 0.05
 
+        if (first) {
+            memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
+        }
+
         // Y-Achse (vertikal) - funktioniert immer
-        let newY = gridPosi.y - (dragOffsetY * scaleY)
+        let newY = memo.startY - (dragMoveY * scaleY)
         newY = Math.max(minY, Math.min(maxY, newY))
 
         if (lang) {
             // Lange Wand: X-Achse bewegen (Richtung abhängig von rechts)
             const dragMultiplier = rechts ? -1 : 1
-            let newX = Math.round(dragMultiplier * dragOffsetX * scale) + x
+            let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
             newX = Math.max(minX, Math.min(maxX, newX))
             setGridPosi({ x: newX, z: gridPosi.z, y: newY })
 
             if (first) {
+                window.activeArrowControl = { kind: 'wand-fenster', id: objId }
                 setOrbitKontrolle(false)
                 const dir = rechts ? -1 : 1
                 // camera.position.set(0, 40, dir * 180)
@@ -103,11 +176,12 @@ export default function WandFenster({
         } else {
             // Kurze Wand: Z-Achse bewegen (Richtung abhängig von rechts)
             const dragMultiplier = rechts ? 1 : -1
-            let newZ = Math.round(dragMultiplier * dragOffsetX * scale) + position[2]
+            let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
             newZ = Math.max(minZ, Math.min(maxZ, newZ))
             setGridPosi({ x: gridPosi.x, z: newZ, y: newY })
 
             if (first) {
+                window.activeArrowControl = { kind: 'wand-fenster', id: objId }
                 setOrbitKontrolle(false)
                 const dir = rechts ? -1 : 1
                 // camera.position.set(dir * 180, 40, 0)
@@ -115,6 +189,8 @@ export default function WandFenster({
         }
 
         if (last) setOrbitKontrolle(true)
+
+        return memo
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -128,8 +204,8 @@ export default function WandFenster({
     const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
     const finalY = gridPosi.y
 
-    const breite = openingArgs[0]
-    const höhe = openingArgs[1]
+    const breite = skaliertBreite
+    const höhe = skaliertHöhe
     const sprossenX = obj?.sprossenX ?? 0
     const sprossenY = obj?.sprossenY ?? 0
     // Fensterfarbe dynamisch

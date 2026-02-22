@@ -402,7 +402,7 @@ export default function Halle({
         {/* Abmessungen auf dem Boden */}
         {abmessungenAnzeigen && (
             <>
-            <Abmessungen koordinate={koordinate} bodenLänge={bodenLänge} bodenBreite={bodenBreite} editMenü={editMenü} />
+            <Abmessungen koordinate={koordinate} bodenLänge={bodenLänge} bodenBreite={bodenBreite} gebäudeHöhe={gebäudeHöhe} editMenü={editMenü} dachArt={effektiveDachArt} pultdachHöheDifferenz={pultdachHöheDifferenz} />
             {editMenü === 'Felder' && (
                 <>
                     <AbgrenzungAbmessung 

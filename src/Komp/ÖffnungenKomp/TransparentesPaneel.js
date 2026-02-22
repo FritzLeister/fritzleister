@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Transparentes Paneel für Wände – Glasfläche mit vertikalen Profilen
@@ -22,8 +22,8 @@ export default function TransparentesPaneel({
 }) {
 	const obj = objs.find(o => o.id === objId)
 	const openingArgs = obj ? [obj.value[0], obj.value[1]] : [3, 3]
-	const paneelBreite = openingArgs[0]
-	const paneelHöhe = openingArgs[1]
+	const paneelBreite = openingArgs[0] * 2.5
+	const paneelHöhe = openingArgs[1] * 2.5
 
 	const rechts = obj?.rechts ?? true
 	const lang = obj?.lang ?? true
@@ -51,11 +51,19 @@ export default function TransparentesPaneel({
 	const initialY = obj?.startPos?.y ?? defaultY
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
 	const [isHovered, setIsHovered] = useState(false)
+	const halbePaneelBreite = paneelBreite / 2
+	const randPuffer = 0.1
 
-	const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2
-	const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2
-	const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2
-	const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2
+	const langeWandMin = xLinks - 1
+	const langeWandMax = xRechts + 1
+
+	const kurzeWandMin = zHinten - 1
+	const kurzeWandMax = zVorne + 1
+
+	const minX = langeWandMin + halbePaneelBreite + randPuffer
+	const maxX = langeWandMax - halbePaneelBreite - randPuffer
+	const minZ = kurzeWandMin + halbePaneelBreite + randPuffer
+	const maxZ = kurzeWandMax - halbePaneelBreite - randPuffer
 
 	const minY = position[1] + sockelhöhe + (paneelHöhe / 2)
 	const maxY = position[1] + 0.2 + wandHöhe - (paneelHöhe / 2) + 0.48
@@ -63,38 +71,102 @@ export default function TransparentesPaneel({
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {
+			window.activeArrowControl = { kind: 'wand-transparentespaneel', id: objId }
 			setSelectedObject(found)
 			setEditMenü('TransparentesPaneel-Bearbeiten')
 		}
 	}
 
-	const bind = useDrag(({ offset: [dragOffsetX, dragOffsetY], first, last }) => {
+	useEffect(() => {
+		const handleKeyDown = (event) => {
+			const active = window.activeArrowControl
+			if (!active || active.kind !== 'wand-transparentespaneel' || active.id !== objId) return
+
+			const stepHorizontal = 3
+			const stepVertical = 0.25
+
+			setGridPosi((prev) => {
+				let newX = prev.x
+				let newZ = prev.z
+				let newY = prev.y
+
+				switch (event.key) {
+					case 'ArrowLeft':
+						if (lang) {
+							newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+							newX = Math.max(minX, Math.min(maxX, newX))
+						} else {
+							newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = Math.max(minZ, Math.min(maxZ, newZ))
+						}
+						event.preventDefault()
+						break
+					case 'ArrowRight':
+						if (lang) {
+							newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+							newX = Math.max(minX, Math.min(maxX, newX))
+						} else {
+							newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = Math.max(minZ, Math.min(maxZ, newZ))
+						}
+						event.preventDefault()
+						break
+					case 'ArrowUp':
+						newY = prev.y + stepVertical
+						newY = Math.max(minY, Math.min(maxY, newY))
+						event.preventDefault()
+						break
+					case 'ArrowDown':
+						newY = prev.y - stepVertical
+						newY = Math.max(minY, Math.min(maxY, newY))
+						event.preventDefault()
+						break
+					default:
+						return prev
+				}
+
+				return { x: newX, z: newZ, y: newY }
+			})
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY])
+
+	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 80 / size.width
 
-		let nextX = gridPosi.x
-		let nextZ = gridPosi.z
+		if (first) {
+			memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
+		}
+
+		let nextX = memo.startX
+		let nextZ = memo.startZ
 
 		if (lang) {
 			const dragMultiplier = rechts ? -1 : 1
-			nextX = Math.round(dragMultiplier * dragOffsetX * scale) + x
+			nextX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
 			nextX = Math.max(minX, Math.min(maxX, nextX))
 		} else {
 			const dragMultiplier = rechts ? 1 : -1
-			nextZ = Math.round(dragMultiplier * dragOffsetX * scale) + position[2]
+			nextZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
 			nextZ = Math.max(minZ, Math.min(maxZ, nextZ))
 		}
 
-		const yDelta = Math.round(-dragOffsetY * scale)
-		let nextY = initialY + yDelta
+		const yDelta = Math.round(-dragMoveY * scale)
+		let nextY = memo.startY + yDelta
 		nextY = Math.max(minY, Math.min(maxY, nextY))
 
 		setGridPosi({ x: nextX, z: nextZ, y: nextY })
 
 		if (first) {
+			window.activeArrowControl = { kind: 'wand-transparentespaneel', id: objId }
 			setOrbitKontrolle(false)
 		}
 
 		if (last) setOrbitKontrolle(true)
+
+		return memo
 	})
 
 	const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -112,6 +184,11 @@ export default function TransparentesPaneel({
 	const profilAbstand = 0.9
 	const profilCount = Math.max(2, Math.floor((breite - 0.25) / profilAbstand))
 
+	let paneelRotation = [0, 0, 0]
+	if (lang && rechts) paneelRotation = [0, Math.PI, 0]
+	if (!lang && rechts) paneelRotation = [0, -Math.PI / 2, 0]
+	if (!lang && !rechts) paneelRotation = [0, Math.PI / 2, 0]
+
 	return (
 		<group
 			position={[finalX, finalY, finalZ]}
@@ -120,7 +197,7 @@ export default function TransparentesPaneel({
 			onClick={handleClick}
 			onPointerOver={() => setIsHovered(true)}
 			onPointerOut={() => setIsHovered(false)}
-			rotation={lang ? [0, 0, 0] : [0, Math.PI * 90 / 180, 0]}
+			rotation={paneelRotation}
 		>
 			{oberflächenAnzeigen && (
 				<>

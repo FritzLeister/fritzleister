@@ -1,8 +1,9 @@
 import { Text } from "@react-three/drei"
 import { useMemo } from "react"
 import MaßLinie from "./Maßlinie"
+import AbmessungenHöhe from "./AbmessungenHöhe"
 
-export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abstand = 1, editMenü }) {
+export default function Abmessungen({ bodenLänge, bodenBreite, gebäudeHöhe, koordinate, abstand = 1, editMenü, dachArt, pultdachHöheDifferenz = 0 }) {
     const längeInMeter = useMemo(() => Math.round(bodenLänge/2.5), [bodenLänge])
     const breiteInMeter = useMemo(() => Math.round(bodenBreite/2.5), [bodenBreite])
     
@@ -226,6 +227,16 @@ export default function Abmessungen({ bodenLänge, bodenBreite, koordinate, abst
                 labelOffset={[1, 0, 0]}
             />
         </group>
+
+        <AbmessungenHöhe
+            koordinate={koordinate}
+            bodenLänge={bodenLänge}
+            bodenBreite={bodenBreite}
+            gebäudeHöhe={gebäudeHöhe}
+            editMenü={editMenü}
+            dachArt={dachArt}
+            pultdachHöheDifferenz={pultdachHöheDifferenz}
+        />
         </>
     )
 }

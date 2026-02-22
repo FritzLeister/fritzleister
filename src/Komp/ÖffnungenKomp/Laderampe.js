@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 
@@ -19,12 +19,14 @@ export default function Laderampe({
 }) {
 	const obj = objs.find(o => o.id === objId)
 	const openingArgs = obj ? [obj.value[0], obj.value[1]] : [3.5, 4.5]
+	const skaliertBreite = openingArgs[0] * 2.5
+	const skaliertHöhe = openingArgs[1] * 2.5
 
 	const rechts = obj?.rechts ?? true
 	const lang = obj?.lang ?? true
 
 	const x = position[0]
-	const y = position[1] + (gebäudeHöhe / 6) - 0.4 - ((gebäudeHöhe - 15) / 6) - 2 + ((openingArgs[1] - 1) / 4)
+	const y = position[1] + (gebäudeHöhe / 6) - 0.4 - ((gebäudeHöhe - 15) / 6) - 2 + ((skaliertHöhe - 1) / 4)
 
 	const zVorne = position[2] + 6.5 + (0.5 * (bodenBreite - 15))
 	const zHinten = position[2] - 6.5 - (0.5 * (bodenBreite - 15))
@@ -42,38 +44,105 @@ export default function Laderampe({
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
 	const [isHovered, setIsHovered] = useState(false)
 
-	const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2 + 1.5
-	const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2 - 1.5
-	const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2 + 1.5
-	const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2 - 1.5
+	const überdachungBreiteFürGrenzen = skaliertBreite + 0.25
+	const halbeLaderampenBreite = überdachungBreiteFürGrenzen / 2
+	const randPuffer = 0.1
+
+	const langeWandMin = xLinks - 1
+	const langeWandMax = xRechts + 1
+
+	const kurzeWandMin = zHinten - 1
+	const kurzeWandMax = zVorne + 1
+
+	const minX = langeWandMin + halbeLaderampenBreite + randPuffer
+	const maxX = langeWandMax - halbeLaderampenBreite - randPuffer
+	const minZ = kurzeWandMin + halbeLaderampenBreite + randPuffer
+	const maxZ = kurzeWandMax - halbeLaderampenBreite - randPuffer
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {
+			window.activeArrowControl = { kind: 'wand-laderampe', id: objId }
 			setSelectedObject(found)
 			setEditMenü('Laderampe-Bearbeiten')
 		}
 	}
 
-	const bind = useDrag(({ offset: [dragOffsetX], first, last }) => {
+	useEffect(() => {
+		const handleKeyDown = (event) => {
+			const active = window.activeArrowControl
+			if (!active || active.kind !== 'wand-laderampe' || active.id !== objId) return
+
+			const stepHorizontal = 3
+
+			setGridPosi((prev) => {
+				let newX = prev.x
+				let newZ = prev.z
+
+				switch (event.key) {
+					case 'ArrowLeft':
+						if (lang) {
+							newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+							newX = Math.max(minX, Math.min(maxX, newX))
+						} else {
+							newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = Math.max(minZ, Math.min(maxZ, newZ))
+						}
+						event.preventDefault()
+						break
+					case 'ArrowRight':
+						if (lang) {
+							newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+							newX = Math.max(minX, Math.min(maxX, newX))
+						} else {
+							newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = Math.max(minZ, Math.min(maxZ, newZ))
+						}
+						event.preventDefault()
+						break
+					default:
+						return prev
+				}
+
+				return { x: newX, z: newZ, y: prev.y }
+			})
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [objId, lang, rechts, minX, maxX, minZ, maxZ])
+
+	const bind = useDrag(({ movement: [dragMoveX], first, last, memo }) => {
 		const scale = 80 / size.width
+
+		if (first) {
+			memo = { startX: gridPosi.x, startZ: gridPosi.z }
+		}
 
 		if (lang) {
 			const dragMultiplier = rechts ? -1 : 1
-			let newX = Math.round(dragMultiplier * dragOffsetX * scale) + x
+			let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
 			newX = Math.max(minX, Math.min(maxX, newX))
 			setGridPosi({ x: newX, z: gridPosi.z, y: gridPosi.y })
 
-			if (first) setOrbitKontrolle(false)
+			if (first) {
+				window.activeArrowControl = { kind: 'wand-laderampe', id: objId }
+				setOrbitKontrolle(false)
+			}
 		} else {
 			const dragMultiplier = rechts ? 1 : -1
-			let newZ = Math.round(dragMultiplier * dragOffsetX * scale) + position[2]
+			let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
 			newZ = Math.max(minZ, Math.min(maxZ, newZ))
 			setGridPosi({ x: gridPosi.x, z: newZ, y: gridPosi.y })
 
-			if (first) setOrbitKontrolle(false)
+			if (first) {
+				window.activeArrowControl = { kind: 'wand-laderampe', id: objId }
+				setOrbitKontrolle(false)
+			}
 		}
 
 		if (last) setOrbitKontrolle(true)
+
+		return memo
 	})
 
 	const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -84,9 +153,9 @@ export default function Laderampe({
 	const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
 	const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
 
-	const breite = openingArgs[0]
-	const höhe = openingArgs[1]
-	const rampenhöhe = Math.max(0, obj?.rampenhöhe ?? 0.8)
+	const breite = skaliertBreite
+	const höhe = skaliertHöhe
+	const rampenhöhe = Math.max(0, (obj?.rampenhöhe ?? 0.8) * 2.5)
 	const laderampeTyp = obj?.typ ?? 'ladehaus'
 	const istLadehaus = laderampeTyp === 'ladehaus'
 	const istVerladehütte = laderampeTyp === 'verladehütte'
@@ -112,10 +181,10 @@ export default function Laderampe({
 
 	const reflektor = obj?.reflektor ?? 'keine'
 	const hatSchlupftür = obj?.schlupftür === 'ja'
-	const schlupftürBreite = hatSchlupftür ? (obj?.schlupftürBreite ?? 1) : 0
-	const schlupftürHöheRoh = hatSchlupftür ? (obj?.schlupftürHöhe ?? 2) : 0
+	const schlupftürBreite = hatSchlupftür ? ((obj?.schlupftürBreite ?? 1) * 2.5) : 0
+	const schlupftürHöheRoh = hatSchlupftür ? ((obj?.schlupftürHöhe ?? 2) * 2.5) : 0
 	const schlupftürHöhe = Math.max(0.2, Math.min(höhe - 0.1, schlupftürHöheRoh))
-	const schlupftürDistanzX = hatSchlupftür ? (obj?.schlupftürDistanzX ?? 0) : 0
+	const schlupftürDistanzX = hatSchlupftür ? ((obj?.schlupftürDistanzX ?? 0) * 2.5) : 0
 	const schlupftürMaxDistanzX = Math.max(0.1, (breite - schlupftürBreite) / 2 - 0.1)
 	const schlupftürDistanzXBegrenzt = Math.max(-schlupftürMaxDistanzX, Math.min(schlupftürMaxDistanzX, schlupftürDistanzX))
 	const schlupftürOrientierung = hatSchlupftür ? (obj?.schlupftürOrientierung ?? 'rechts') : 'rechts'
@@ -124,9 +193,9 @@ export default function Laderampe({
 	const schlupftürRahmenFarbe = '#776c6c'
 	const lamellenAnzahl = Math.max(8, Math.min(28, Math.round(höhe / 0.18)))
 	const lamellenHöhe = höhe / lamellenAnzahl
-	const lamellenTiefe = 0.1
+	const lamellenTiefe = 0.02
 	const laderampenPlatteHöhe = 0.15
-	const laderampenBasisTiefe = Math.max(0.05, obj?.länge ?? 2)
+	const laderampenBasisTiefe = Math.max(0.05, (obj?.länge ?? 2) * 2.5)
 	const rampenAuszugZ = 0
 	const laderampenPlatteTiefe = laderampenBasisTiefe + Math.max(0, rampenAuszugZ)
 	const laderampenPlatteOffsetZ = (laderampenPlatteTiefe / 2) + 0.02
@@ -329,6 +398,34 @@ export default function Laderampe({
 				<>
 					<lineSegments>
 						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(breite, höhe, tiefe)]} />
+						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+					</lineSegments>
+
+					<lineSegments position={[-umrandungX, außenwandY, laderampenPlatteOffsetZ]}>
+						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(umrandungDicke, außenwandHöhe, laderampenPlatteTiefe)]} />
+						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+					</lineSegments>
+					<lineSegments position={[umrandungX, außenwandY, laderampenPlatteOffsetZ]}>
+						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(umrandungDicke, außenwandHöhe, laderampenPlatteTiefe)]} />
+						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+					</lineSegments>
+
+					<lineSegments position={[-außenwandAbdeckungPosX, 0, laderampenPlatteOffsetZ * 2]}>
+						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(außenwandAbdeckungDicke, außenwandAbdeckungHöhe, außenwandAbdeckungTiefe)]} />
+						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+					</lineSegments>
+					<lineSegments position={[außenwandAbdeckungPosX, 0, laderampenPlatteOffsetZ * 2]}>
+						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(außenwandAbdeckungDicke, außenwandAbdeckungHöhe, außenwandAbdeckungTiefe)]} />
+						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+					</lineSegments>
+
+					<lineSegments position={[0, zwischenMeshY, laderampenPlatteOffsetZ * 2]}>
+						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(breite + 0.2, zwischenMeshHöhe + 0.225, außenwandAbdeckungTiefe)]} />
+						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+					</lineSegments>
+
+					<lineSegments position={[0, höhe / 2 + (überdachungDicke / 2), laderampenPlatteOffsetZ]}>
+						<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(breite + 0.25, überdachungDicke, laderampenPlatteTiefe)]} />
 						<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
 					</lineSegments>
 				</>

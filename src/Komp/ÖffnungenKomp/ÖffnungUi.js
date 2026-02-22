@@ -168,6 +168,8 @@ export default function ÖffnungUi({
         'Hinzufügen Laderampe'
     ])
 
+    const maxLeeröffnungHöhe = wand === false ? Math.floor(gebäudeBreite / 2) : gebäudeHöhe
+
     return(
         <>
             <div style={{
@@ -2565,12 +2567,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{wand === false ? Math.floor(gebäudeBreite / 2) : gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>1-{maxLeeröffnungHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={1} 
-                                    max={wand === false ? Math.floor(gebäudeBreite / 2) : gebäudeHöhe} 
+                                    max={maxLeeröffnungHöhe} 
                                     state={öffnungsHöhe} 
                                     setState={setÖffnungsHöhe} 
                                 />
@@ -2604,7 +2606,7 @@ export default function ÖffnungUi({
                                 </button>
                                 <button
                                     onClick={() => {
-                                        addObj([öffnungsBreite + 13, öffnungsHöhe + 13], 'leeröffnung', newId, rechts, clickedButtonPos, lang, {
+                                        addObj([öffnungsBreite*2.5, öffnungsHöhe*2.5], 'leeröffnung', newId, rechts, clickedButtonPos, lang, {
                                             posSegment: 'mittig',
                                             vorne: clickedButtonPos?.vorne ?? true
                                         })

@@ -142,6 +142,7 @@ export default function DachTransparentesPaneel({
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
+            window.activeArrowControl = { kind: 'dach-transparentespaneel', id: objId }
             setSelectedObject(found)
             setEditMenü('TransparentesPaneel-Bearbeiten')
         }
@@ -151,7 +152,8 @@ export default function DachTransparentesPaneel({
     useEffect(() => {
         const handleKeyDown = (event) => {
             // Nur reagieren wenn DIESES Paneel aktiv ist
-            if (window.activeDachPaneelId !== objId) return
+            const active = window.activeArrowControl
+            if (!active || active.kind !== 'dach-transparentespaneel' || active.id !== objId) return
 
             const gridSize = 3
             const step = gridSize
@@ -209,33 +211,29 @@ export default function DachTransparentesPaneel({
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [objId, minX, maxX, minZ, maxZ, vorne])
 
-    const bind = useDrag(({ offset: [offsetX, offsetY], first, last }) => {
+    const bind = useDrag(({ movement: [mx, my], first, last, memo }) => {
         const scale = 400 / size.width
+        const zScale = 10 / size.width
         const gridSize = 0.6 // Feineres Raster für sofortiges Feedback
 
-        let newX = vorne ? x + (offsetX * scale) : x - (offsetX * scale)
+        let start = memo
+        if (first || !start) {
+            start = { x: gridPosi.x, z: gridPosi.z }
+        }
+
+        let newX = vorne ? start.x + (mx * scale) : start.x - (mx * scale)
         newX = Math.round(newX / gridSize) * gridSize // Auf Raster snappen
         newX = Math.max(minX, Math.min(maxX, newX))
 
         // Vertikale Bewegung auf dem Dach - Richtung ist unterschiedlich für vorne/hinten
-        let newZ = gridPosi.z
-        const zScale = 10 / size.width
-        
-        if (vorne) {
-            // Vorne: Z kleiner = höher auf Dach, also offsetY positiv (nach unten) → Z größer
-            newZ = gridPosi.z + (offsetY * zScale)
-        } else {
-            // Hinten: Z größer = höher auf Dach, also offsetY positiv (nach unten) → Z kleiner
-            newZ = gridPosi.z - (offsetY * zScale)
-        }
-        
+        let newZ = vorne ? start.z + (my * zScale) : start.z - (my * zScale)
         newZ = Math.round(newZ / gridSize) * gridSize // Auf Raster snappen
         newZ = Math.max(minZ, Math.min(maxZ, newZ))
 
         setGridPosi({ x: newX, z: newZ })
 
         if (first) {
-            window.activeDachPaneelId = objId // Panel wird aktiv und gespeichert
+            window.activeArrowControl = { kind: 'dach-transparentespaneel', id: objId }
             setIsActive(true)
             setOrbitKontrolle(false)
             camera.position.set(0, 125, vorne ? 40 : -40)
@@ -245,6 +243,8 @@ export default function DachTransparentesPaneel({
             setOrbitKontrolle(true)
             // Panel BLEIBT aktiv wenn nicht anders draggt (nicht auf null zurücksetzen)
         }
+
+        return start
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'

@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 
@@ -54,40 +54,117 @@ export default function SchiebeTür({
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
     const [isHovered, setIsHovered] = useState(false)
 
-    // Grenzen für lange Wände (X-Achse)
-    const minX = x - 7 + (openingArgs[0] - 16) / 2 - (bodenLänge - 30) / 2
-    const maxX = x + 7 - (openingArgs[0] - 16) / 2 + (bodenLänge - 30) / 2
+    const skaliertBreite = openingArgs[0] * 2.5
+    const skaliertHöhe = openingArgs[1] * 2.5
+    const schiebeseite = obj?.schiebeseite ?? 'beide'
+    const schieneLängeFürGrenzen = skaliertBreite * 2
+    const schieneCenterXFuerGrenzen = schiebeseite === 'links'
+        ? -skaliertBreite / 2
+        : schiebeseite === 'rechts'
+            ? skaliertBreite / 2
+            : 0
+    const minOffsetHorizontal = Math.min(-skaliertBreite / 2, schieneCenterXFuerGrenzen - schieneLängeFürGrenzen / 2)
+    const maxOffsetHorizontal = Math.max(skaliertBreite / 2, schieneCenterXFuerGrenzen + schieneLängeFürGrenzen / 2)
+    const randPuffer = 0.1
 
-    // Grenzen für kurze Wände (Z-Achse) - aber nur für initiale Position
-    const minZ = position[2] - 7 + (openingArgs[0] - 16) / 2 - (bodenBreite - 30) / 2
-    const maxZ = position[2] + 7 - (openingArgs[0] - 16) / 2 + (bodenBreite - 30) / 2
+    const langeWandMin = xLinks - 1
+    const langeWandMax = xRechts + 1
+
+    const kurzeWandMin = zHinten - 1
+    const kurzeWandMax = zVorne + 1
+
+    // Grenzen für lange Wände (X-Achse)
+    const minX = langeWandMin + randPuffer - minOffsetHorizontal
+    const maxX = langeWandMax - randPuffer - maxOffsetHorizontal
+
+    // Grenzen für kurze Wände (Z-Achse)
+    const minZ = kurzeWandMin + randPuffer - minOffsetHorizontal
+    const maxZ = kurzeWandMax - randPuffer - maxOffsetHorizontal
 
     // Grenzen für Y-Achse (vertikal auf der Wand)
-    const minY = position[1] + (openingArgs[1] / 2) + 0.5 - 4
-    const maxY = position[1] + wandHöhe - (openingArgs[1] / 2) - 1 - 4 + 1
+    const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
+    const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
 
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
+            window.activeArrowControl = { kind: 'wand-schiebetuer', id: objId }
             setSelectedObject(found)
             setEditMenü('Schiebetür-Bearbeiten')
         }
     }
 
-    const bind = useDrag(({ offset: [dragOffsetX, dragOffsetY], first, last }) => {
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            const active = window.activeArrowControl
+            if (!active || active.kind !== 'wand-schiebetuer' || active.id !== objId) return
+
+            const stepHorizontal = 3
+
+            setGridPosi((prev) => {
+                let newX = prev.x
+                let newZ = prev.z
+
+                switch (event.key) {
+                    case 'ArrowLeft':
+                        if (lang) {
+                            newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+                            newX = Math.max(minX, Math.min(maxX, newX))
+                        } else {
+                            newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        }
+                        event.preventDefault()
+                        break
+                    case 'ArrowRight':
+                        if (lang) {
+                            newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+                            newX = Math.max(minX, Math.min(maxX, newX))
+                        } else {
+                            newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+                        }
+                        event.preventDefault()
+                        break
+                    default:
+                        return prev
+                }
+
+                return { x: newX, z: newZ, y: prev.y }
+            })
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [objId, lang, rechts, minX, maxX, minZ, maxZ])
+
+    const bind = useDrag(({ movement: [dragMoveX], first, last, memo }) => {
         const scale = 80 / size.width
 
-        // Schiebetür bewegt sich IMMER auf X-Achse, unabhängig von lang/rechts
-        const dragMultiplier = rechts ? -1 : 1
-        let newX = Math.round(dragMultiplier * dragOffsetX * scale) + x
-        newX = Math.max(minX, Math.min(maxX, newX))
-        setGridPosi({ x: newX, z: gridPosi.z, y: gridPosi.y })
+        if (first) {
+            memo = { startX: gridPosi.x, startZ: gridPosi.z }
+        }
+
+        if (lang) {
+            const dragMultiplier = rechts ? -1 : 1
+            let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
+            newX = Math.max(minX, Math.min(maxX, newX))
+            setGridPosi({ x: newX, z: gridPosi.z, y: gridPosi.y })
+        } else {
+            const dragMultiplier = rechts ? 1 : -1
+            let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
+            newZ = Math.max(minZ, Math.min(maxZ, newZ))
+            setGridPosi({ x: gridPosi.x, z: newZ, y: gridPosi.y })
+        }
 
         if (first) {
+            window.activeArrowControl = { kind: 'wand-schiebetuer', id: objId }
             setOrbitKontrolle(false)
         }
 
         if (last) setOrbitKontrolle(true)
+
+        return memo
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'
@@ -99,8 +176,8 @@ export default function SchiebeTür({
     const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
     const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
     
-    const breite = openingArgs[0] * 1.9
-    const höhe = openingArgs[1] * 0.9
+    const breite = skaliertBreite
+    const höhe = skaliertHöhe
 
     const colorMap = {
         Weiß: '#c2c2c2',
@@ -126,7 +203,6 @@ export default function SchiebeTür({
     const flügel2X = (breite - flügelGap) / 4   // Rechter Flügel
     const schieneLänge = breite * 2  // Schiene ist doppelt so lang
     const schieneHöhe = 0.25      // Dicke der Schiene
-    const schiebeseite = obj?.schiebeseite ?? 'beide'
     const öffnet = obj?.öffnet ?? 'innen'
     const schieneCenterX = schiebeseite === 'links'
         ? -breite / 2
@@ -138,7 +214,13 @@ export default function SchiebeTür({
     const einzelBreite = breite - 0.05
     const einzelX = 0
     const einzelKnaufX = (einzelBreite / 2 - 0.15) * (schiebeseite === 'rechts' ? -1 : 1)
-    const knaufHöhe = -höhe / 2 + 1.0  // Knäufe immer 1m über dem Boden
+    const knaufHöhe = -höhe / 2 + 2  // Knäufe immer 1m über dem Boden
+
+    // Rotationslogik so, dass lokale +Z immer "außen" der Wand ist
+    let schiebetürRotation = [0, 0, 0]
+    if (lang && rechts) schiebetürRotation = [0, Math.PI, 0]
+    if (!lang && rechts) schiebetürRotation = [0, -Math.PI / 2, 0]
+    if (!lang && !rechts) schiebetürRotation = [0, Math.PI / 2, 0]
 
     return (
         <group
@@ -148,7 +230,7 @@ export default function SchiebeTür({
             onClick={handleClick}
             onPointerOver={() => setIsHovered(true)}
             onPointerOut={() => setIsHovered(false)}
-            rotation={lang ? [0, 0, 0] : [0, Math.PI * 90 / 180, 0]}
+            rotation={schiebetürRotation}
         >
             {oberflächenAnzeigen && (
                 <>

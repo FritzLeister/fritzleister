@@ -15,6 +15,7 @@ export default function App({
     setShowApp, 
     setShowApp2,
     setShowApp3,
+    setShowAppKontakt,
     appSequence, 
     flach,
     länge,
@@ -272,6 +273,24 @@ export default function App({
         setTürAttribute(false)
     }
 
+    function saveCurrentHalle() {
+        setHallenSave(prev => {
+            const newObj = {
+                id: Date.now(),
+                breite,
+                höhe,
+                länge,
+                dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
+                hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
+                objs: Array.isArray(objs) ? objs.map(o => ({ ...o })) : [],
+                name: ""
+            };
+            return [...prev, newObj];
+        });
+
+        setHallenId(prev => Number(prev) + 1);
+    }
+
 
     return(
         <>
@@ -374,23 +393,10 @@ export default function App({
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
             onClick={() => {
-                setHallenSave(prev => {
-                    const newObj = {
-                    id: Date.now(),
-                    breite,
-                    höhe,
-                    länge,
-                    dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
-                    hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
-                    objs: Array.isArray(objs) ? objs.map(o => ({ ...o })) : [],
-                    name: ""
-                    };
-                    return [...prev, newObj];
-                });
+                saveCurrentHalle();
 
                 setTimeout(() => {
                     setShowApp3();
-                    setHallenId(prev => Number(prev) + 1);
                 }, 100);
             }}
             onMouseEnter={(e) => {
@@ -452,7 +458,7 @@ export default function App({
 
             dachArt={dachArt}
             diffTraufFirst={diffTraufFirst}
-            pultdachHöheDifferenz={dachneigung}
+            pultdachHöheDifferenz={dachneigung * 2.5}
             sockelhöhe={sockelhöhe}
             wandGeometrieVorgaben={wandGeometrieVorgaben}
             außenFarbe={außenFarbe}
@@ -545,6 +551,13 @@ export default function App({
         addObj={addObj} 
         editMenü={editMenü} 
         setEditMenü={setEditMenü}
+        setShowApp3={setShowApp3}
+        setShowAppKontakt={() => {
+            saveCurrentHalle();
+            setTimeout(() => {
+                setShowAppKontakt();
+            }, 100);
+        }}
         clickedButtonPos={clickedButtonPos}
         selectedObject={selectedObject}
         objs={objs}

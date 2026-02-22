@@ -120,6 +120,7 @@ function AppPageFunc({
         setShowApp={() => setShowApp("landing")} 
         setShowApp2={() => setShowApp("custom")} 
         setShowApp3={() => setShowApp("preis")}
+        setShowAppKontakt={() => setShowApp("kontakt")}
         flach={flach}
         länge={länge}
         setLänge={setLänge}
@@ -254,6 +255,20 @@ function Root() {
         setDachSelection={setDachSelection}
         hallenSave={hallenSave}
         setObjs={setObjs}
+        />
+      )}
+
+      {showApp === "kontakt" && (
+        <SavePage 
+        setShowApp={setShowApp}
+        setLänge={setLänge}
+        setBreite={setBreite}
+        setHöhe={setHöhe}
+        setHallenartSelection={setHallenartSelection}
+        setDachSelection={setDachSelection}
+        hallenSave={hallenSave}
+        setObjs={setObjs}
+        initialSchirm="kontakt"
         />
       )}
 

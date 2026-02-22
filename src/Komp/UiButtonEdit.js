@@ -8,6 +8,8 @@ import { Center } from '@react-three/drei';
 export default function UiButtonEdit({ 
     height, 
     name,
+    setShowApp3,
+    setShowAppKontakt,
     // Abmessungs-Props (aus App.js)
     breite,
     setBreite,
@@ -204,6 +206,7 @@ export default function UiButtonEdit({
                             setState={setDachArt}
                         />
                     </div>
+                    
                     {dachArt === 'pultdach' && (
                         <>
                             {/*
@@ -969,6 +972,15 @@ export default function UiButtonEdit({
                                         justifyContent: 'center',
                                         backgroundColor: 'lightyellow',
                                         cursor: 'pointer'
+                                    }}
+                                    onClick={() => {
+                                        if (setShowAppKontakt) {
+                                            setShowAppKontakt();
+                                            return;
+                                        }
+                                        if (setShowApp3) {
+                                            setShowApp3();
+                                        }
                                     }}
                                 >
 
