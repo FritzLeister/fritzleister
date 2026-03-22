@@ -436,8 +436,10 @@ export default function App({
             bodenBreite={breite*2.5} // +15
             gebäudeHöhe={höhe*2.5} // +3
             koordinate={koordinate}
+            selectedObj={selectedObject}
             setTürAttribute={setTürAttribute}
             setSelectedObject={setSelectedObject}
+            setObjs={setObjs}
             objs={objs}
             flach={dachSelection === "flachdach" ? true : false}
             originalBreite={breite}
@@ -459,7 +461,7 @@ export default function App({
             dachArt={dachArt}
             diffTraufFirst={diffTraufFirst}
             pultdachHöheDifferenz={dachneigung * 2.5}
-            sockelhöhe={sockelhöhe}
+            sockelhöhe={sockelhöhe * 2.6}
             wandGeometrieVorgaben={wandGeometrieVorgaben}
             außenFarbe={außenFarbe}
             />

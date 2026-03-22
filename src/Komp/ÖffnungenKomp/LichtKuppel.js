@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useMemo, useRef, useState, useEffect } from 'react'
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 function getRahmenFarbe(farbe) {
@@ -16,6 +16,7 @@ export default function LichtKuppel({
 	bodenLänge,
 	setOrbitKontrolle,
 	setSelectedObject,
+	setObjs,
 	objId,
 	objs,
 	setEditMenü,
@@ -67,8 +68,40 @@ export default function LichtKuppel({
 
 	const clampedInitialZ = Math.max(initialMinZ, Math.min(initialMaxZ, initialZ))
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: clampedInitialZ })
+	const gridPosiRef = useRef({ x: initialX, z: clampedInitialZ })
 	const [isHovered, setIsHovered] = useState(false)
 	const [isActive, setIsActive] = useState(false)
+
+	useEffect(() => {
+		gridPosiRef.current = gridPosi
+	}, [gridPosi])
+
+	const persistPosition = useCallback((nextPos) => {
+		if (!setObjs) return
+		setObjs(prevObjs => prevObjs.map(item =>
+			item.id === objId
+				? {
+					...item,
+					startPos: {
+						...(item.startPos ?? {}),
+						x: nextPos.x,
+						z: nextPos.z
+					}
+				}
+				: item
+		))
+		setSelectedObject(prev => {
+			if (!prev || prev.id !== objId) return prev
+			return {
+				...prev,
+				startPos: {
+					...(prev.startPos ?? {}),
+					x: nextPos.x,
+					z: nextPos.z
+				}
+			}
+		})
+	}, [objId, setObjs, setSelectedObject])
 
 	let rotation = 0
 	let finalX = gridPosi.x
@@ -129,8 +162,8 @@ export default function LichtKuppel({
 		finalX = gridPosi.x
 	}
 
-	const minX = xLinks + (openingArgs[0] / 2) - 1
-	const maxX = xRechts - (openingArgs[0] / 2) + 1
+	const minX = xLinks + (openingArgs[0] / 2) - 0.5
+	const maxX = xRechts - (openingArgs[0] / 2) + 0.5
 	let minZ = initialMinZ
 	let maxZ = initialMaxZ
 
@@ -150,59 +183,60 @@ export default function LichtKuppel({
 
 			const gridSize = 3
 			const step = gridSize
+			const current = gridPosiRef.current
+			let newX = current.x
+			let newZ = current.z
 
-			setGridPosi(prev => {
-				let newX = prev.x
-				let newZ = prev.z
+			switch (event.key) {
+				case 'ArrowLeft':
+					if (vorne) {
+						newX = current.x - step
+					} else {
+						newX = current.x + step
+					}
+					newX = Math.max(minX, Math.min(maxX, newX))
+					event.preventDefault()
+					break
+				case 'ArrowRight':
+					if (vorne) {
+						newX = current.x + step
+					} else {
+						newX = current.x - step
+					}
+					newX = Math.max(minX, Math.min(maxX, newX))
+					event.preventDefault()
+					break
+				case 'ArrowUp':
+					if (vorne) {
+						newZ = current.z - step
+					} else {
+						newZ = current.z + step
+					}
+					newZ = Math.max(minZ, Math.min(maxZ, newZ))
+					event.preventDefault()
+					break
+				case 'ArrowDown':
+					if (vorne) {
+						newZ = current.z + step
+					} else {
+						newZ = current.z - step
+					}
+					newZ = Math.max(minZ, Math.min(maxZ, newZ))
+					event.preventDefault()
+					break
+				default:
+					return
+			}
 
-				switch (event.key) {
-					case 'ArrowLeft':
-						if (vorne) {
-							newX = prev.x - step
-						} else {
-							newX = prev.x + step
-						}
-						newX = Math.max(minX, Math.min(maxX, newX))
-						event.preventDefault()
-						break
-					case 'ArrowRight':
-						if (vorne) {
-							newX = prev.x + step
-						} else {
-							newX = prev.x - step
-						}
-						newX = Math.max(minX, Math.min(maxX, newX))
-						event.preventDefault()
-						break
-					case 'ArrowUp':
-						if (vorne) {
-							newZ = prev.z - step
-						} else {
-							newZ = prev.z + step
-						}
-						newZ = Math.max(minZ, Math.min(maxZ, newZ))
-						event.preventDefault()
-						break
-					case 'ArrowDown':
-						if (vorne) {
-							newZ = prev.z + step
-						} else {
-							newZ = prev.z - step
-						}
-						newZ = Math.max(minZ, Math.min(maxZ, newZ))
-						event.preventDefault()
-						break
-					default:
-						return prev
-				}
-
-				return { x: newX, z: newZ }
-			})
+			const nextPos = { x: newX, z: newZ }
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+			persistPosition(nextPos)
 		}
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [objId, minX, maxX, minZ, maxZ, vorne])
+		}, [objId, minX, maxX, minZ, maxZ, vorne, persistPosition])
 
 	const bind = useDrag(({ movement: [moveX, moveY], first, last, memo }) => {
 		const scale = 400 / size.width
@@ -230,7 +264,8 @@ export default function LichtKuppel({
 		newZ = Math.round(newZ / gridSize) * gridSize
 		newZ = Math.max(minZ, Math.min(maxZ, newZ))
 
-		setGridPosi({ x: newX, z: newZ })
+		const nextPos = { x: newX, z: newZ }
+		setGridPosi(nextPos)
 
 		if (first) {
 			window.activeArrowControl = { kind: 'dach-lichtkuppel', id: objId }
@@ -240,6 +275,7 @@ export default function LichtKuppel({
 		}
 
 		if (last) {
+			persistPosition(nextPos)
 			setOrbitKontrolle(true)
 		}
 
@@ -250,7 +286,11 @@ export default function LichtKuppel({
 	const rahmenFarbe = getRahmenFarbe(obj?.farbe)
 	const breiteX = openingArgs[0]
 	const breiteY = openingArgs[1]
-	const basisTiefe = 0.25
+	const basisTiefe = 1
+	const unterbauTiefe = 0.10
+	const rahmenStärke = Math.max(0.08, Math.min(0.18, Math.min(breiteX, breiteY) * 0.12))
+	const innenBreiteX = Math.max(0.12, breiteX - (rahmenStärke * 2))
+	const innenBreiteY = Math.max(0.12, breiteY - (rahmenStärke * 2))
 	const kuppelSteilheit = 0.20
 	const kuppelHöhe = Math.max(0.22, Math.min(0.95, Math.min(breiteX, breiteY) * kuppelSteilheit))
 
@@ -293,16 +333,45 @@ export default function LichtKuppel({
 		>
 			{oberflächenAnzeigen && (
 				<>
-					<mesh position={[0, 0, 0]}>
-						<boxGeometry args={[breiteX, breiteY, basisTiefe]} />
+					{/* Rahmen statt Vollplatte, damit die Öffnung frei bleibt */}
+					<mesh position={[0, (breiteY / 2) - (rahmenStärke / 2), 0]}>
+						<boxGeometry args={[breiteX, rahmenStärke, basisTiefe]} />
 						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+					</mesh>
+
+					<mesh position={[0, -(breiteY / 2) + (rahmenStärke / 2), 0]}>
+						<boxGeometry args={[breiteX, rahmenStärke, basisTiefe]} />
+						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+					</mesh>
+
+					<mesh position={[-(breiteX / 2) + (rahmenStärke / 2), 0, 0]}>
+						<boxGeometry args={[rahmenStärke, innenBreiteY, basisTiefe]} />
+						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+					</mesh>
+
+					<mesh position={[(breiteX / 2) - (rahmenStärke / 2), 0, 0]}>
+						<boxGeometry args={[rahmenStärke, innenBreiteY, basisTiefe]} />
+						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+					</mesh>
+					
+					<mesh position={[0, 0, (basisTiefe / 2) + (unterbauTiefe / 2)]}>
+						<boxGeometry args={[innenBreiteX, innenBreiteY, unterbauTiefe]} />
+						<meshStandardMaterial
+							color="#CFF4FF"
+							transparent
+							opacity={0.88}
+							depthWrite={false}
+							side={THREE.DoubleSide}
+							metalness={0.1}
+							roughness={0.08}
+						/>
 					</mesh>
 
 					<mesh geometry={pyramidGeometry}>
 						<meshStandardMaterial
 							color="#BFEFFF"
 							transparent
-							opacity={0.6}
+							opacity={0.75}
 							depthWrite={false}
 							side={THREE.DoubleSide}
 							metalness={0.1}
@@ -310,18 +379,7 @@ export default function LichtKuppel({
 						/>
 					</mesh>
 
-					<mesh position={[0, 0, -basisTiefe / 2 - 0.02]}>
-						<boxGeometry args={[breiteX - 0.12, breiteY - 0.12, 0.03]} />
-						<meshStandardMaterial
-							color="#CFF4FF"
-							transparent
-							opacity={0.42}
-							depthWrite={false}
-							side={THREE.DoubleSide}
-							metalness={0.1}
-							roughness={0.15}
-						/>
-					</mesh>
+
 				</>
 			)}
 
@@ -329,7 +387,16 @@ export default function LichtKuppel({
 				<>
 					<lineSegments>
 						<edgesGeometry args={[new THREE.BoxGeometry(breiteX, breiteY, basisTiefe)]} />
-						<lineBasicMaterial color={borderColor} linewidth={2} />
+						<lineBasicMaterial 
+						// color={borderColor} 
+						color={isActive ? '#2f6db8' : borderColor}
+						linewidth={2} 
+						/>
+					</lineSegments>
+
+					<lineSegments position={[0, 0, (basisTiefe / 2) + (unterbauTiefe / 2)]}>
+						<edgesGeometry args={[new THREE.BoxGeometry(breiteX - 0.06, breiteY - 0.06, unterbauTiefe)]} />
+						<lineBasicMaterial color="#ffffff" linewidth={1} />
 					</lineSegments>
 
 					<lineSegments>

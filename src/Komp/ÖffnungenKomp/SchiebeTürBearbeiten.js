@@ -8,25 +8,44 @@ export default function SchiebeTürBearbeiten({
 	objs,
 	setObjs,
 	gebäudeHöhe,
-	gebäudeBreite
+	gebäudeBreite,
+	gebäudeLänge
 }) {
 	const [schiebetürBreite, setSchiebetürBreite] = useState(selectedObject?.value?.[0] ?? 2)
 	const [schiebetürHöhe, setSchiebetürHöhe] = useState(selectedObject?.value?.[1] ?? 2.1)
 	const [schiebetürSchienenFarbe, setSchiebetürSchienenFarbe] = useState(selectedObject?.schiebetürSchienenFarbe ?? selectedObject?.schienenFarbe ?? 'Grau')
 	const [schiebetürFüllFarbe, setSchiebetürFüllFarbe] = useState(selectedObject?.schiebetürFüllFarbe ?? selectedObject?.füllFarbe ?? 'Weiß')
 	const [schiebetürFüllFarbeInnen, setSchiebetürFüllFarbeInnen] = useState(selectedObject?.schiebetürFüllFarbeInnen ?? selectedObject?.schiebetürFüllFarbe ?? selectedObject?.füllFarbe ?? 'Weiß')
+	const istLangeWand = selectedObject?.lang ?? true
+	const maxSchiebetürBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const maxSchiebetürHöhe = gebäudeHöhe
+	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+
+	const clampValue = (value, min, max) => {
+		const num = Number(value)
+		if (Number.isNaN(num)) return min
+		return Math.min(Math.max(num, min), max)
+	}
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		const geklemmteSchiebetürBreite = clampValue(schiebetürBreite, 0.5, maxSchiebetürBreite)
+		const geklemmteSchiebetürHöhe = clampValue(schiebetürHöhe, 0.2, maxSchiebetürHöhe)
+		const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
+		const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
 				? {
 					...obj,
-					value: [schiebetürBreite, schiebetürHöhe],
+					value: [geklemmteSchiebetürBreite, geklemmteSchiebetürHöhe],
 					schiebetürSchienenFarbe,
 					schiebetürFüllFarbe,
-					schiebetürFüllFarbeInnen
+					schiebetürFüllFarbeInnen,
+					abstandLinks: sichererAbstandLinks,
+					abstandRechts: sichererAbstandRechts
 				}
 				: obj
 		))
@@ -82,12 +101,12 @@ export default function SchiebeTürBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-						<span className='text' style={{ fontSize: 12 }}>0.5-{gebäudeBreite - 2}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.5-{maxSchiebetürBreite}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.5}
-						max={gebäudeBreite - 2}
+						max={maxSchiebetürBreite}
 						state={schiebetürBreite}
 						setState={setSchiebetürBreite}
 					/>
@@ -103,16 +122,60 @@ export default function SchiebeTürBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeHöhe}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxSchiebetürHöhe}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeHöhe}
+						max={maxSchiebetürHöhe}
 						state={schiebetürHöhe}
 						setState={setSchiebetürHöhe}
 					/>
 				</div>
+
+				{/*
+				<div style={{
+					display: 'flex',
+					gap: '10px',
+					alignItems: 'center',
+					marginBottom: "10px",
+					justifyContent: 'space-between',
+					marginRight: "10px"
+				}}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield
+						label={'m'}
+						min={0}
+						max={maxAbstand}
+						state={abstandLinks}
+						setState={setAbstandLinks}
+					/>
+				</div>
+
+				<div style={{
+					display: 'flex',
+					gap: '10px',
+					alignItems: 'center',
+					marginBottom: "14px",
+					justifyContent: 'space-between',
+					marginRight: "10px"
+				}}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield
+						label={'m'}
+						min={0}
+						max={maxAbstand}
+						state={abstandRechts}
+						setState={setAbstandRechts}
+					/>
+				</div>
+				*/}
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Farben:</p>
 

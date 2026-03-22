@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Transparentes Paneel für Dach – Positionierung analog DachLeeröffnung
@@ -11,6 +11,7 @@ export default function DachTransparentesPaneel({
     bodenLänge,
     setOrbitKontrolle,
     setSelectedObject,
+    setObjs,
     objId,
     objs,
     setEditMenü,
@@ -70,8 +71,47 @@ export default function DachTransparentesPaneel({
     
     const clampedInitialZ = Math.max(initialMinZ, Math.min(initialMaxZ, initialZ))
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: clampedInitialZ })
+    const gridPosiRef = useRef({ x: initialX, z: clampedInitialZ })
     const [isHovered, setIsHovered] = useState(false)
-    const [isActive, setIsActive] = useState(false) // Aktiv = zuletzt gedraggt
+
+    useEffect(() => {
+        gridPosiRef.current = gridPosi
+    }, [gridPosi])
+
+    const persistPosition = useCallback((nextPos) => {
+        if (!setObjs) return
+
+        setObjs(prevObjs => prevObjs.map(item =>
+            item.id === objId
+                ? {
+                    ...item,
+                    startPos: {
+                        ...(item.startPos ?? {}),
+                        x: nextPos.x,
+                        z: nextPos.z
+                    }
+                }
+                : item
+        ))
+
+        setSelectedObject(prev => {
+            if (!prev || prev.id !== objId) return prev
+            return {
+                ...prev,
+                startPos: {
+                    ...(prev.startPos ?? {}),
+                    x: nextPos.x,
+                    z: nextPos.z
+                }
+            }
+        })
+    }, [objId, setObjs, setSelectedObject])
+
+    const updatePosition = useCallback((nextPos) => {
+        gridPosiRef.current = nextPos
+        setGridPosi(nextPos)
+        persistPosition(nextPos)
+    }, [persistPosition])
 
     let rotation = 0
     let finalX = gridPosi.x
@@ -157,59 +197,58 @@ export default function DachTransparentesPaneel({
 
             const gridSize = 3
             const step = gridSize
-            
-            setGridPosi(prev => {
-                let newX = prev.x
-                let newZ = prev.z
+
+            const current = gridPosiRef.current
+            let newX = current.x
+            let newZ = current.z
 
                 switch(event.key) {
                     case 'ArrowLeft':
                         if (vorne) {
-                            newX = prev.x - step
+                            newX = current.x - step
                         } else {
-                            newX = prev.x + step
+                            newX = current.x + step
                         }
                         newX = Math.max(minX, Math.min(maxX, newX))
                         event.preventDefault()
                         break
                     case 'ArrowRight':
                         if (vorne) {
-                            newX = prev.x + step
+                            newX = current.x + step
                         } else {
-                            newX = prev.x - step
+                            newX = current.x - step
                         }
                         newX = Math.max(minX, Math.min(maxX, newX))
                         event.preventDefault()
                         break
                     case 'ArrowUp':
                         if (vorne) {
-                            newZ = prev.z - step
+                            newZ = current.z - step
                         } else {
-                            newZ = prev.z + step
+                            newZ = current.z + step
                         }
                         newZ = Math.max(minZ, Math.min(maxZ, newZ))
                         event.preventDefault()
                         break
                     case 'ArrowDown':
                         if (vorne) {
-                            newZ = prev.z + step
+                            newZ = current.z + step
                         } else {
-                            newZ = prev.z - step
+                            newZ = current.z - step
                         }
                         newZ = Math.max(minZ, Math.min(maxZ, newZ))
                         event.preventDefault()
                         break
                     default:
-                        return prev
+                        return
                 }
 
-                return { x: newX, z: newZ }
-            })
+            updatePosition({ x: newX, z: newZ })
         }
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [objId, minX, maxX, minZ, maxZ, vorne])
+    }, [objId, minX, maxX, minZ, maxZ, vorne, updatePosition])
 
     const bind = useDrag(({ movement: [mx, my], first, last, memo }) => {
         const scale = 400 / size.width
@@ -218,7 +257,7 @@ export default function DachTransparentesPaneel({
 
         let start = memo
         if (first || !start) {
-            start = { x: gridPosi.x, z: gridPosi.z }
+            start = { x: gridPosiRef.current.x, z: gridPosiRef.current.z }
         }
 
         let newX = vorne ? start.x + (mx * scale) : start.x - (mx * scale)
@@ -230,18 +269,16 @@ export default function DachTransparentesPaneel({
         newZ = Math.round(newZ / gridSize) * gridSize // Auf Raster snappen
         newZ = Math.max(minZ, Math.min(maxZ, newZ))
 
-        setGridPosi({ x: newX, z: newZ })
+        updatePosition({ x: newX, z: newZ })
 
         if (first) {
             window.activeArrowControl = { kind: 'dach-transparentespaneel', id: objId }
-            setIsActive(true)
             setOrbitKontrolle(false)
             camera.position.set(0, 125, vorne ? 40 : -40)
         }
 
         if (last) {
             setOrbitKontrolle(true)
-            // Panel BLEIBT aktiv wenn nicht anders draggt (nicht auf null zurücksetzen)
         }
 
         return start

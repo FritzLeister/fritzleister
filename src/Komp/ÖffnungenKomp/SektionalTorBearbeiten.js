@@ -9,7 +9,8 @@ export default function SektionalTorBearbeiten({
 	objs,
 	setObjs,
 	gebäudeHöhe,
-	gebäudeBreite
+	gebäudeBreite,
+	gebäudeLänge
 }) {
 	const [sektionalTorBreite, setSektionalTorBreite] = useState(selectedObject?.value?.[0] ?? 3)
 	const [sektionalTorHöhe, setSektionalTorHöhe] = useState(selectedObject?.value?.[1] ?? 3)
@@ -27,22 +28,38 @@ export default function SektionalTorBearbeiten({
 	const [sektionalTorFüllFarbe, setSektionalTorFüllFarbe] = useState(selectedObject?.sektionalTorFüllFarbe ?? 'Weiß')
 	const [sektionalTorFüllFarbeInnen, setSektionalTorFüllFarbeInnen] = useState(selectedObject?.sektionalTorFüllFarbeInnen ?? 'Weiß')
 	const [sektionalTorReflektorFarbe, setSektionalTorReflektorFarbe] = useState(selectedObject?.sektionalTorReflektorFarbe ?? 'Weiß')
+	const istLangeWand = selectedObject?.lang ?? true
+	const maxSektionalTorBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const maxSektionalTorHöhe = gebäudeHöhe
+	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+
+	const clampValue = (value, min, max) => {
+		const num = Number(value)
+		if (Number.isNaN(num)) return min
+		return Math.min(Math.max(num, min), max)
+	}
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		const geklemmteSektionalTorBreite = clampValue(sektionalTorBreite, 0.2, maxSektionalTorBreite)
+		const geklemmteSektionalTorHöhe = clampValue(sektionalTorHöhe, 0.2, maxSektionalTorHöhe)
 
 		const transparentePaneeleValue = transparenteFüllung === 'ja' ? transparentePaneele : null
 		const fensterstreifenHöheValue = transparenteFüllung === 'ja' ? fensterstreifenHöhe : null
-		const schlupftürBreiteValue = schlupftür === 'ja' ? schlupftürBreite : null
-		const schlupftürHöheValue = schlupftür === 'ja' ? schlupftürHöhe : null
-		const schlupftürDistanzXValue = schlupftür === 'ja' ? schlupftürDistanzX : null
+		const schlupftürBreiteValue = schlupftür === 'ja' ? clampValue(schlupftürBreite, 0.2, maxSektionalTorBreite) : null
+		const schlupftürHöheValue = schlupftür === 'ja' ? clampValue(schlupftürHöhe, 0.2, maxSektionalTorHöhe) : null
+		const schlupftürDistanzXValue = schlupftür === 'ja' ? clampValue(schlupftürDistanzX, 0, maxSektionalTorBreite) : null
 		const schlupftürOrientierungValue = schlupftür === 'ja' ? schlupftürOrientierung : null
+		const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
+		const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
 				? {
 					...obj,
-					value: [sektionalTorBreite, sektionalTorHöhe],
+					value: [geklemmteSektionalTorBreite, geklemmteSektionalTorHöhe],
 					posSegment,
 					transparenteFüllung,
 					transparentePaneele: transparentePaneeleValue,
@@ -56,7 +73,9 @@ export default function SektionalTorBearbeiten({
 					sektionalTorFarbe,
 					sektionalTorFüllFarbe,
 					sektionalTorFüllFarbeInnen,
-					sektionalTorReflektorFarbe
+					sektionalTorReflektorFarbe,
+					abstandLinks: sichererAbstandLinks,
+					abstandRechts: sichererAbstandRechts
 				}
 				: obj
 		))
@@ -136,12 +155,12 @@ export default function SektionalTorBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite - 2}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxSektionalTorBreite}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeBreite - 2}
+						max={maxSektionalTorBreite}
 						state={sektionalTorBreite}
 						setState={setSektionalTorBreite}
 					/>
@@ -157,16 +176,60 @@ export default function SektionalTorBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeHöhe}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxSektionalTorHöhe}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeHöhe}
+						max={maxSektionalTorHöhe}
 						state={sektionalTorHöhe}
 						setState={setSektionalTorHöhe}
 					/>
 				</div>
+
+				{/*
+				<div style={{
+					display: 'flex',
+					gap: '10px',
+					alignItems: 'center',
+					marginBottom: "10px",
+					justifyContent: 'space-between',
+					marginRight: "10px"
+				}}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield
+						label={'m'}
+						min={0}
+						max={maxAbstand}
+						state={abstandLinks}
+						setState={setAbstandLinks}
+					/>
+				</div>
+
+				<div style={{
+					display: 'flex',
+					gap: '10px',
+					alignItems: 'center',
+					marginBottom: "14px",
+					justifyContent: 'space-between',
+					marginRight: "10px"
+				}}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield
+						label={'m'}
+						min={0}
+						max={maxAbstand}
+						state={abstandRechts}
+						setState={setAbstandRechts}
+					/>
+				</div>
+				*/}
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Eigenschaften:</p>
 
@@ -284,12 +347,12 @@ export default function SektionalTorBearbeiten({
 						}}>
 							<div style={{ display: 'flex', flexDirection: 'column' }}>
 								<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-								<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite - 2}</span>
+								<span className='text' style={{ fontSize: 12 }}>0.2-{maxSektionalTorBreite}</span>
 							</div>
 							<MuiNumberfield
 								label={'m'}
 								min={0.2}
-								max={gebäudeBreite - 2}
+								max={maxSektionalTorBreite}
 								state={schlupftürBreite}
 								setState={setSchlupftürBreite}
 							/>
@@ -305,12 +368,12 @@ export default function SektionalTorBearbeiten({
 						}}>
 							<div style={{ display: 'flex', flexDirection: 'column' }}>
 								<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-								<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeHöhe}</span>
+								<span className='text' style={{ fontSize: 12 }}>0.2-{maxSektionalTorHöhe}</span>
 							</div>
 							<MuiNumberfield
 								label={'m'}
 								min={0.2}
-								max={gebäudeHöhe}
+								max={maxSektionalTorHöhe}
 								state={schlupftürHöhe}
 								setState={setSchlupftürHöhe}
 							/>
@@ -328,7 +391,7 @@ export default function SektionalTorBearbeiten({
 							<MuiNumberfield
 								label={'m'}
 								min={0}
-								max={gebäudeBreite - 2}
+								max={maxSektionalTorBreite}
 								state={schlupftürDistanzX}
 								setState={setSchlupftürDistanzX}
 							/>

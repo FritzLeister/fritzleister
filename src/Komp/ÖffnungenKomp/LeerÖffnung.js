@@ -11,21 +11,26 @@ export default function LeerÖffnung({
 	bodenLänge,
 	setOrbitKontrolle,
 	setSelectedObject,
+	setObjs,
 	objId,
 	objs,
 	setEditMenü,
 	oberflächenAnzeigen,
-	kantenAnzeigen
+	kantenAnzeigen,
+	dachArt = 'satteldach',
+	pultdachHöheDifferenz = 0
 }) {
 	const obj = objs.find(o => o.id === objId)
 	const openingArgs = obj ? [obj.value[0], obj.value[1]] : [12, 8]
 
 	const rechts = obj?.rechts ?? true // true = Rückseite, false = Vorderseite
 	const lang = obj?.lang ?? true // true = lange Wand, false = kurze Wand
+	const skaliertBreite = openingArgs[0] * 2.5
+	const skaliertHöhe = openingArgs[1] * 2.5
 
 	const x = position[0]
 	//const y = position[1] + (gebäudeHöhe / 6) - 0.4 - ((gebäudeHöhe - 15) / 6) - 2 + ((openingArgs[1] - 1) / 4)
-	const y = position[1] + (openingArgs[1] / 2)
+	const y = position[1] + (skaliertHöhe / 2)
 	
 	// Positionierung wie bei Wand: zVorne = z + 6.5 + (0.5 * (bodenBreite - 15))
 	const zVorne = position[2] + 6.5 + (0.5 * (bodenBreite - 15))+1.5
@@ -44,10 +49,10 @@ export default function LeerÖffnung({
 	const initialZ = obj?.startPos?.z ?? position[2]
 	const initialY = obj?.startPos?.y ?? y
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
+	const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
 	const [isHovered, setIsHovered] = useState(false)
 
-	const skaliertBreite = openingArgs[0] * 2.5
-	const höhe = openingArgs[1]
+	const höhe = skaliertHöhe
 	const halbeBreite = skaliertBreite / 2
 	const randPuffer = 0.1
 
@@ -65,8 +70,16 @@ export default function LeerÖffnung({
 	const minZ = kurzeWandMin + halbeBreite + randPuffer
 	const maxZ = kurzeWandMax - halbeBreite - randPuffer
 
-	const minY = position[1] + (höhe / 2) + 0.5
-	const maxY = position[1] + gebäudeHöhe - (höhe / 2) - 1
+	const wandUnterkante = position[1]
+	const wandOberkanteBasis = position[1] + gebäudeHöhe + 0.35
+	const wandOberkante = dachArt === 'pultdach' && !rechts
+		? wandOberkanteBasis + pultdachHöheDifferenz
+		: wandOberkanteBasis
+	const minYRaw = wandUnterkante + (höhe / 2)
+	const maxYRaw = wandOberkante - (höhe / 2)
+	const hatValidenYBereich = maxYRaw - minYRaw >= 0.25
+	const minY = hatValidenYBereich ? minYRaw : (wandUnterkante + wandOberkante) / 2
+	const maxY = hatValidenYBereich ? maxYRaw : (wandUnterkante + wandOberkante) / 2
 
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
@@ -78,77 +91,116 @@ export default function LeerÖffnung({
 	}
 
 	useEffect(() => {
+		gridPosiRef.current = gridPosi
+	}, [gridPosi])
+
+	useEffect(() => {
 		const handleKeyDown = (event) => {
 			const active = window.activeArrowControl
 			if (!active || active.kind !== 'wand-leeroeffnung' || active.id !== objId) return
 
 			const stepHorizontal = 3
 			const stepVertical = 0.25
+			const current = gridPosiRef.current
+			let newX = current.x
+			let newZ = current.z
+			let newY = current.y
 
-			setGridPosi((prev) => {
-				let newX = prev.x
-				let newZ = prev.z
-				let newY = prev.y
+			switch (event.key) {
+				case 'ArrowLeft':
+					if (lang) {
+						newX = current.x + (rechts ? stepHorizontal : -stepHorizontal)
+						newX = Math.max(minX, Math.min(maxX, newX))
+					} else {
+						newZ = current.z - (rechts ? stepHorizontal : -stepHorizontal)
+						newZ = Math.max(minZ, Math.min(maxZ, newZ))
+					}
+					event.preventDefault()
+					break
+				case 'ArrowRight':
+					if (lang) {
+						newX = current.x + (rechts ? -stepHorizontal : stepHorizontal)
+						newX = Math.max(minX, Math.min(maxX, newX))
+					} else {
+						newZ = current.z + (rechts ? stepHorizontal : -stepHorizontal)
+						newZ = Math.max(minZ, Math.min(maxZ, newZ))
+					}
+					event.preventDefault()
+					break
+				case 'ArrowUp':
+					newY = current.y + stepVertical
+					newY = Math.max(minY, Math.min(maxY, newY))
+					event.preventDefault()
+					break
+				case 'ArrowDown':
+					newY = current.y - stepVertical
+					newY = Math.max(minY, Math.min(maxY, newY))
+					event.preventDefault()
+					break
+				default:
+					return
+			}
 
-				switch (event.key) {
-					case 'ArrowLeft':
-						if (lang) {
-							newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
-							newX = Math.max(minX, Math.min(maxX, newX))
-						} else {
-							newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
-							newZ = Math.max(minZ, Math.min(maxZ, newZ))
-						}
-						event.preventDefault()
-						break
-					case 'ArrowRight':
-						if (lang) {
-							newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
-							newX = Math.max(minX, Math.min(maxX, newX))
-						} else {
-							newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
-							newZ = Math.max(minZ, Math.min(maxZ, newZ))
-						}
-						event.preventDefault()
-						break
-					case 'ArrowUp':
-						newY = prev.y + stepVertical
-						newY = Math.max(minY, Math.min(maxY, newY))
-						event.preventDefault()
-						break
-					case 'ArrowDown':
-						newY = prev.y - stepVertical
-						newY = Math.max(minY, Math.min(maxY, newY))
-						event.preventDefault()
-						break
-					default:
-						return prev
-				}
-
-				return { x: newX, z: newZ, y: newY }
-			})
+			const nextPos = { x: newX, z: newZ, y: newY }
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+			persistPosition(nextPos)
 		}
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY])
 
-	const bind = useDrag(({ movement: [dragMoveX], first, last, memo }) => {
+	const persistPosition = (nextPos) => {
+		if (!setObjs) return
+
+		setObjs(prevObjs => prevObjs.map(item =>
+			item.id === objId
+				? {
+					...item,
+					startPos: {
+						...(item.startPos ?? {}),
+						x: nextPos.x,
+						y: nextPos.y,
+						z: nextPos.z
+					}
+				}
+				: item
+		))
+
+		setSelectedObject(prev => {
+			if (!prev || prev.id !== objId) return prev
+			return {
+				...prev,
+				startPos: {
+					...(prev.startPos ?? {}),
+					x: nextPos.x,
+					y: nextPos.y,
+					z: nextPos.z
+				}
+			}
+		})
+	}
+
+	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 100 / size.width
+		const scaleY = 100 / size.height
 
 		if (first) {
-			memo = { startX: gridPosi.x, startZ: gridPosi.z }
+			memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
 		}
 
-		let newY = gridPosi.y
+		let newY = memo.startY - (dragMoveY * scaleY)
 		newY = Math.max(minY, Math.min(maxY, newY))
+		let nextPos = { x: gridPosi.x, z: gridPosi.z, y: newY }
 
 		if (lang) {
 			// Lange Wand: X-Achse bewegen (Richtung abhängig von rechts)
 			const dragMultiplier = rechts ? -1 : 1
 			let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
 			newX = Math.max(minX, Math.min(maxX, newX))
-			setGridPosi({ x: newX, z: gridPosi.z, y: newY })
+			nextPos = { x: newX, z: gridPosi.z, y: newY }
+			setGridPosi(nextPos)
 
 			if (first) {
 				window.activeArrowControl = { kind: 'wand-leeroeffnung', id: objId }
@@ -161,7 +213,8 @@ export default function LeerÖffnung({
 			const dragMultiplier = rechts ? 1 : -1
 			let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
 			newZ = Math.max(minZ, Math.min(maxZ, newZ))
-			setGridPosi({ x: gridPosi.x, z: newZ, y: newY })
+			nextPos = { x: gridPosi.x, z: newZ, y: newY }
+			setGridPosi(nextPos)
 
 			if (first) {
 				window.activeArrowControl = { kind: 'wand-leeroeffnung', id: objId }
@@ -171,7 +224,10 @@ export default function LeerÖffnung({
 			}
 		}
 
-		if (last) setOrbitKontrolle(true)
+		if (last) {
+			persistPosition(nextPos)
+			setOrbitKontrolle(true)
+		}
 
 		return memo
 	})
@@ -196,7 +252,7 @@ export default function LeerÖffnung({
 			{/* halbtransparentes Glas - durchsichtige Öffnung */}
 			{oberflächenAnzeigen && (
 			<mesh position={[0, 0, 0]}>
-				<boxGeometry args={[skaliertBreite, openingArgs[1], 1]} />
+				<boxGeometry args={[skaliertBreite, skaliertHöhe, 1]} />
 				<meshStandardMaterial
 					color="#87CEEB"
 					transparent
@@ -213,7 +269,7 @@ export default function LeerÖffnung({
 			{/* feine Umrandung */}
 			{kantenAnzeigen && (
 			<lineSegments position={[0, 0, 0]}>
-				<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(skaliertBreite, openingArgs[1], 1)]} />
+				<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(skaliertBreite, skaliertHöhe, 1)]} />
 				<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
 			</lineSegments>
 			)}

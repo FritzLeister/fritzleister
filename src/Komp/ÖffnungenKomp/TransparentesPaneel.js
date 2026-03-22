@@ -11,6 +11,7 @@ export default function TransparentesPaneel({
 	bodenLänge,
 	setOrbitKontrolle,
 	setSelectedObject,
+	setObjs,
 	objId,
 	objs,
 	setEditMenü,
@@ -50,6 +51,7 @@ export default function TransparentesPaneel({
 	const initialZ = obj?.startPos?.z ?? position[2]
 	const initialY = obj?.startPos?.y ?? defaultY
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
+	const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
 	const [isHovered, setIsHovered] = useState(false)
 	const halbePaneelBreite = paneelBreite / 2
 	const randPuffer = 0.1
@@ -68,6 +70,41 @@ export default function TransparentesPaneel({
 	const minY = position[1] + sockelhöhe + (paneelHöhe / 2)
 	const maxY = position[1] + 0.2 + wandHöhe - (paneelHöhe / 2) + 0.48
 
+	useEffect(() => {
+		gridPosiRef.current = gridPosi
+	}, [gridPosi])
+
+	const persistPosition = (nextPos) => {
+		if (!setObjs) return
+
+		setObjs(prevObjs => prevObjs.map(item =>
+			item.id === objId
+				? {
+					...item,
+					startPos: {
+						...(item.startPos ?? {}),
+						x: nextPos.x,
+						y: nextPos.y,
+						z: nextPos.z
+					}
+				}
+				: item
+		))
+
+		setSelectedObject(prev => {
+			if (!prev || prev.id !== objId) return prev
+			return {
+				...prev,
+				startPos: {
+					...(prev.startPos ?? {}),
+					x: nextPos.x,
+					y: nextPos.y,
+					z: nextPos.z
+				}
+			}
+		})
+	}
+
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {
@@ -84,49 +121,50 @@ export default function TransparentesPaneel({
 
 			const stepHorizontal = 3
 			const stepVertical = 0.25
-
-			setGridPosi((prev) => {
-				let newX = prev.x
-				let newZ = prev.z
-				let newY = prev.y
+			const current = gridPosiRef.current
+			let newX = current.x
+			let newZ = current.z
+			let newY = current.y
 
 				switch (event.key) {
 					case 'ArrowLeft':
 						if (lang) {
-							newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
+							newX = current.x + (rechts ? stepHorizontal : -stepHorizontal)
 							newX = Math.max(minX, Math.min(maxX, newX))
 						} else {
-							newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = current.z - (rechts ? stepHorizontal : -stepHorizontal)
 							newZ = Math.max(minZ, Math.min(maxZ, newZ))
 						}
 						event.preventDefault()
 						break
 					case 'ArrowRight':
 						if (lang) {
-							newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
+							newX = current.x + (rechts ? -stepHorizontal : stepHorizontal)
 							newX = Math.max(minX, Math.min(maxX, newX))
 						} else {
-							newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
+							newZ = current.z + (rechts ? stepHorizontal : -stepHorizontal)
 							newZ = Math.max(minZ, Math.min(maxZ, newZ))
 						}
 						event.preventDefault()
 						break
 					case 'ArrowUp':
-						newY = prev.y + stepVertical
+						newY = current.y + stepVertical
 						newY = Math.max(minY, Math.min(maxY, newY))
 						event.preventDefault()
 						break
 					case 'ArrowDown':
-						newY = prev.y - stepVertical
+						newY = current.y - stepVertical
 						newY = Math.max(minY, Math.min(maxY, newY))
 						event.preventDefault()
 						break
 					default:
-						return prev
+						return
 				}
 
-				return { x: newX, z: newZ, y: newY }
-			})
+			const nextPos = { x: newX, z: newZ, y: newY }
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+			persistPosition(nextPos)
 		}
 
 		window.addEventListener('keydown', handleKeyDown)
@@ -137,7 +175,11 @@ export default function TransparentesPaneel({
 		const scale = 80 / size.width
 
 		if (first) {
-			memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
+			memo = {
+				startX: gridPosiRef.current.x,
+				startZ: gridPosiRef.current.z,
+				startY: gridPosiRef.current.y
+			}
 		}
 
 		let nextX = memo.startX
@@ -157,14 +199,19 @@ export default function TransparentesPaneel({
 		let nextY = memo.startY + yDelta
 		nextY = Math.max(minY, Math.min(maxY, nextY))
 
-		setGridPosi({ x: nextX, z: nextZ, y: nextY })
+		const nextPos = { x: nextX, z: nextZ, y: nextY }
+		gridPosiRef.current = nextPos
+		setGridPosi(nextPos)
 
 		if (first) {
 			window.activeArrowControl = { kind: 'wand-transparentespaneel', id: objId }
 			setOrbitKontrolle(false)
 		}
 
-		if (last) setOrbitKontrolle(true)
+		if (last) {
+			persistPosition(nextPos)
+			setOrbitKontrolle(true)
+		}
 
 		return memo
 	})

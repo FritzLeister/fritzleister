@@ -9,7 +9,8 @@ export default function LaderampeBearbeiten({
 	objs,
 	setObjs,
 	gebäudeHöhe,
-	gebäudeBreite
+	gebäudeBreite,
+	gebäudeLänge
 }) {
 	const getLaderampeStartLängeByTyp = (typ) => {
 		if (typ === 'laderaum') return 1
@@ -37,6 +38,20 @@ export default function LaderampeBearbeiten({
 	const [farbe, setFarbe] = useState(selectedObject?.farbe ?? 'Weiß')
 	const [füllFarbe, setFüllFarbe] = useState(selectedObject?.füllFarbe ?? 'Weiß')
 	const [verkleidungFarbe, setVerkleidungFarbe] = useState(selectedObject?.verkleidungFarbe ?? 'Weiß')
+	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const istLangeWand = selectedObject?.lang ?? true
+	const maxLaderampeBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const maxLaderampeRampenhöhe = Math.max(0, gebäudeHöhe - 0.2)
+	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const begrenzteRampenhöhe = Math.min(Math.max(Number(rampenhöhe) || 0, 0), maxLaderampeRampenhöhe)
+	const maxLaderampeHöhe = Math.max(0.2, gebäudeHöhe - begrenzteRampenhöhe)
+
+	const clampValue = (value, min, max) => {
+		const num = Number(value)
+		if (Number.isNaN(num)) return min
+		return Math.min(Math.max(num, min), max)
+	}
 
 	const handleTypChange = (newTyp) => {
 		setTyp(newTyp)
@@ -45,27 +60,38 @@ export default function LaderampeBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		const geklemmteRampenhöhe = clampValue(rampenhöhe, 0, maxLaderampeRampenhöhe)
+		const maxLaderampeHöheNachRampe = Math.max(0.2, gebäudeHöhe - geklemmteRampenhöhe)
+		const geklemmteLaderampeBreite = clampValue(laderampeBreite, 0.2, maxLaderampeBreite)
+		const geklemmteLaderampeHöhe = clampValue(laderampeHöhe, 0.2, maxLaderampeHöheNachRampe)
+		const geklemmteSchlupftürBreite = clampValue(schlupftürBreite, 0.2, maxLaderampeBreite)
+		const geklemmteSchlupftürHöhe = clampValue(schlupftürHöhe, 0.2, maxLaderampeHöheNachRampe)
+		const geklemmteSchlupftürDistanzX = clampValue(schlupftürDistanzX, 0, maxLaderampeBreite)
+		const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
+		const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
 				? {
 					...obj,
-					value: [laderampeBreite, laderampeHöhe],
+					value: [geklemmteLaderampeBreite, geklemmteLaderampeHöhe],
 					typ,
 					länge,
-					rampenhöhe,
+					rampenhöhe: geklemmteRampenhöhe,
 					transparenteFüllung,
 					transparentePaneele: transparenteFüllung === 'ja' ? transparentePaneele : null,
 					fensterstreifenHöhe: transparenteFüllung === 'ja' ? fensterstreifenHöhe : null,
 					reflektor,
 					schlupftür,
-					schlupftürBreite: schlupftür === 'ja' ? schlupftürBreite : null,
-					schlupftürHöhe: schlupftür === 'ja' ? schlupftürHöhe : null,
-					schlupftürDistanzX: schlupftür === 'ja' ? schlupftürDistanzX : null,
+					schlupftürBreite: schlupftür === 'ja' ? geklemmteSchlupftürBreite : null,
+					schlupftürHöhe: schlupftür === 'ja' ? geklemmteSchlupftürHöhe : null,
+					schlupftürDistanzX: schlupftür === 'ja' ? geklemmteSchlupftürDistanzX : null,
 					schlupftürOrientierung: schlupftür === 'ja' ? schlupftürOrientierung : null,
 					farbe,
 					füllFarbe,
-					verkleidungFarbe
+					verkleidungFarbe,
+					abstandLinks: sichererAbstandLinks,
+					abstandRechts: sichererAbstandRechts
 				}
 				: obj
 		))
@@ -129,17 +155,17 @@ export default function LaderampeBearbeiten({
 				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite - 2}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxLaderampeBreite}</span>
 					</div>
-					<MuiNumberfield label={'m'} min={0.2} max={gebäudeBreite - 2} state={laderampeBreite} setState={setLaderampeBreite} />
+					<MuiNumberfield label={'m'} min={0.2} max={maxLaderampeBreite} state={laderampeBreite} setState={setLaderampeBreite} />
 				</div>
 
 				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeHöhe}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxLaderampeHöhe}</span>
 					</div>
-					<MuiNumberfield label={'m'} min={0.2} max={gebäudeHöhe} state={laderampeHöhe} setState={setLaderampeHöhe} />
+					<MuiNumberfield label={'m'} min={0.2} max={maxLaderampeHöhe} state={laderampeHöhe} setState={setLaderampeHöhe} />
 				</div>
 
 				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
@@ -153,10 +179,28 @@ export default function LaderampeBearbeiten({
 				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "14px", justifyContent: 'space-between', marginRight: "10px" }}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Höhe der Rampe</span>
-						<span className='text' style={{ fontSize: 12 }}>0-5</span>
+						<span className='text' style={{ fontSize: 12 }}>0-{maxLaderampeRampenhöhe}</span>
 					</div>
-					<MuiNumberfield label={'m'} min={0} max={5} state={rampenhöhe} setState={setRampenhöhe} />
+					<MuiNumberfield label={'m'} min={0} max={maxLaderampeRampenhöhe} state={rampenhöhe} setState={setRampenhöhe} />
 				</div>
+
+				{/*
+				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield label={'m'} min={0} max={maxAbstand} state={abstandLinks} setState={setAbstandLinks} />
+				</div>
+
+				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "14px", justifyContent: 'space-between', marginRight: "10px" }}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield label={'m'} min={0} max={maxAbstand} state={abstandRechts} setState={setAbstandRechts} />
+				</div>
+				*/}
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Sektionaltor:</p>
 
@@ -222,22 +266,22 @@ export default function LaderampeBearbeiten({
 						<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
 							<div style={{ display: 'flex', flexDirection: 'column' }}>
 								<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-								<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite - 2}</span>
+								<span className='text' style={{ fontSize: 12 }}>0.2-{maxLaderampeBreite}</span>
 							</div>
-							<MuiNumberfield label={'m'} min={0.2} max={gebäudeBreite - 2} state={schlupftürBreite} setState={setSchlupftürBreite} />
+							<MuiNumberfield label={'m'} min={0.2} max={maxLaderampeBreite} state={schlupftürBreite} setState={setSchlupftürBreite} />
 						</div>
 
 						<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
 							<div style={{ display: 'flex', flexDirection: 'column' }}>
 								<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-								<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeHöhe}</span>
+								<span className='text' style={{ fontSize: 12 }}>0.2-{maxLaderampeHöhe}</span>
 							</div>
-							<MuiNumberfield label={'m'} min={0.2} max={gebäudeHöhe} state={schlupftürHöhe} setState={setSchlupftürHöhe} />
+							<MuiNumberfield label={'m'} min={0.2} max={maxLaderampeHöhe} state={schlupftürHöhe} setState={setSchlupftürHöhe} />
 						</div>
 
 						<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "10px", justifyContent: 'space-between', marginRight: "10px" }}>
 							<span className='text' style={{ fontWeight: 200 }}>Distanz +X</span>
-							<MuiNumberfield label={'m'} min={0} max={gebäudeBreite - 2} state={schlupftürDistanzX} setState={setSchlupftürDistanzX} />
+							<MuiNumberfield label={'m'} min={0} max={maxLaderampeBreite} state={schlupftürDistanzX} setState={setSchlupftürDistanzX} />
 						</div>
 
 						<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: "14px", justifyContent: 'space-between', marginRight: "10px" }}>

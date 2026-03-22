@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Transparente Öffnung für Dach (mit Winkelrotation)
@@ -9,8 +9,10 @@ export default function DachLeeröffnung({
     position,
     bodenBreite,
     bodenLänge,
+    selectedObject,
     setOrbitKontrolle,
     setSelectedObject,
+    setObjs,
     objId,
     objs,
     setEditMenü,
@@ -45,6 +47,7 @@ export default function DachLeeröffnung({
     const initialX = obj?.startPos?.x ?? x
     const initialZ = obj?.startPos?.z ?? z
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ })
+    const gridPosiRef = useRef({ x: initialX, z: initialZ })
     const [isHovered, setIsHovered] = useState(false)
 
     const skaliertBreite = openingArgs[0] * 2.5
@@ -123,8 +126,8 @@ export default function DachLeeröffnung({
     }
 
     // Grenzen für Bewegung - beachte die Breite und Höhe der Öffnung
-    const minX = xLinks + (skaliertBreite / 2)
-    const maxX = xRechts - (skaliertBreite / 2)
+    const minX = xLinks + (skaliertBreite / 2) - 0.75
+    const maxX = xRechts - (skaliertBreite / 2) +1
     let minZ = zHinten + (skaliertHöhe / 2)
     let maxZ = zVorne - (skaliertHöhe / 2)
 
@@ -133,11 +136,11 @@ export default function DachLeeröffnung({
         if (vorne) {
             // Vordere Seite: von First (z = oben) bis Traufe (zVorne = unten)
             minZ = z + (skaliertHöhe / 2)
-            maxZ = zVorne - (skaliertHöhe / 2)
+            maxZ = zVorne - (skaliertHöhe / 2) +0.5
         } else {
             // Hintere Seite: von Traufe (zHinten = unten) bis First (z = oben)
-            minZ = zHinten + (skaliertHöhe / 2)
-            maxZ = z - (skaliertHöhe / 2)
+            minZ = zHinten + (skaliertHöhe / 2) - 0.5
+            maxZ = z - (skaliertHöhe / 2) + 0.5
         }
     }
 
@@ -154,75 +157,123 @@ export default function DachLeeröffnung({
         })
     }, [minX, maxX, minZ, maxZ])
 
+    useEffect(() => {
+        gridPosiRef.current = gridPosi
+    }, [gridPosi])
+
+    const persistPosition = useCallback((nextPos) => {
+        if (!setObjs) return
+
+        setObjs(prevObjs => prevObjs.map(item =>
+            item.id === objId
+                ? {
+                    ...item,
+                    startPos: {
+                        ...(item.startPos ?? {}),
+                        x: nextPos.x,
+                        z: nextPos.z
+                    }
+                }
+                : item
+        ))
+
+        setSelectedObject(prev => {
+            if (!prev || prev.id !== objId) return prev
+            return {
+                ...prev,
+                startPos: {
+                    ...(prev.startPos ?? {}),
+                    x: nextPos.x,
+                    z: nextPos.z
+                }
+            }
+        })
+    }, [objId, setObjs, setSelectedObject])
+
+    const updatePosition = useCallback((nextPos) => {
+        gridPosiRef.current = nextPos
+        setGridPosi(nextPos)
+        persistPosition(nextPos)
+    }, [persistPosition])
+
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
             window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
-            setSelectedObject(found)
+            const current = gridPosiRef.current
+            setSelectedObject({
+                ...found,
+                startPos: {
+                    ...(found.startPos ?? {}),
+                    x: current.x,
+                    z: current.z
+                }
+            })
             setEditMenü('LeerÖffnung-Bearbeiten')
         }
     }
 
     useEffect(() => {
+        const istAusgewählt = selectedObject?.id === objId && selectedObject?.type === 'leeröffnung' && selectedObject?.lang === false
+        if (istAusgewählt) {
+            window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
+        }
+    }, [selectedObject, objId])
+
+    useEffect(() => {
         const handleKeyDown = (event) => {
             const active = window.activeArrowControl
-            if (!active || active.kind !== 'dach-leeroeffnung' || active.id !== objId) return
+            const istAktiv = active && active.kind === 'dach-leeroeffnung' && active.id === objId
+            const istAusgewählt = selectedObject?.id === objId && selectedObject?.type === 'leeröffnung' && selectedObject?.lang === false
+            if (!istAktiv && !istAusgewählt) return
 
             const gridSize = 3
             const step = gridSize
 
-            setGridPosi(prev => {
-                let newX = prev.x
-                let newZ = prev.z
+            const current = gridPosiRef.current
+            let newX = current.x
+            let newZ = current.z
 
                 switch (event.key) {
                     case 'ArrowLeft':
                         if (vorne) {
-                            newX = prev.x - step
+                            newX = current.x - step
                         } else {
-                            newX = prev.x + step
+                            newX = current.x + step
                         }
                         newX = Math.max(minX, Math.min(maxX, newX))
                         event.preventDefault()
                         break
                     case 'ArrowRight':
                         if (vorne) {
-                            newX = prev.x + step
+                            newX = current.x + step
                         } else {
-                            newX = prev.x - step
+                            newX = current.x - step
                         }
                         newX = Math.max(minX, Math.min(maxX, newX))
                         event.preventDefault()
                         break
                     case 'ArrowUp':
-                        if (vorne) {
-                            newZ = prev.z - step
-                        } else {
-                            newZ = prev.z + step
-                        }
+                        newZ = vorne ? current.z - step : current.z + step
                         newZ = Math.max(minZ, Math.min(maxZ, newZ))
                         event.preventDefault()
                         break
                     case 'ArrowDown':
-                        if (vorne) {
-                            newZ = prev.z + step
-                        } else {
-                            newZ = prev.z - step
-                        }
+                        newZ = vorne ? current.z + step : current.z - step
                         newZ = Math.max(minZ, Math.min(maxZ, newZ))
                         event.preventDefault()
                         break
                     default:
-                        return prev
+                        return
                 }
 
-                return { x: newX, z: newZ }
-            })
+            const nextPos = { x: newX, z: newZ }
+            updatePosition(nextPos)
         }
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [objId, minX, maxX, minZ, maxZ, vorne])
+    }, [objId, minX, maxX, minZ, maxZ, vorne, selectedObject, updatePosition])
 
     const bind = useDrag(({ movement: [mx], first, last, memo }) => {
         if (!obj) return
@@ -238,7 +289,8 @@ export default function DachLeeröffnung({
         newX = Math.max(minX, Math.min(maxX, newX))
         
         // Z-Position bleibt konstant
-        setGridPosi({ x: newX, z: gridPosi.z })
+        const nextPos = { x: newX, z: gridPosi.z }
+        updatePosition(nextPos)
 
         if (first) {
             window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }

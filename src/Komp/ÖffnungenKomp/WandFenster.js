@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
+import { ENABLE_WANDFENSTER_ABSTAND_FEATURE } from '../../featureFlags'
 
 import Reflektor from './Reflektor'
 
@@ -14,6 +15,7 @@ export default function WandFenster({
     bodenLänge,
     setOrbitKontrolle,
     setSelectedObject,
+    setObjs,
     objId,
     objs,
     setEditMenü,
@@ -55,7 +57,68 @@ export default function WandFenster({
     const initialZ = obj?.startPos?.z ?? position[2]
     const initialY = obj?.startPos?.y ?? y
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
+    const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
     const [isHovered, setIsHovered] = useState(false)
+
+    useEffect(() => {
+        gridPosiRef.current = gridPosi
+    }, [gridPosi])
+
+    const persistPosition = (nextPos) => {
+        // Fenster bleibt mittig in der Wandstärke, damit innen und außen sichtbar sind
+        const surfaceOffset = 0
+        const normalSign = rechts ? -1 : 1
+        
+        // Berechne echte Position wie in finalX/finalZ
+        const realX = lang ? nextPos.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
+        const realZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : nextPos.z
+
+        const nextAbstandRechtsRaw = lang
+            ? (xRechts - halbeFensterBreite) - nextPos.x
+            : (zVorne - halbeFensterBreite) - nextPos.z
+        const nextAbstandUntenRaw = (nextPos.y + 4) - position[1] - (skaliertHöhe / 2)
+        const nextAbstandRechts = Math.max(0, Number(nextAbstandRechtsRaw.toFixed(3)))
+        const nextAbstandUnten = Math.max(0, Number(nextAbstandUntenRaw.toFixed(3)))
+
+        if (!setObjs) return
+        setObjs(prevObjs => prevObjs.map(item =>
+            item.id === objId
+                ? {
+                    ...item,
+                    ...(ENABLE_WANDFENSTER_ABSTAND_FEATURE
+                        ? {
+                            abstandRechts: nextAbstandRechts,
+                            abstandUnten: nextAbstandUnten
+                        }
+                        : {}),
+                    startPos: {
+                        ...(item.startPos ?? {}),
+                        x: realX,
+                        y: nextPos.y, // gridPosi.y; world Y = +4 (added in Wand.js)
+                        z: realZ
+                    }
+                }
+                : item
+        ))
+        setSelectedObject(prev => {
+            if (!prev || prev.id !== objId) return prev
+            return {
+                ...prev,
+                ...(ENABLE_WANDFENSTER_ABSTAND_FEATURE
+                    ? {
+                        abstandRechts: nextAbstandRechts,
+                        abstandUnten: nextAbstandUnten
+                    }
+                    : {}),
+                startPos: {
+                    ...(prev.startPos ?? {}),
+                    x: realX,
+                    y: nextPos.y,
+                    z: realZ
+                }
+            }
+        })
+    }
 
     const skaliertBreite = openingArgs[0] * 2.5
     const skaliertHöhe = openingArgs[1] * 2.5
@@ -83,6 +146,44 @@ export default function WandFenster({
     const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
     const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
 
+    useEffect(() => {
+        if (!ENABLE_WANDFENSTER_ABSTAND_FEATURE) return
+        if (!obj) return
+
+        const hasAbstandRechts = obj?.abstandRechts !== undefined && obj?.abstandRechts !== null
+        const hasAbstandUnten = obj?.abstandUnten !== undefined && obj?.abstandUnten !== null
+        if (!hasAbstandRechts && !hasAbstandUnten) return
+
+        const distRechts = hasAbstandRechts ? Number(obj.abstandRechts) : 0
+        const distUnten = hasAbstandUnten ? Number(obj.abstandUnten) : 0
+        const safeDistRechts = Number.isFinite(distRechts) ? Math.max(0, distRechts) : 0
+        const safeDistUnten = Number.isFinite(distUnten) ? Math.max(0, distUnten) : 0
+
+        let nextX = gridPosiRef.current.x
+        let nextZ = gridPosiRef.current.z
+
+        if (lang) {
+            nextX = (xRechts - halbeFensterBreite) - safeDistRechts
+            nextX = Math.max(minX, Math.min(maxX, nextX))
+        } else {
+            nextZ = (zVorne - halbeFensterBreite) - safeDistRechts
+            nextZ = Math.max(minZ, Math.min(maxZ, nextZ))
+        }
+
+        let nextY = position[1] + (skaliertHöhe / 2) + safeDistUnten - 4
+        nextY = Math.max(minY, Math.min(maxY, nextY))
+
+        const nextPos = { x: nextX, z: nextZ, y: nextY }
+        const prevPos = gridPosiRef.current
+
+        if (prevPos.x === nextPos.x && prevPos.y === nextPos.y && prevPos.z === nextPos.z) return
+
+        gridPosiRef.current = nextPos
+        setGridPosi(nextPos)
+        // Synchronisiere sofort auch die gespeicherte startPos, damit CSG-Aussparung und Fenster deckungsgleich bleiben.
+        persistPosition(nextPos)
+    }, [obj, lang, xRechts, zVorne, halbeFensterBreite, minX, maxX, minZ, maxZ, minY, maxY, position, skaliertHöhe, persistPosition])
+
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
@@ -99,49 +200,44 @@ export default function WandFenster({
 
             const stepHorizontal = 3
             const stepVertical = 0.25
+            const current = gridPosiRef.current
+            let newX = current.x
+            let newZ = current.z
+            let newY = current.y
 
-            setGridPosi((prev) => {
-                let newX = prev.x
-                let newZ = prev.z
-                let newY = prev.y
+            switch (event.key) {
+                case 'ArrowLeft':
+                    if (lang) {
+                        newX = Math.max(minX, Math.min(maxX, current.x + (rechts ? stepHorizontal : -stepHorizontal)))
+                    } else {
+                        newZ = Math.max(minZ, Math.min(maxZ, current.z - (rechts ? stepHorizontal : -stepHorizontal)))
+                    }
+                    event.preventDefault()
+                    break
+                case 'ArrowRight':
+                    if (lang) {
+                        newX = Math.max(minX, Math.min(maxX, current.x + (rechts ? -stepHorizontal : stepHorizontal)))
+                    } else {
+                        newZ = Math.max(minZ, Math.min(maxZ, current.z + (rechts ? stepHorizontal : -stepHorizontal)))
+                    }
+                    event.preventDefault()
+                    break
+                case 'ArrowUp':
+                    newY = Math.max(minY, Math.min(maxY, current.y + stepVertical))
+                    event.preventDefault()
+                    break
+                case 'ArrowDown':
+                    newY = Math.max(minY, Math.min(maxY, current.y - stepVertical))
+                    event.preventDefault()
+                    break
+                default:
+                    return
+            }
 
-                switch (event.key) {
-                    case 'ArrowLeft':
-                        if (lang) {
-                            newX = prev.x + (rechts ? stepHorizontal : -stepHorizontal)
-                            newX = Math.max(minX, Math.min(maxX, newX))
-                        } else {
-                            newZ = prev.z - (rechts ? stepHorizontal : -stepHorizontal)
-                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
-                        }
-                        event.preventDefault()
-                        break
-                    case 'ArrowRight':
-                        if (lang) {
-                            newX = prev.x + (rechts ? -stepHorizontal : stepHorizontal)
-                            newX = Math.max(minX, Math.min(maxX, newX))
-                        } else {
-                            newZ = prev.z + (rechts ? stepHorizontal : -stepHorizontal)
-                            newZ = Math.max(minZ, Math.min(maxZ, newZ))
-                        }
-                        event.preventDefault()
-                        break
-                    case 'ArrowUp':
-                        newY = prev.y + stepVertical
-                        newY = Math.max(minY, Math.min(maxY, newY))
-                        event.preventDefault()
-                        break
-                    case 'ArrowDown':
-                        newY = prev.y - stepVertical
-                        newY = Math.max(minY, Math.min(maxY, newY))
-                        event.preventDefault()
-                        break
-                    default:
-                        return prev
-                }
-
-                return { x: newX, z: newZ, y: newY }
-            })
+            const nextPos = { x: newX, z: newZ, y: newY }
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+            persistPosition(nextPos)
         }
 
         window.addEventListener('keydown', handleKeyDown)
@@ -150,7 +246,7 @@ export default function WandFenster({
 
     const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
         const scale = 80 / size.width
-        const scaleY = scale * 0.05
+        const scaleY = scale * 0.5
 
         if (first) {
             memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
@@ -160,12 +256,14 @@ export default function WandFenster({
         let newY = memo.startY - (dragMoveY * scaleY)
         newY = Math.max(minY, Math.min(maxY, newY))
 
+        let nextPos
         if (lang) {
             // Lange Wand: X-Achse bewegen (Richtung abhängig von rechts)
             const dragMultiplier = rechts ? -1 : 1
             let newX = Math.round(memo.startX + (dragMultiplier * dragMoveX * scale))
             newX = Math.max(minX, Math.min(maxX, newX))
-            setGridPosi({ x: newX, z: gridPosi.z, y: newY })
+            nextPos = { x: newX, z: gridPosi.z, y: newY }
+            setGridPosi(nextPos)
 
             if (first) {
                 window.activeArrowControl = { kind: 'wand-fenster', id: objId }
@@ -178,7 +276,8 @@ export default function WandFenster({
             const dragMultiplier = rechts ? 1 : -1
             let newZ = Math.round(memo.startZ + (dragMultiplier * dragMoveX * scale))
             newZ = Math.max(minZ, Math.min(maxZ, newZ))
-            setGridPosi({ x: gridPosi.x, z: newZ, y: newY })
+            nextPos = { x: gridPosi.x, z: newZ, y: newY }
+            setGridPosi(nextPos)
 
             if (first) {
                 window.activeArrowControl = { kind: 'wand-fenster', id: objId }
@@ -188,7 +287,10 @@ export default function WandFenster({
             }
         }
 
-        if (last) setOrbitKontrolle(true)
+        if (last) {
+            persistPosition(nextPos)
+            setOrbitKontrolle(true)
+        }
 
         return memo
     })
@@ -197,7 +299,6 @@ export default function WandFenster({
 
     // Finale Position basierend auf Wandtyp
     const tiefe = 0.7
-    // const surfaceOffset = tiefe / 2 + 0.05
     const surfaceOffset = 0
     const normalSign = rechts ? -1 : 1
     const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
@@ -270,10 +371,17 @@ export default function WandFenster({
         >
             {oberflächenAnzeigen && (
                 <>
-                    {/* Fensterfläche */}
+                    {/* Fensterfläche – Glas */}
                     <mesh position={[0, 0, 0]}>
                         <boxGeometry args={[breite-0.1, höhe-0.1, tiefe]} />
-                        <meshStandardMaterial color="lightblue" />
+                        <meshStandardMaterial
+                            color="#a8d8f0"
+                            transparent={true}
+                            opacity={0.38}
+                            roughness={0}
+                            metalness={0.05}
+                            depthWrite={false}
+                        />
                     </mesh>
 
                     {/* Oben */}

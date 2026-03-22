@@ -2,6 +2,7 @@ import { useState } from "react"
 import MuiTextfeld from "../MuiTextfeld"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
+import { ENABLE_WANDFENSTER_ABSTAND_FEATURE } from "../../featureFlags"
 
 
 export default function ÖffnungUi({ 
@@ -14,7 +15,10 @@ export default function ÖffnungUi({
     setNewId, 
     clickedButtonPos,
     gebäudeBreite,
-    gebäudeHöhe
+    gebäudeLänge,
+    gebäudeHöhe,
+    dachArt = 'satteldach',
+    dachneigung = 0
 }) {
     const getLaderampeStartLängeByTyp = (typ) => {
         if (typ === 'laderaum') return 1
@@ -38,6 +42,8 @@ export default function ÖffnungUi({
     const [sprossenY, setSprossenY] = useState(0)
     const [fensterFarbe, setFensterFarbe] = useState('Weiß')
     const [reflektorFarbe, setReflektorFarbe] = useState('Weiß')
+    const [fensterAbstandRechts, setFensterAbstandRechts] = useState(0)
+    const [fensterAbstandUnten, setFensterAbstandUnten] = useState(0)
 
     // Tür-UI State
     const [türBreite, setTürBreite] = useState(0.95)
@@ -168,7 +174,29 @@ export default function ÖffnungUi({
         'Hinzufügen Laderampe'
     ])
 
-    const maxLeeröffnungHöhe = wand === false ? Math.floor(gebäudeBreite / 2) : gebäudeHöhe
+    const maxLeeröffnungBreite = wand === false ? gebäudeLänge : (lang ? gebäudeLänge : gebäudeBreite)
+    const pultdachZusatz = (wand && lang && !rechts && dachArt === 'pultdach') ? (Number(dachneigung) || 0) : 0
+    const maxLeeröffnungHöhe = wand === false ? Math.floor(gebäudeBreite / 2) : (gebäudeHöhe + pultdachZusatz)
+    const maxFensterBreite = lang ? gebäudeLänge : gebäudeBreite
+    const maxFensterHöhe = gebäudeHöhe
+    const maxFensterAbstandRechts = Math.max(0, maxFensterBreite - fensterBreite)
+    const maxFensterAbstandUnten = Math.max(0, maxFensterHöhe - fensterHöhe)
+    const maxTürBreite = lang ? gebäudeLänge : gebäudeBreite
+    const maxTürHöhe = gebäudeHöhe
+    const maxSektionalTorBreite = lang ? gebäudeLänge : gebäudeBreite
+    const maxSektionalTorHöhe = gebäudeHöhe
+    const maxSchiebetürBreite = lang ? gebäudeLänge : gebäudeBreite
+    const maxSchiebetürHöhe = gebäudeHöhe
+    const maxRolltorBreite = lang ? gebäudeLänge : gebäudeBreite
+    const maxRolltorHöhe = gebäudeHöhe
+    const maxLaderampeBreite = lang ? gebäudeLänge : gebäudeBreite
+    const maxLaderampeRampenhöhe = Math.max(0, gebäudeHöhe - 0.2)
+    const begrenzteLaderampeRampenhöhe = Math.min(Math.max(Number(laderampeRampenhöhe) || 0, 0), maxLaderampeRampenhöhe)
+    const maxLaderampeHöhe = Math.max(0.2, gebäudeHöhe - begrenzteLaderampeRampenhöhe)
+    const maxTransparentesPaneelBreite = wand === false ? gebäudeLänge : (lang ? gebäudeLänge : gebäudeBreite)
+    const maxTransparentesPaneelHöhe = wand === false ? Math.floor(gebäudeBreite / 2) : gebäudeHöhe
+    const maxKleinLichtkuppelBreiteX = gebäudeLänge
+    const maxKleinLichtkuppelBreiteY = Math.floor(gebäudeBreite / 2)
 
     return(
         <>
@@ -343,12 +371,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxFensterBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxFensterBreite} 
                                     state={fensterBreite} 
                                     setState={setFensterBreite} 
                                 />
@@ -364,16 +392,64 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxFensterHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxFensterHöhe} 
                                     state={fensterHöhe} 
                                     setState={setFensterHöhe} 
                                 />
                             </div>
+
+                            {ENABLE_WANDFENSTER_ABSTAND_FEATURE && (
+                                <>
+                                    <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position:</p>
+
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        gap: '10px', 
+                                        alignItems: 'center', 
+                                        marginBottom: "10px", 
+                                        justifyContent: 'space-between', 
+                                        marginRight: "10px"
+                                    }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span className='text' style={{ fontWeight: 200}}>Abstand Rechts</span>
+                                            <span className='text' style={{ fontSize: 12}}>0-{maxFensterAbstandRechts.toFixed(2)}</span>
+                                        </div>
+                                        <MuiNumberfield 
+                                            label={'m'} 
+                                            min={0} 
+                                            max={maxFensterAbstandRechts} 
+                                            state={fensterAbstandRechts} 
+                                            setState={setFensterAbstandRechts} 
+                                        />
+                                    </div>
+
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        gap: '10px', 
+                                        alignItems: 'center', 
+                                        marginBottom: "14px", 
+                                        justifyContent: 'space-between', 
+                                        marginRight: "10px"
+                                    }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span className='text' style={{ fontWeight: 200}}>Abstand Unten</span>
+                                            <span className='text' style={{ fontSize: 12}}>0-{maxFensterAbstandUnten.toFixed(2)}</span>
+                                        </div>
+                                        <MuiNumberfield 
+                                            label={'m'} 
+                                            min={0} 
+                                            max={maxFensterAbstandUnten} 
+                                            state={fensterAbstandUnten} 
+                                            setState={setFensterAbstandUnten} 
+                                        />
+                                    </div>
+                                </>
+                            )}
 
                             <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Eigenschaften:</p>
 
@@ -517,7 +593,13 @@ export default function ÖffnungUi({
                                             sprossenX,
                                             sprossenY,
                                             fensterFarbe,
-                                            reflektorFarbe
+                                            reflektorFarbe,
+                                            ...(ENABLE_WANDFENSTER_ABSTAND_FEATURE
+                                                ? {
+                                                    abstandRechts: Math.max(0, Math.min(fensterAbstandRechts, maxFensterAbstandRechts)),
+                                                    abstandUnten: Math.max(0, Math.min(fensterAbstandUnten, maxFensterAbstandUnten))
+                                                }
+                                                : {})
                                         })
                                         setNewId(id => id + 1)
                                         setSelectedType('')
@@ -593,12 +675,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxTürBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxTürBreite} 
                                     state={türBreite} 
                                     setState={setTürBreite} 
                                 />
@@ -614,12 +696,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxTürHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxTürHöhe} 
                                     state={türHöhe} 
                                     setState={setTürHöhe} 
                                 />
@@ -895,12 +977,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxSektionalTorBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxSektionalTorBreite} 
                                     state={sektionalTorBreite} 
                                     setState={setSektionalTorBreite} 
                                 />
@@ -916,12 +998,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxSektionalTorHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxSektionalTorHöhe} 
                                     state={sektionalTorHöhe} 
                                     setState={setSektionalTorHöhe} 
                                 />
@@ -1043,12 +1125,12 @@ export default function ÖffnungUi({
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                            <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                            <span className='text' style={{ fontSize: 12}}>0.2-{maxSektionalTorBreite}</span>
                                         </div>
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0.2} 
-                                            max={gebäudeBreite-2} 
+                                            max={maxSektionalTorBreite} 
                                             state={schlupftürBreite} 
                                             setState={setSchlupftürBreite} 
                                         />
@@ -1064,12 +1146,12 @@ export default function ÖffnungUi({
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                            <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                            <span className='text' style={{ fontSize: 12}}>0.2-{maxSektionalTorHöhe}</span>
                                         </div>
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0.2} 
-                                            max={gebäudeHöhe} 
+                                            max={maxSektionalTorHöhe} 
                                             state={schlupftürHöhe} 
                                             setState={setSchlupftürHöhe} 
                                         />
@@ -1087,7 +1169,7 @@ export default function ÖffnungUi({
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0} 
-                                            max={gebäudeBreite-2} 
+                                            max={maxSektionalTorBreite} 
                                             state={schlupftürDistanzX} 
                                             setState={setSchlupftürDistanzX} 
                                         />
@@ -1323,12 +1405,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxSchiebetürBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxSchiebetürBreite} 
                                     state={schiebetürBreite} 
                                     setState={setSchiebetürBreite} 
                                 />
@@ -1344,12 +1426,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxSchiebetürHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxSchiebetürHöhe} 
                                     state={schiebetürHöhe} 
                                     setState={setSchiebetürHöhe} 
                                 />
@@ -1433,12 +1515,12 @@ export default function ÖffnungUi({
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                            <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                            <span className='text' style={{ fontSize: 12}}>0.2-{maxSchiebetürBreite}</span>
                                         </div>
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0.2} 
-                                            max={gebäudeBreite-2} 
+                                            max={maxSchiebetürBreite} 
                                             state={schiebetürSchlupftürBreite} 
                                             setState={setSchiebetürSchlupftürBreite} 
                                         />
@@ -1454,12 +1536,12 @@ export default function ÖffnungUi({
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                            <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                            <span className='text' style={{ fontSize: 12}}>0.2-{maxSchiebetürHöhe}</span>
                                         </div>
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0.2} 
-                                            max={gebäudeHöhe} 
+                                            max={maxSchiebetürHöhe} 
                                             state={schiebetürSchlupftürHöhe} 
                                             setState={setSchiebetürSchlupftürHöhe} 
                                         />
@@ -1477,7 +1559,7 @@ export default function ÖffnungUi({
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0} 
-                                            max={gebäudeBreite-2} 
+                                            max={maxSchiebetürBreite} 
                                             state={schiebetürSchlupftürDistanz} 
                                             setState={setSchiebetürSchlupftürDistanz} 
                                         />
@@ -1710,12 +1792,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxRolltorBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxRolltorBreite} 
                                     state={rolltorBreite} 
                                     setState={setRolltorBreite} 
                                 />
@@ -1731,12 +1813,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxRolltorHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxRolltorHöhe} 
                                     state={rolltorHöhe} 
                                     setState={setRolltorHöhe} 
                                 />
@@ -1962,12 +2044,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxTransparentesPaneelBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxTransparentesPaneelBreite} 
                                     state={transparentesPaneelBreite} 
                                     setState={setTransparentesPaneelBreite} 
                                 />
@@ -1983,12 +2065,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxTransparentesPaneelHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxTransparentesPaneelHöhe} 
                                     state={transparentesPaneelHöhe} 
                                     setState={setTransparentesPaneelHöhe} 
                                 />
@@ -2024,7 +2106,8 @@ export default function ÖffnungUi({
                                     onClick={() => {
                                         addObj([transparentesPaneelBreite, transparentesPaneelHöhe], 'transparentespaneel', newId, rechts, clickedButtonPos, lang, {
                                             posSegment: transparentesPaneelPosSegment,
-                                            vorne: clickedButtonPos?.vorne ?? true
+                                            vorne: clickedButtonPos?.vorne ?? true,
+                                            bereich: wand ? 'wand' : 'dach'
                                         })
                                         setNewId(id => id + 1)
                                         setSelectedType('')
@@ -2122,12 +2205,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxLaderampeBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxLaderampeBreite} 
                                     state={laderampeBreite} 
                                     setState={setLaderampeBreite} 
                                 />
@@ -2143,12 +2226,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxLaderampeHöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeHöhe} 
+                                    max={maxLaderampeHöhe} 
                                     state={laderampeHöhe} 
                                     setState={setLaderampeHöhe} 
                                 />
@@ -2185,12 +2268,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Höhe der Rampe</span>
-                                    <span className='text' style={{ fontSize: 12}}>0-5</span>
+                                    <span className='text' style={{ fontSize: 12}}>0-{maxLaderampeRampenhöhe}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0} 
-                                    max={5} 
+                                    max={maxLaderampeRampenhöhe} 
                                     state={laderampeRampenhöhe} 
                                     setState={setLaderampeRampenhöhe} 
                                 />
@@ -2312,12 +2395,12 @@ export default function ÖffnungUi({
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                            <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                                <span className='text' style={{ fontSize: 12}}>0.2-{maxLaderampeBreite}</span>
                                         </div>
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0.2} 
-                                            max={gebäudeBreite-2} 
+                                                max={maxLaderampeBreite} 
                                             state={laderampeSchlupftürBreite} 
                                             setState={setLaderampeSchlupftürBreite} 
                                         />
@@ -2333,12 +2416,12 @@ export default function ÖffnungUi({
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                                            <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                                                <span className='text' style={{ fontSize: 12}}>0.2-{maxLaderampeHöhe}</span>
                                         </div>
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0.2} 
-                                            max={gebäudeHöhe} 
+                                                max={maxLaderampeHöhe} 
                                             state={laderampeSchlupftürHöhe} 
                                             setState={setLaderampeSchlupftürHöhe} 
                                         />
@@ -2356,7 +2439,7 @@ export default function ÖffnungUi({
                                         <MuiNumberfield 
                                             label={'m'} 
                                             min={0} 
-                                            max={gebäudeBreite-2} 
+                                            max={maxLaderampeBreite} 
                                             state={laderampeSchlupftürDistanzX} 
                                             setState={setLaderampeSchlupftürDistanzX} 
                                         />
@@ -2480,19 +2563,33 @@ export default function ÖffnungUi({
                                 </button>
                                 <button
                                     onClick={() => {
-                                        addObj([laderampeBreite, laderampeHöhe], 'laderampe', newId, rechts, clickedButtonPos, lang, {
+                                        const clampValue = (value, min, max) => {
+                                            const num = Number(value)
+                                            if (Number.isNaN(num)) return min
+                                            return Math.min(Math.max(num, min), max)
+                                        }
+
+                                        const geklemmteRampenhöhe = clampValue(laderampeRampenhöhe, 0, maxLaderampeRampenhöhe)
+                                        const maxLaderampeHöheNachRampe = Math.max(0.2, gebäudeHöhe - geklemmteRampenhöhe)
+                                        const geklemmteLaderampeBreite = clampValue(laderampeBreite, 0.2, maxLaderampeBreite)
+                                        const geklemmteLaderampeHöhe = clampValue(laderampeHöhe, 0.2, maxLaderampeHöheNachRampe)
+                                        const geklemmteSchlupftürBreite = clampValue(laderampeSchlupftürBreite, 0.2, maxLaderampeBreite)
+                                        const geklemmteSchlupftürHöhe = clampValue(laderampeSchlupftürHöhe, 0.2, maxLaderampeHöheNachRampe)
+                                        const geklemmteSchlupftürDistanzX = clampValue(laderampeSchlupftürDistanzX, 0, maxLaderampeBreite)
+
+                                        addObj([geklemmteLaderampeBreite, geklemmteLaderampeHöhe], 'laderampe', newId, rechts, clickedButtonPos, lang, {
                                             posSegment: laderampePosSegment,
                                             typ: laderampeTyp,
                                             länge: laderampeLänge,
-                                            rampenhöhe: laderampeRampenhöhe,
+                                            rampenhöhe: geklemmteRampenhöhe,
                                             transparenteFüllung: laderampeTransparenteFüllung,
                                             transparentePaneele: laderampeTransparenteFüllung === 'ja' ? laderampeTransparentePaneele : null,
                                             fensterstreifenHöhe: laderampeTransparenteFüllung === 'ja' ? laderampeFensterstreifenHöhe : null,
                                             reflektor: laderampeReflektor,
                                             schlupftür: laderampeSchlupftür,
-                                            schlupftürBreite: laderampeSchlupftür === 'ja' ? laderampeSchlupftürBreite : null,
-                                            schlupftürHöhe: laderampeSchlupftür === 'ja' ? laderampeSchlupftürHöhe : null,
-                                            schlupftürDistanzX: laderampeSchlupftür === 'ja' ? laderampeSchlupftürDistanzX : null,
+                                            schlupftürBreite: laderampeSchlupftür === 'ja' ? geklemmteSchlupftürBreite : null,
+                                            schlupftürHöhe: laderampeSchlupftür === 'ja' ? geklemmteSchlupftürHöhe : null,
+                                            schlupftürDistanzX: laderampeSchlupftür === 'ja' ? geklemmteSchlupftürDistanzX : null,
                                             schlupftürOrientierung: laderampeSchlupftür === 'ja' ? laderampeSchlupftürOrientierung : null,
                                             farbe: laderampeFarbe,
                                             füllFarbe: laderampeFüllFarbe,
@@ -2545,13 +2642,13 @@ export default function ÖffnungUi({
                                 marginRight: "10px"
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite-2}</span>
+                                    <span className='text' style={{ fontWeight: 200 }}>Breite</span>
+                                    <span className='text' style={{ fontSize: 12 }}>1-{maxLeeröffnungBreite}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={1} 
-                                    max={gebäudeBreite-2} 
+                                    max={maxLeeröffnungBreite} 
                                     state={öffnungsBreite} 
                                     setState={setÖffnungsBreite} 
                                 />
@@ -2606,9 +2703,10 @@ export default function ÖffnungUi({
                                 </button>
                                 <button
                                     onClick={() => {
-                                        addObj([öffnungsBreite*2.5, öffnungsHöhe*2.5], 'leeröffnung', newId, rechts, clickedButtonPos, lang, {
+                                        addObj([öffnungsBreite, öffnungsHöhe], 'leeröffnung', newId, rechts, clickedButtonPos, lang, {
                                             posSegment: 'mittig',
-                                            vorne: clickedButtonPos?.vorne ?? true
+                                            vorne: clickedButtonPos?.vorne ?? true,
+                                            bereich: wand ? 'wand' : 'dach'
                                         })
                                         setNewId(id => id + 1)
                                         setSelectedType('')
@@ -2755,12 +2853,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite X</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxKleinLichtkuppelBreiteX}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite} 
+                                    max={maxKleinLichtkuppelBreiteX} 
                                     step={0.01}
                                     state={kleinLichtkuppelBreiteX} 
                                     setState={setKleinLichtkuppelBreiteX} 
@@ -2777,12 +2875,12 @@ export default function ÖffnungUi({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite Y</span>
-                                    <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite}</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxKleinLichtkuppelBreiteY}</span>
                                 </div>
                                 <MuiNumberfield 
                                     label={'m'} 
                                     min={0.2} 
-                                    max={gebäudeBreite} 
+                                    max={maxKleinLichtkuppelBreiteY} 
                                     step={0.01}
                                     state={kleinLichtkuppelBreiteY} 
                                     setState={setKleinLichtkuppelBreiteY} 

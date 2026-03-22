@@ -73,13 +73,27 @@ export default function SchiebeTür({
     const kurzeWandMin = zHinten - 1
     const kurzeWandMax = zVorne + 1
 
+    const getAchsenGrenzen = (wandMin, wandMax, richtungsVorzeichen) => {
+        if (richtungsVorzeichen >= 0) {
+            return {
+                min: wandMin + randPuffer - minOffsetHorizontal,
+                max: wandMax - randPuffer - maxOffsetHorizontal
+            }
+        }
+
+        return {
+            min: wandMin + randPuffer + maxOffsetHorizontal,
+            max: wandMax - randPuffer + minOffsetHorizontal
+        }
+    }
+
     // Grenzen für lange Wände (X-Achse)
-    const minX = langeWandMin + randPuffer - minOffsetHorizontal
-    const maxX = langeWandMax - randPuffer - maxOffsetHorizontal
+    const xRichtungsVorzeichen = rechts ? -1 : 1
+    const { min: minX, max: maxX } = getAchsenGrenzen(langeWandMin, langeWandMax, xRichtungsVorzeichen)
 
     // Grenzen für kurze Wände (Z-Achse)
-    const minZ = kurzeWandMin + randPuffer - minOffsetHorizontal
-    const maxZ = kurzeWandMax - randPuffer - maxOffsetHorizontal
+    const zRichtungsVorzeichen = rechts ? 1 : -1
+    const { min: minZ, max: maxZ } = getAchsenGrenzen(kurzeWandMin, kurzeWandMax, zRichtungsVorzeichen)
 
     // Grenzen für Y-Achse (vertikal auf der Wand)
     const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
@@ -197,7 +211,7 @@ export default function SchiebeTür({
     // - Zwei Türflügel untereinander (jeder = breite/2)
     // - Griffe zeigen nach innen (zur Mitte)
     
-    const flügelGap = 0.1  // Gap zwischen den Flügeln in Metern (einstellbar)
+    const flügelGap = 0.04  // Gap zwischen den Flügeln in Metern (einstellbar)
     const flügelBreite = (breite - flügelGap) / 2 - 0.05
     const flügel1X = -(breite - flügelGap) / 4  // Linker Flügel
     const flügel2X = (breite - flügelGap) / 4   // Rechter Flügel

@@ -1,8 +1,14 @@
 import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
+import { ENABLE_WANDFENSTER_ABSTAND_FEATURE } from "../../featureFlags"
 
-export default function WandFensterBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite }) {
+export default function WandFensterBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
+    const istLangeWand = selectedObject?.lang ?? true
+    const maxFensterBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
+    const maxFensterHöhe = gebäudeHöhe
+    const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
+
     // Pre-füllen mit aktuellen Werten
     const [fensterBreite, setFensterBreite] = useState(selectedObject?.value[0] ?? 4.1)
     const [fensterHöhe, setFensterHöhe] = useState(selectedObject?.value[1] ?? 2.95)
@@ -12,20 +18,35 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
     const [sprossenY, setSprossenY] = useState(selectedObject?.sprossenY ?? 0)
     const [fensterFarbe, setFensterFarbe] = useState(selectedObject?.fensterFarbe ?? 'Weiß')
     const [reflektorFarbe, setReflektorFarbe] = useState(selectedObject?.reflektorFarbe ?? 'Weiß')
+    const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+    const [abstandUnten, setAbstandUnten] = useState(selectedObject?.abstandUnten ?? 0)
+
+    const maxAbstandRechts = Math.max(0, maxFensterBreite - fensterBreite)
+    const maxAbstandUnten = Math.max(0, maxFensterHöhe - fensterHöhe)
 
     const handleUpdate = () => {
         if (selectedObject) {
+            const sichereFensterBreite = clampValue(fensterBreite, 0.2, maxFensterBreite)
+            const sichereFensterHöhe = clampValue(fensterHöhe, 0.2, maxFensterHöhe)
+            const sichererAbstandRechts = clampValue(abstandRechts, 0, Math.max(0, maxFensterBreite - sichereFensterBreite))
+            const sichererAbstandUnten = clampValue(abstandUnten, 0, Math.max(0, maxFensterHöhe - sichereFensterHöhe))
             setObjs(objs => objs.map(obj => 
                 obj.id === selectedObject.id 
                     ? { 
                         ...obj, 
-                        value: [fensterBreite, fensterHöhe], 
+                        value: [sichereFensterBreite, sichereFensterHöhe], 
                         posSegment,
                         reflektor,
                         sprossenX,
                         sprossenY,
                         fensterFarbe,
-                        reflektorFarbe
+                        reflektorFarbe,
+                        ...(ENABLE_WANDFENSTER_ABSTAND_FEATURE
+                            ? {
+                                abstandRechts: sichererAbstandRechts,
+                                abstandUnten: sichererAbstandUnten
+                            }
+                            : {})
                     }
                     : obj
             ))
@@ -107,12 +128,12 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                        <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite}</span>
+                        <span className='text' style={{ fontSize: 12}}>0.2-{maxFensterBreite}</span>
                     </div>
                     <MuiNumberfield 
                         label={'m'} 
                         min={0.2} 
-                        max={gebäudeBreite} 
+                        max={maxFensterBreite} 
                         state={fensterBreite} 
                         setState={setFensterBreite} 
                     />
@@ -128,16 +149,62 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                        <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                        <span className='text' style={{ fontSize: 12}}>0.2-{maxFensterHöhe}</span>
                     </div>
                     <MuiNumberfield 
                         label={'m'} 
                         min={0.2} 
-                        max={gebäudeHöhe} 
+                        max={maxFensterHöhe} 
                         state={fensterHöhe} 
                         setState={setFensterHöhe} 
                     />
                 </div>
+
+                {ENABLE_WANDFENSTER_ABSTAND_FEATURE && (
+                    <>
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "10px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "10px"
+                        }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+                                <span className='text' style={{ fontSize: 12 }}>0-{maxAbstandRechts.toFixed(2)}</span>
+                            </div>
+                            <MuiNumberfield
+                                label={'m'}
+                                min={0}
+                                max={maxAbstandRechts}
+                                state={abstandRechts}
+                                setState={setAbstandRechts}
+                            />
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px', 
+                            alignItems: 'center', 
+                            marginBottom: "14px", 
+                            justifyContent: 'space-between', 
+                            marginRight: "10px"
+                        }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span className='text' style={{ fontWeight: 200 }}>Abstand Unten</span>
+                                <span className='text' style={{ fontSize: 12 }}>0-{maxAbstandUnten.toFixed(2)}</span>
+                            </div>
+                            <MuiNumberfield
+                                label={'m'}
+                                min={0}
+                                max={maxAbstandUnten}
+                                state={abstandUnten}
+                                setState={setAbstandUnten}
+                            />
+                        </div>
+                    </>
+                )}
 
                 <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Eigenschaften:</p>
 

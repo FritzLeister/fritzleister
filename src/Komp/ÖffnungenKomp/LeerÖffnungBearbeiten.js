@@ -2,31 +2,39 @@ import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 
-export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
-    const internerMaßstab = 2.5
+export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge, dachArt = 'satteldach', dachneigung = 0 }) {
     const istLangeWand = selectedObject?.lang ?? true
-    const maxÖffnungsBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
-    const maxÖffnungsHöhe = gebäudeHöhe
+    const istHohePultdachseite = dachArt === 'pultdach' && istLangeWand && !(selectedObject?.rechts ?? true)
+    const pultdachZusatz = istHohePultdachseite ? (Number(dachneigung) || 0) : 0
+    const maxÖffnungsBreite = selectedObject?.lang === false ? gebäudeLänge : (istLangeWand ? gebäudeLänge : gebäudeBreite)
+    const maxÖffnungsHöhe = istLangeWand ? (gebäudeHöhe + pultdachZusatz) : Math.floor(gebäudeBreite / 2)
+    const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
 
     const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
 
     // Pre-füllen mit aktuellen Werten
-    const [öffnungsBreite, setÖffnungsBreite] = useState(() => clampValue((selectedObject?.value[0] ?? 12) / internerMaßstab, 1, maxÖffnungsBreite))
-    const [öffnungsHöhe, setÖffnungsHöhe] = useState(() => clampValue((selectedObject?.value[1] ?? 8) / internerMaßstab, 1, maxÖffnungsHöhe))
+    const [öffnungsBreite, setÖffnungsBreite] = useState(() => clampValue(selectedObject?.value[0] ?? 12, 1, maxÖffnungsBreite))
+    const [öffnungsHöhe, setÖffnungsHöhe] = useState(() => clampValue(selectedObject?.value[1] ?? 8, 1, maxÖffnungsHöhe))
     const [posSegment, setPosSegment] = useState(selectedObject?.posSegment ?? 'mittig')
+    const [abstandLinks, setAbstandLinks] = useState(() => clampValue(selectedObject?.abstandLinks ?? 0, 0, maxAbstand))
+    const [abstandRechts, setAbstandRechts] = useState(() => clampValue(selectedObject?.abstandRechts ?? 0, 0, maxAbstand))
 
     useEffect(() => {
         setÖffnungsBreite((prev) => clampValue(prev, 1, maxÖffnungsBreite))
         setÖffnungsHöhe((prev) => clampValue(prev, 1, maxÖffnungsHöhe))
-    }, [maxÖffnungsBreite, maxÖffnungsHöhe])
+        setAbstandLinks((prev) => clampValue(prev, 0, maxAbstand))
+        setAbstandRechts((prev) => clampValue(prev, 0, maxAbstand))
+    }, [maxÖffnungsBreite, maxÖffnungsHöhe, maxAbstand])
 
     const handleUpdate = () => {
         if (selectedObject) {
             const sichereBreite = clampValue(öffnungsBreite, 1, maxÖffnungsBreite)
             const sichereHöhe = clampValue(öffnungsHöhe, 1, maxÖffnungsHöhe)
+                const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
+                const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
             setObjs(objs => objs.map(obj => 
                 obj.id === selectedObject.id 
-                    ? { ...obj, value: [sichereBreite * internerMaßstab, sichereHöhe * internerMaßstab], posSegment }
+                    ? { ...obj, value: [sichereBreite, sichereHöhe], posSegment, abstandLinks: sichererAbstandLinks, abstandRechts: sichererAbstandRechts }
                     : obj
             ))
             setEditMenü(null)
@@ -114,6 +122,50 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
                         setState={(value) => setÖffnungsHöhe(value)} 
                     />
                 </div>
+
+                {/*
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '10px', 
+                    alignItems: 'center', 
+                    marginBottom: "10px", 
+                    justifyContent: 'space-between', 
+                    marginRight: "15px"
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
+                        <span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+                    </div>
+                    <MuiNumberfield
+                        label={'m'}
+                        min={0}
+                        max={maxAbstand}
+                        state={abstandLinks}
+                        setState={setAbstandLinks}
+                    />
+                </div>
+
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '10px', 
+                    alignItems: 'center', 
+                    marginBottom: "20px", 
+                    justifyContent: 'space-between', 
+                    marginRight: "15px"
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+                        <span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+                    </div>
+                    <MuiNumberfield
+                        label={'m'}
+                        min={0}
+                        max={maxAbstand}
+                        state={abstandRechts}
+                        setState={setAbstandRechts}
+                    />
+                </div>
+                */}
 
                 {/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
                 

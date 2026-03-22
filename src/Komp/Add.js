@@ -438,7 +438,9 @@ export default function Add({
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
-        {editMenü === 'Öffnungen' && <UiButtonEdit 
+
+        {/* Öffnungen Ui aber brauch ich erstmal nicht ig */}
+        {/* {editMenü === 'Öffnungen' && <UiButtonEdit 
             name={"Öffnungen"} 
             height={3} 
             breite={breite}
@@ -523,18 +525,18 @@ export default function Add({
             setKranKapazität={setKranKapazität}
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
-        /> }
-        {editMenü === 'Öffnungen-Auswahl' && <ÖffnungenUi wand={true} lang={clickedButtonPos?.lang ?? true} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeHöhe={höhe} />}
-        {editMenü === 'Öffnungen-Dach-Auswahl' && <ÖffnungenUi wand={false} lang={false} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeHöhe={höhe} />}
-        {editMenü === 'LeerÖffnung-Bearbeiten' && selectedObject?.type === 'leeröffnung' && <LeerÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
-        {editMenü === 'Fenster-Bearbeiten' && selectedObject?.type === 'fenster' && <WandFensterBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'Tür-Bearbeiten' && selectedObject?.type === 'tür-öffnung' && <TürÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'SektionalTor-Bearbeiten' && <SektionalTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'Schiebetür-Bearbeiten' && selectedObject?.type === 'schiebetür' && <SchiebeTürBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'Rolltor-Bearbeiten' && selectedObject?.type === 'rolltor' && <RollTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'TransparentesPaneel-Bearbeiten' && selectedObject?.type === 'transparentespaneel' && <TransparentesPaneelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'Laderampe-Bearbeiten' && selectedObject?.type === 'laderampe' && <LaderampeBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} />}
-        {editMenü === 'Lichtkuppel-Bearbeiten' && selectedObject?.type === 'kleinlichtskuppel' && <LichtKuppelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeBreite={breite} />}
+        /> } */}
+        {editMenü === 'Öffnungen-Auswahl' && <ÖffnungenUi wand={true} lang={clickedButtonPos?.lang ?? true} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeLänge={länge} gebäudeHöhe={höhe} dachArt={dachArt} dachneigung={dachneigung} />}
+        {editMenü === 'Öffnungen-Dach-Auswahl' && <ÖffnungenUi wand={false} lang={false} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeLänge={länge} gebäudeHöhe={höhe} dachArt={dachArt} dachneigung={dachneigung} />}
+        {editMenü === 'LeerÖffnung-Bearbeiten' && selectedObject?.type === 'leeröffnung' && <LeerÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} dachArt={dachArt} dachneigung={dachneigung} />}
+        {editMenü === 'Fenster-Bearbeiten' && selectedObject?.type === 'fenster' && <WandFensterBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'Tür-Bearbeiten' && selectedObject?.type === 'tür-öffnung' && <TürÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'SektionalTor-Bearbeiten' && <SektionalTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'Schiebetür-Bearbeiten' && selectedObject?.type === 'schiebetür' && <SchiebeTürBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'Rolltor-Bearbeiten' && selectedObject?.type === 'rolltor' && <RollTorBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'TransparentesPaneel-Bearbeiten' && selectedObject?.type === 'transparentespaneel' && <TransparentesPaneelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'Laderampe-Bearbeiten' && selectedObject?.type === 'laderampe' && <LaderampeBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'Lichtkuppel-Bearbeiten' && selectedObject?.type === 'kleinlichtskuppel' && <LichtKuppelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeBreite={breite} gebäudeLänge={länge} />}
 
         {editMenü === 'Zubehör' && <UiButtonEdit 
             name={"Zubehör"} 
@@ -709,11 +711,12 @@ export default function Add({
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
+        
         {editMenü === 'Angebot' && <UiButtonEdit 
             name={"Angebot"} 
             height={6} 
-          setShowApp3={setShowApp3}
-          setShowAppKontakt={setShowAppKontakt}
+            setShowApp3={setShowApp3}
+            setShowAppKontakt={setShowAppKontakt}
             breite={breite}
             setBreite={setBreite}
             länge={länge}

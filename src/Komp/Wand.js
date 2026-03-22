@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import Platten from "./WandKomp/Platten"
 import Abgrenzung from "./WandKomp/Abgrenzung"
 import AddButtonWand from "./WandKomp/AddButtonWand"
+import MassivwandCSG from "./WandKomp/MassivwandCSG"
 
 export default function Wand({ 
     koordinate, 
@@ -57,6 +58,61 @@ export default function Wand({
 
         const frag = []
         const zWert = rechts ? zHinten - 1 : zVorne + 1
+
+        const leeröffnungenFuerWand = (objs || [])
+            .filter(obj => obj.type === "leeröffnung" && (obj.lang ?? true) === true && (obj.rechts ?? true) === rechts)
+            .map((obj, index) => {
+                const öffnungsBreite = (obj?.value?.[0] ?? 12) * 2.5
+                const öffnungsHöhe = (obj?.value?.[1] ?? 8) * 2.5
+
+                return {
+                    id: `lang-${rechts ? 'hinten' : 'vorne'}-${obj.id ?? index}`,
+                    position: [
+                        obj?.startPos?.x ?? x,
+                        obj?.startPos?.y ?? (koordinate[1] + öffnungsHöhe / 2),
+                        zWert
+                    ],
+                    size: [öffnungsBreite, öffnungsHöhe, 1.4]
+                }
+            })
+
+        const fensterFuerWand = (objs || [])
+            .filter(obj => obj.type === "fenster" && (obj.lang ?? true) === true && (obj.rechts ?? true) === rechts)
+            .map((obj, index) => {
+                const öffnungsBreite = (obj?.value?.[0] ?? 8) * 2.5
+                const öffnungsHöhe = (obj?.value?.[1] ?? 6) * 2.5
+                const worldY = obj?.startPos?.y !== undefined
+                    ? obj.startPos.y + 4
+                    : koordinate[1] + öffnungsHöhe / 2
+                return {
+                    id: `fenster-lang-${rechts ? 'hinten' : 'vorne'}-${obj.id ?? index}`,
+                    position: [obj?.startPos?.x ?? x, worldY, zWert],
+                    size: [öffnungsBreite, öffnungsHöhe, 1.4]
+                }
+            })
+
+        const transparentePaneeleFuerWand = (objs || [])
+            .filter(obj =>
+                obj.type === "transparentespaneel" &&
+                (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang ?? true) === true)) &&
+                (obj.lang ?? true) === true &&
+                (obj.rechts ?? true) === rechts
+            )
+            .map((obj, index) => {
+                const öffnungsBreite = (obj?.value?.[0] ?? 3) * 2.5
+                const öffnungsHöhe = (obj?.value?.[1] ?? 3) * 2.5
+                const worldY = obj?.startPos?.y !== undefined
+                    ? obj.startPos.y
+                    : koordinate[1] + sockelHöhe + (öffnungsHöhe / 2)
+
+                return {
+                    id: `paneel-lang-${rechts ? 'hinten' : 'vorne'}-${obj.id ?? index}`,
+                    position: [obj?.startPos?.x ?? x, worldY, zWert],
+                    size: [öffnungsBreite, öffnungsHöhe, 1.4]
+                }
+            })
+
+        const alleÖffnungenLang = [...leeröffnungenFuerWand, ...fensterFuerWand, ...transparentePaneeleFuerWand]
         
         // Berechne Platten-Höhe und Position wie bei Kantteilen
         const traufhöhe = y + 4.5 + gebäudeHöhe
@@ -82,22 +138,28 @@ export default function Wand({
                     sockelHöhe={sockelHöhe}
                     lang={true}
                     gebäudeHöhe={plattenHöhe}
+                    öffnungen={alleÖffnungenLang}
                     oberflächenAnzeigen={oberflächenAnzeigen}
                     plattenAnzeigen={plattenAnzeigen}
                     kantenAnzeigen={kantenAnzeigen}
                     color={color}
                 />
-                {massivWand && oberflächenAnzeigen && (
-                    <mesh 
-                    key={`lang-mesh-${rechts ? 'rechts' : 'links'}-${i}`} 
-                    position={[startX + i * fragBreite, koordinate[1] + (sockelHöhe / 2), zWert]} 
-                    onClick={() => console.log("")} >
-                        <boxGeometry args={[fragBreite, sockelHöhe, 1]} />
-                        <meshStandardMaterial color={'grey'} />
-                    </mesh>
-                )}
                 </>
             ); 
+        }
+
+        if (massivWand) {
+            frag.push(
+                <MassivwandCSG
+                    key={`lang-massiv-csg-${rechts ? 'hinten' : 'vorne'}`}
+                    position={[(xLinks - 1 + xRechts + 1) / 2, koordinate[1] + (sockelHöhe / 2), zWert]}
+                    size={[wandLänge, sockelHöhe, 1]}
+                    öffnungen={alleÖffnungenLang}
+                    farbe={'grey'}
+                    oberflächenAnzeigen={oberflächenAnzeigen}
+                    kantenAnzeigen={false}
+                />
+            )
         }
         
         // Horizontale Umrandung (oben und unten, jeweils beide Kanten) + vertikale Ecken
@@ -214,10 +276,65 @@ export default function Wand({
         // Wand zwischen den Kantteilen
         const wandLänge = längeKurzeSeite + 1.85
         const fragBreite = wandLänge / wievieleFragmente
-        const startZ = (zHinten - 1) + fragBreite / 2
         
         const frag = []
         const xWert = rechts ? xLinks - 1 : xRechts + 1
+
+        const leeröffnungenFuerWand = (objs || [])
+            .filter(obj => obj.type === "leeröffnung" && (obj.lang ?? true) === false && (obj.rechts ?? true) === rechts)
+            .map((obj, index) => {
+                const öffnungsBreite = (obj?.value?.[0] ?? 12) * 2.5
+                const öffnungsHöhe = (obj?.value?.[1] ?? 8) * 2.5
+
+
+                return {
+                    id: `kurz-${rechts ? 'links' : 'rechts'}-${obj.id ?? index}`,
+                    position: [
+                        xWert,
+                        obj?.startPos?.y ?? (koordinate[1] + öffnungsHöhe / 2),
+                        obj?.startPos?.z ?? z
+                    ],
+                    size: [1.4, öffnungsHöhe, öffnungsBreite]
+                }
+            })
+
+        const fensterFuerKurzeWand = (objs || [])
+            .filter(obj => obj.type === "fenster" && (obj.lang ?? true) === false && (obj.rechts ?? true) === rechts)
+            .map((obj, index) => {
+                const öffnungsBreite = (obj?.value?.[0] ?? 8) * 2.5
+                const öffnungsHöhe = (obj?.value?.[1] ?? 6) * 2.5
+                const worldY = obj?.startPos?.y !== undefined
+                    ? obj.startPos.y + 4
+                    : koordinate[1] + öffnungsHöhe / 2
+                return {
+                    id: `fenster-kurz-${rechts ? 'links' : 'rechts'}-${obj.id ?? index}`,
+                    position: [xWert, worldY, obj?.startPos?.z ?? z],
+                    size: [1.4, öffnungsHöhe, öffnungsBreite]
+                }
+            })
+
+        const transparentePaneeleFuerKurzeWand = (objs || [])
+            .filter(obj =>
+                obj.type === "transparentespaneel" &&
+                obj.bereich === 'wand' &&
+                (obj.lang ?? true) === false &&
+                (obj.rechts ?? true) === rechts
+            )
+            .map((obj, index) => {
+                const öffnungsBreite = (obj?.value?.[0] ?? 3) * 2.5
+                const öffnungsHöhe = (obj?.value?.[1] ?? 3) * 2.5
+                const worldY = obj?.startPos?.y !== undefined
+                    ? obj.startPos.y
+                    : koordinate[1] + sockelHöhe + (öffnungsHöhe / 2)
+
+                return {
+                    id: `paneel-kurz-${rechts ? 'links' : 'rechts'}-${obj.id ?? index}`,
+                    position: [xWert, worldY, obj?.startPos?.z ?? z],
+                    size: [1.4, öffnungsHöhe, öffnungsBreite]
+                }
+            })
+
+        const alleÖffnungenKurz = [...leeröffnungenFuerWand, ...fensterFuerKurzeWand, ...transparentePaneeleFuerKurzeWand]
 
         const lüfterObjs = (objs || []).filter(obj => obj.type === "lüfter")
 
@@ -247,15 +364,38 @@ export default function Wand({
                 plattenHöhe = höheOben+0.15 - sockelHöhe;
                 plattenYPosition = sockelHöhe + plattenHöhe / 2
             }
+
+            const streifenMinY = plattenYPosition - (plattenHöhe / 2)
+            const streifenMaxY = plattenYPosition + (plattenHöhe / 2)
+            const streifenMinZ = zPos - (plattenDicke / 2)
+            const streifenMaxZ = zPos + (plattenDicke / 2)
+
+            const öffnungenFürStreifen = alleÖffnungenKurz.filter((öffnung) => {
+                const öffnungMinY = öffnung.position[1] - (öffnung.size[1] / 2)
+                const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
+                const öffnungMinZ = öffnung.position[2] - (öffnung.size[2] / 2)
+                const öffnungMaxZ = öffnung.position[2] + (öffnung.size[2] / 2)
+
+                const überschneidungY = öffnungMaxY >= streifenMinY && öffnungMinY <= streifenMaxY
+                const überschneidungZ = öffnungMaxZ >= streifenMinZ && öffnungMinZ <= streifenMaxZ
+                return überschneidungY && überschneidungZ
+            })
             
             frag.push(
                 <>
-                {plattenAnzeigen && oberflächenAnzeigen && (
-                    <mesh key={`kurz-platte-${rechts ? 'rechts' : 'links'}-${i}`} position={[xWert, plattenYPosition, zPos]}>
-                        <boxGeometry args={[0.4, plattenHöhe, plattenDicke]} />
-                        <meshStandardMaterial color={color} />
-                    </mesh>
-                )}
+                <Platten
+                    key={`kurz-platte-${rechts ? 'rechts' : 'links'}-${i}`}
+                    fragBreite={plattenDicke}
+                    position={[xWert, plattenYPosition, zPos]}
+                    sockelHöhe={sockelHöhe}
+                    lang={false}
+                    gebäudeHöhe={plattenHöhe}
+                    öffnungen={öffnungenFürStreifen}
+                    oberflächenAnzeigen={oberflächenAnzeigen}
+                    plattenAnzeigen={plattenAnzeigen}
+                    kantenAnzeigen={false}
+                    color={color}
+                />
                 {/* {plattenAnzeigen && kantenAnzeigen && (
                     <lineSegments key={`kurz-platte-kante-${rechts ? 'rechts' : 'links'}-${i}`} position={[xWert, plattenYPosition, zPos]}>
                         <edgesGeometry args={[new THREE.BoxGeometry(0.4, plattenHöhe, plattenDicke)]} />
@@ -267,19 +407,18 @@ export default function Wand({
             )
         }
         
-        // Massivwände als Fragmente
-        for (let i = 0; i < wievieleFragmente; i++) {
+        if (massivWand) {
             frag.push(
-                <>
-                {massivWand && oberflächenAnzeigen && (
-                    <mesh key={`kurz-mesh-${rechts ? 'rechts' : 'links'}-${i}`} position={[xWert, koordinate[1] + (sockelHöhe / 2), startZ + i * fragBreite]} onClick={() => console.log("")} >
-                        <boxGeometry args={[1, sockelHöhe, fragBreite+1]} />
-                        <meshStandardMaterial color={'grey'} />
-                    </mesh>
-                )}
-                </>
-            ); 
-            console.log(i)
+                <MassivwandCSG
+                    key={`kurz-massiv-csg-${rechts ? 'links' : 'rechts'}`}
+                    position={[xWert, koordinate[1] + (sockelHöhe / 2), (zHinten - 1 + zVorne + 1) / 2]}
+                    size={[1, sockelHöhe, wandLänge]}
+                    öffnungen={alleÖffnungenKurz}
+                    farbe={'grey'}
+                    oberflächenAnzeigen={oberflächenAnzeigen}
+                    kantenAnzeigen={false}
+                />
+            )
         }
         
         // Durchgehende Umrandung für die gesamte Wand

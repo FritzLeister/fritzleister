@@ -20,7 +20,8 @@ export default function Gerüst({
     pultdachHöheDifferenz,
     kantenAnzeigen,
     oberflächenAnzeigen,
-    sockelHöhe
+    sockelHöhe,
+    objs
 }) {
 
     const bodenDicke = 0.3
@@ -90,6 +91,7 @@ export default function Gerüst({
                 dachArt={dachArt}
                 frame={kantenAnzeigen}
                 oberfläche={oberflächenAnzeigen}
+                objs={objs}
             /> 
         )}
 
@@ -107,6 +109,7 @@ export default function Gerüst({
                 dachArt={dachArt}
                 frame={kantenAnzeigen}
                 oberfläche={oberflächenAnzeigen}
+                objs={objs}
             />
         )}
 

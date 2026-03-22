@@ -30,8 +30,10 @@ export default function Halle({
     bodenBreite, 
     gebäudeHöhe, 
     koordinate, 
+    selectedObj,
     setTürAttribute, 
     setSelectedObject, 
+    setObjs,
     objs,
     objId,
     flach,
@@ -59,15 +61,27 @@ export default function Halle({
 
     const [orbitKontrolle, setOrbitKontrolle] = useState(true)
     const türObjs = objs.filter(obj => obj.type === "tür-öffnung")
-    const leeröffnungen = objs.filter(obj => obj.type === "leeröffnung" && (obj.lang === true || obj.lang === undefined))
+    const leeröffnungen = objs.filter(obj =>
+        obj.type === "leeröffnung" &&
+        (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined)))
+    )
     const wandFenster = objs.filter(obj => obj.type === "fenster")
     const sektionalTore = objs.filter(obj => obj.type === "sektionaltor")
     const schiebetüren = objs.filter(obj => obj.type === "schiebetür")
     const rolltore = objs.filter(obj => obj.type === "rolltor")
     const laderampen = objs.filter(obj => obj.type === "laderampe")
-    const transparentePaneeleWand = objs.filter(obj => obj.type === "transparentespaneel" && (obj.lang === true || obj.lang === undefined))
-    const transparentePaneeleDach = objs.filter(obj => obj.type === "transparentespaneel" && obj.lang === false)
-    const dachLeeröffnungen = objs.filter(obj => obj.type === "leeröffnung" && obj.lang === false)
+    const transparentePaneeleWand = objs.filter(obj =>
+        obj.type === "transparentespaneel" &&
+        (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined)))
+    )
+    const transparentePaneeleDach = objs.filter(obj =>
+        obj.type === "transparentespaneel" &&
+        (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false))
+    )
+    const dachLeeröffnungen = objs.filter(obj =>
+        obj.type === "leeröffnung" &&
+        (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false))
+    )
     const lichtkuppeln = objs.filter(obj => obj.type === "kleinlichtskuppel")
 
     // Flachdach wird wie Satteldach behandelt, aber mit diffTraufFirst = 0
@@ -97,6 +111,7 @@ export default function Halle({
                 zusatzHöheMitte={effektiveDiffTraufFirst}
             />
         ) : (
+            objs={objs}
             <> */}
             {/* Stahlrahmen, Pfetten, Wandriegel, Kantteile */}
             <Gerüst 
@@ -114,6 +129,7 @@ export default function Halle({
             kantenAnzeigen={kantenAnzeigen}
             oberflächenAnzeigen={oberflächenAnzeigen}
             sockelHöhe={gerüstSockelHöhe}
+            objs={objs}
             />
 
 
@@ -206,11 +222,14 @@ export default function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
                 oberflächenAnzeigen={oberflächenAnzeigen}
                 kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
             />
         ))}
 
@@ -223,6 +242,7 @@ export default function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
@@ -315,6 +335,7 @@ export default function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
@@ -334,6 +355,7 @@ export default function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
@@ -353,10 +375,12 @@ export default function Halle({
                 position={koordinate}
                 bodenBreite={bodenBreite}
                 bodenLänge={bodenLänge}
+                selectedObject={selectedObj}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
                 objId={obj.id}
                 objs={objs}
+                setObjs={setObjs}
                 setEditMenü={setEditMenü}
                 oberflächenAnzeigen={oberflächenAnzeigen}
                 kantenAnzeigen={kantenAnzeigen}
@@ -376,6 +400,7 @@ export default function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}

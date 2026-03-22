@@ -7,8 +7,12 @@ export default function LichtKuppelBearbeiten({
 	setEditMenü,
 	objs,
 	setObjs,
-	gebäudeBreite
+	gebäudeBreite,
+	gebäudeLänge
 }) {
+	const maxBreiteX = gebäudeLänge
+	const maxBreiteY = Math.floor(gebäudeBreite / 2)
+	const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
 	const [breiteX, setBreiteX] = useState(selectedObject?.value?.[0] ?? 1)
 	const [breiteY, setBreiteY] = useState(selectedObject?.value?.[1] ?? 1)
 	const [horizontaleAusrichtung, setHorizontaleAusrichtung] = useState(selectedObject?.horizontaleAusrichtung ?? 'mittig')
@@ -16,12 +20,14 @@ export default function LichtKuppelBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		const sichereBreiteX = clampValue(breiteX, 0.2, maxBreiteX)
+		const sichereBreiteY = clampValue(breiteY, 0.2, maxBreiteY)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
 				? {
 					...obj,
-					value: [breiteX, breiteY],
+					value: [sichereBreiteX, sichereBreiteY],
 					horizontaleAusrichtung,
 					farbe
 				}
@@ -104,12 +110,12 @@ export default function LichtKuppelBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxBreiteX}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeBreite}
+						max={maxBreiteX}
 						step={0.01}
 						state={breiteX}
 						setState={setBreiteX}
@@ -126,12 +132,12 @@ export default function LichtKuppelBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxBreiteY}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeBreite}
+						max={maxBreiteY}
 						step={0.01}
 						state={breiteY}
 						setState={setBreiteY}

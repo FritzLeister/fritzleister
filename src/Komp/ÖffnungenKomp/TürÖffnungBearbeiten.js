@@ -2,7 +2,13 @@ import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 
-export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite }) {
+export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
+    const istLangeWand = selectedObject?.lang ?? true
+    const maxTürBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
+    const maxTürHöhe = gebäudeHöhe
+    const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
+    const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
+
     // Pre-füllen mit aktuellen Werten
     const [türBreite, setTürBreite] = useState(selectedObject?.value[0] ?? 0.95)
     const [türHöhe, setTürHöhe] = useState(selectedObject?.value[1] ?? 2.05)
@@ -14,14 +20,20 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
     const [türFarbe, setTürFarbe] = useState(selectedObject?.türFarbe ?? 'Weiß')
     const [türFüllFarbe, setTürFüllFarbe] = useState(selectedObject?.türFüllFarbe ?? 'Weiß')
     const [türFüllFarbeInnen, setTürFüllFarbeInnen] = useState(selectedObject?.türFüllFarbeInnen ?? 'Weiß')
+    const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+    const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
     const handleUpdate = () => {
         if (selectedObject) {
+            const sichereTürBreite = clampValue(türBreite, 0.2, maxTürBreite)
+            const sichereTürHöhe = clampValue(türHöhe, 0.2, maxTürHöhe)
+            const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
+            const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
             setObjs(objs => objs.map(obj => 
                 obj.id === selectedObject.id 
                     ? { 
                         ...obj, 
-                        value: [türBreite, türHöhe],
+                        value: [sichereTürBreite, sichereTürHöhe],
                         posSegment,
                         doppeltür,
                         öffnet,
@@ -29,7 +41,9 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
                         türReflektor,
                         türFarbe,
                         türFüllFarbe,
-                        türFüllFarbeInnen
+                        türFüllFarbeInnen,
+                        abstandLinks: sichererAbstandLinks,
+                        abstandRechts: sichererAbstandRechts
                     }
                     : obj
             ))
@@ -111,12 +125,12 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                        <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeBreite}</span>
+                        <span className='text' style={{ fontSize: 12}}>0.2-{maxTürBreite}</span>
                     </div>
                     <MuiNumberfield 
                         label={'m'} 
                         min={0.2} 
-                        max={gebäudeBreite} 
+                        max={maxTürBreite} 
                         state={türBreite} 
                         setState={setTürBreite} 
                     />
@@ -132,16 +146,60 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span className='text' style={{ fontWeight: 200}}>Höhe</span>
-                        <span className='text' style={{ fontSize: 12}}>0.2-{gebäudeHöhe}</span>
+                        <span className='text' style={{ fontSize: 12}}>0.2-{maxTürHöhe}</span>
                     </div>
                     <MuiNumberfield 
                         label={'m'} 
                         min={0.2} 
-                        max={gebäudeHöhe} 
+                        max={maxTürHöhe} 
                         state={türHöhe} 
                         setState={setTürHöhe} 
                     />
                 </div>
+
+                {/*
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '10px', 
+                    alignItems: 'center', 
+                    marginBottom: "10px", 
+                    justifyContent: 'space-between', 
+                    marginRight: "10px"
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
+                        <span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+                    </div>
+                    <MuiNumberfield
+                        label={'m'}
+                        min={0}
+                        max={maxAbstand}
+                        state={abstandLinks}
+                        setState={setAbstandLinks}
+                    />
+                </div>
+
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '10px', 
+                    alignItems: 'center', 
+                    marginBottom: "14px", 
+                    justifyContent: 'space-between', 
+                    marginRight: "10px"
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+                        <span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+                    </div>
+                    <MuiNumberfield
+                        label={'m'}
+                        min={0}
+                        max={maxAbstand}
+                        state={abstandRechts}
+                        setState={setAbstandRechts}
+                    />
+                </div>
+                */}
 
                 <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Türeigenschaften:</p>
 

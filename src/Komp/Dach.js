@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import * as THREE from 'three'
 import DachFenster from "./DachFenster"
+import { Geometry, Base, Subtraction } from '@react-three/csg'
 
 export default function Dach({ 
     koordinate, 
@@ -46,6 +47,216 @@ export default function Dach({
     // Verwende die gleiche Berechnung wie in Kantteile.js für die Traufhöhe
     const traufhöhe = y + 4.5 + gebäudeHöhe
 
+    const dachLeeröffnungen = (objs || [])
+        .filter(obj => obj.type === 'leeröffnung' && (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false)))
+        .map((obj, index) => {
+            const öffnungsBreite = (obj?.value?.[0] ?? 5) * 2.5
+            const öffnungsHöhe = (obj?.value?.[1] ?? 5) * 2.5
+            const startX = obj?.startPos?.x ?? x
+            const startZ = obj?.startPos?.z ?? z
+
+            let seite = 'pult'
+            let worldY = traufhöhe - 4
+
+            if (dachArt === 'satteldach') {
+                const istVorne = obj?.vorne ?? true
+                seite = istVorne ? 'vorne' : 'hinten'
+
+                if (istVorne) {
+                    const zStart = zVorne + 1
+                    const zEnd = z
+                    const zLänge = Math.max(Math.abs(zStart - zEnd), 0.0001)
+
+                    const yStart = traufhöhe - 4
+                    const yEnd = traufhöhe + zusatzHöheMitte - 4
+                    const zNormalized = (startZ - zStart) / (-zLänge)
+                    worldY = yStart + ((yEnd - yStart) * zNormalized)
+                } else {
+                    const zStart = z
+                    const zEnd = zHinten - 1
+                    const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+
+                    const yStart = traufhöhe + zusatzHöheMitte - 4
+                    const yEnd = traufhöhe - 4
+                    const zNormalized = (zStart - startZ) / zLänge
+                    worldY = yStart + ((yEnd - yStart) * zNormalized)
+                }
+            }
+
+            if (dachArt === 'pultdach') {
+                const zStart = zHinten - 1
+                const zEnd = zVorne + 1
+                const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+
+                const yStart = traufhöhe - 4
+                const yEnd = traufhöhe - 4 + pultdachHöheDifferenz
+                const zNormalized = (startZ - zStart) / zLänge
+                worldY = yStart + ((yEnd - yStart) * zNormalized)
+            }
+
+            return {
+                id: `dach-leer-${obj.id ?? index}`,
+                seite,
+                position: [startX, worldY, startZ],
+                size: [öffnungsBreite, öffnungsHöhe]
+            }
+        })
+
+    const lichtkuppelÖffnungen = (objs || [])
+        .filter(obj => obj.type === 'kleinlichtskuppel')
+        .map((obj, index) => {
+            const breiteX = obj?.value?.[0] ?? 1
+            const breiteY = obj?.value?.[1] ?? 1
+            const startX = obj?.startPos?.x ?? x
+            const startZ = obj?.startPos?.z ?? z
+
+            let seite = 'pult'
+            let worldY = traufhöhe - 4
+            const istVorne = obj?.vorne ?? true
+
+            if (dachArt === 'satteldach') {
+                seite = istVorne ? 'vorne' : 'hinten'
+
+                if (istVorne) {
+                    const zStart = zVorne + 1
+                    const zEnd = z
+                    const zLänge = Math.max(Math.abs(zStart - zEnd), 0.0001)
+
+                    const yStart = traufhöhe - 4
+                    const yEnd = traufhöhe + zusatzHöheMitte - 4
+                    const zNormalized = (startZ - zStart) / (-zLänge)
+                    worldY = yStart + ((yEnd - yStart) * zNormalized)
+                } else {
+                    const zStart = z
+                    const zEnd = zHinten - 1
+                    const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+
+                    const yStart = traufhöhe + zusatzHöheMitte - 4
+                    const yEnd = traufhöhe - 4
+                    const zNormalized = (zStart - startZ) / zLänge
+                    worldY = yStart + ((yEnd - yStart) * zNormalized)
+                }
+            }
+
+            if (dachArt === 'pultdach') {
+                const zStart = zHinten - 1
+                const zEnd = zVorne + 1
+                const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+
+                const yStart = traufhöhe - 4
+                const yEnd = traufhöhe - 4 + pultdachHöheDifferenz
+                const zNormalized = (startZ - zStart) / zLänge
+                worldY = yStart + ((yEnd - yStart) * zNormalized)
+            }
+
+            return {
+                id: `dach-lichtkuppel-${obj.id ?? index}`,
+                seite,
+                position: [startX, worldY, startZ],
+                size: [breiteX, breiteY]
+            }
+        })
+
+    const transparentePaneelÖffnungen = (objs || [])
+        .filter(obj => obj.type === 'transparentespaneel' && (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false)))
+        .map((obj, index) => {
+            const öffnungsBreite = obj?.value?.[0] ?? 3
+            const öffnungsHöhe = obj?.value?.[1] ?? 3
+            const startX = obj?.startPos?.x ?? x
+            const startZ = obj?.startPos?.z ?? z
+
+            let seite = 'pult'
+            let worldY = traufhöhe - 4
+
+            if (dachArt === 'satteldach') {
+                const istVorne = obj?.vorne ?? true
+                seite = istVorne ? 'vorne' : 'hinten'
+
+                if (istVorne) {
+                    const zStart = zVorne + 1
+                    const zEnd = z
+                    const zLänge = Math.max(Math.abs(zStart - zEnd), 0.0001)
+
+                    const yStart = traufhöhe - 4
+                    const yEnd = traufhöhe + zusatzHöheMitte - 4
+                    const zNormalized = (startZ - zStart) / (-zLänge)
+                    worldY = yStart + ((yEnd - yStart) * zNormalized)
+                } else {
+                    const zStart = z
+                    const zEnd = zHinten - 1
+                    const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+
+                    const yStart = traufhöhe + zusatzHöheMitte - 4
+                    const yEnd = traufhöhe - 4
+                    const zNormalized = (zStart - startZ) / zLänge
+                    worldY = yStart + ((yEnd - yStart) * zNormalized)
+                }
+            }
+
+            if (dachArt === 'pultdach') {
+                const zStart = zHinten - 1
+                const zEnd = zVorne + 1
+                const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+
+                const yStart = traufhöhe - 4
+                const yEnd = traufhöhe - 4 + pultdachHöheDifferenz
+                const zNormalized = (startZ - zStart) / zLänge
+                worldY = yStart + ((yEnd - yStart) * zNormalized)
+            }
+
+            return {
+                id: `dach-paneel-${obj.id ?? index}`,
+                seite,
+                position: [startX, worldY, startZ],
+                size: [öffnungsBreite, öffnungsHöhe]
+            }
+        })
+
+    const alleÖffnungen = [...dachLeeröffnungen, ...lichtkuppelÖffnungen, ...transparentePaneelÖffnungen]
+
+    const dachLeeröffnungenVersion = alleÖffnungen
+        .map(öffnung => `${öffnung.id}:${öffnung.position[0].toFixed(3)}:${öffnung.position[1].toFixed(3)}:${öffnung.position[2].toFixed(3)}:${öffnung.size[0].toFixed(3)}:${öffnung.size[1].toFixed(3)}:${öffnung.seite}`)
+        .join('|')
+
+    const renderDachplatteCSG = ({ key, position, rotationX, size, seite }) => {
+        const openingsFürSeite = alleÖffnungen.filter(öffnung => dachArt === 'pultdach' || öffnung.seite === seite)
+
+        return (
+            <group key={key}>
+                {plattenAnzeigen && oberflächenAnzeigen && (
+                    <mesh key={`${key}-mesh-${dachLeeröffnungenVersion}`} position={position} rotation={[rotationX, 0, 0]}>
+                        <Geometry>
+                            <Base>
+                                <boxGeometry args={size} />
+                            </Base>
+                            {openingsFürSeite.map((öffnung) => {
+                                const platePos = new THREE.Vector3(position[0], position[1], position[2])
+                                const openingPos = new THREE.Vector3(öffnung.position[0], öffnung.position[1], öffnung.position[2])
+                                const localOpeningPos = openingPos.sub(platePos).applyEuler(new THREE.Euler(-rotationX, 0, 0))
+
+                                return (
+                                    <Subtraction
+                                        key={`${key}-${öffnung.id}`}
+                                        position={[localOpeningPos.x, localOpeningPos.y, localOpeningPos.z]}
+                                    >
+                                        <boxGeometry args={[öffnung.size[0], 1.2, öffnung.size[1]]} />
+                                    </Subtraction>
+                                )
+                            })}
+                        </Geometry>
+                        <meshStandardMaterial color={color} />
+                    </mesh>
+                )}
+                {plattenAnzeigen && kantenAnzeigen && (
+                    <lineSegments position={position} rotation={[rotationX, 0, 0]}>
+                        <edgesGeometry args={[new THREE.BoxGeometry(size[0], size[1], size[2])]} />
+                        <lineBasicMaterial color="black" />
+                    </lineSegments>
+                )}
+            </group>
+        )
+    }
+
     const dachplatten = []
     const buttons = []
     
@@ -77,20 +288,13 @@ export default function Dach({
             const plattenX = (xStart + xEnd) / 2
             
             dachplatten.push(
-                <group key={`dachplatte-${i}`}>
-                    {plattenAnzeigen && oberflächenAnzeigen && (
-                        <mesh position={[plattenX, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <boxGeometry args={[plattenBreite - 0.05, 0.15, plattenLänge]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                    )}
-                    {plattenAnzeigen && kantenAnzeigen && (
-                        <lineSegments position={[plattenX, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(plattenBreite - 0.05, 0.15, plattenLänge)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                    )}
-                </group>
+                renderDachplatteCSG({
+                    key: `dachplatte-${i}`,
+                    position: [plattenX, yMitte, zMitte],
+                    rotationX: rotation,
+                    size: [plattenBreite - 0.05, 0.15, plattenLänge],
+                    seite: 'pult'
+                })
             )
             
             // Button für diese Dachplatte
@@ -176,20 +380,13 @@ export default function Dach({
             
             // Vordere Dachplatte
             dachplatten.push(
-                <group key={`dachplatte-vorne-${i}`}>
-                    {plattenAnzeigen && oberflächenAnzeigen && (
-                        <mesh position={[plattenX, yMitteVorne, zMitteVorne]} rotation={[rotationVorne, 0, 0]}>
-                            <boxGeometry args={[plattenBreite - 0.05, 0.15, plattenLängeVorne]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                    )}
-                    {plattenAnzeigen && kantenAnzeigen && (
-                        <lineSegments position={[plattenX, yMitteVorne, zMitteVorne]} rotation={[rotationVorne, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(plattenBreite - 0.05, 0.15, plattenLängeVorne)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                    )}
-                </group>
+                renderDachplatteCSG({
+                    key: `dachplatte-vorne-${i}`,
+                    position: [plattenX, yMitteVorne, zMitteVorne],
+                    rotationX: rotationVorne,
+                    size: [plattenBreite - 0.05, 0.15, plattenLängeVorne],
+                    seite: 'vorne'
+                })
             )
             
             // Button für vordere Dachplatte
@@ -234,20 +431,13 @@ export default function Dach({
             
             // Hintere Dachplatte
             dachplatten.push(
-                <group key={`dachplatte-hinten-${i}`}>
-                    {plattenAnzeigen && oberflächenAnzeigen && (
-                        <mesh position={[plattenX, yMitteHinten, zMitteHinten]} rotation={[rotationHinten, 0, 0]}>
-                            <boxGeometry args={[plattenBreite - 0.05, 0.15, plattenLängeHinten]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                    )}
-                    {plattenAnzeigen && kantenAnzeigen && (
-                        <lineSegments position={[plattenX, yMitteHinten, zMitteHinten]} rotation={[rotationHinten, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(plattenBreite - 0.05, 0.15, plattenLängeHinten)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                    )}
-                </group>
+                renderDachplatteCSG({
+                    key: `dachplatte-hinten-${i}`,
+                    position: [plattenX, yMitteHinten, zMitteHinten],
+                    rotationX: rotationHinten,
+                    size: [plattenBreite - 0.05, 0.15, plattenLängeHinten],
+                    seite: 'hinten'
+                })
             )
             
             // Button für hintere Dachplatte

@@ -7,19 +7,33 @@ export default function TransparentesPaneelBearbeiten({
 	objs,
 	setObjs,
 	gebäudeHöhe,
-	gebäudeBreite
+	gebäudeBreite,
+	gebäudeLänge
 }) {
+	const istLangeWand = selectedObject?.lang ?? true
+	const maxPaneelBreite = selectedObject?.lang === false ? gebäudeLänge : (istLangeWand ? gebäudeLänge : gebäudeBreite)
+	const maxPaneelHöhe = selectedObject?.lang === false ? Math.floor(gebäudeBreite / 2) : gebäudeHöhe
+	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
+	const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
 	const [paneelBreite, setPaneelBreite] = useState(selectedObject?.value?.[0] ?? 3)
 	const [paneelHöhe, setPaneelHöhe] = useState(selectedObject?.value?.[1] ?? 3)
+	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		const sicherePaneelBreite = clampValue(paneelBreite, 0.2, maxPaneelBreite)
+		const sicherePaneelHöhe = clampValue(paneelHöhe, 0.2, maxPaneelHöhe)
+		const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
+		const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
 				? {
 					...obj,
-					value: [paneelBreite, paneelHöhe]
+					value: [sicherePaneelBreite, sicherePaneelHöhe],
+					abstandLinks: sichererAbstandLinks,
+					abstandRechts: sichererAbstandRechts
 				}
 				: obj
 		))
@@ -76,12 +90,12 @@ export default function TransparentesPaneelBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Breite</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeBreite - 2}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxPaneelBreite}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeBreite - 2}
+						max={maxPaneelBreite}
 						state={paneelBreite}
 						setState={setPaneelBreite}
 					/>
@@ -97,16 +111,60 @@ export default function TransparentesPaneelBearbeiten({
 				}}>
 					<div style={{ display: 'flex', flexDirection: 'column' }}>
 						<span className='text' style={{ fontWeight: 200 }}>Höhe</span>
-						<span className='text' style={{ fontSize: 12 }}>0.2-{gebäudeHöhe}</span>
+						<span className='text' style={{ fontSize: 12 }}>0.2-{maxPaneelHöhe}</span>
 					</div>
 					<MuiNumberfield
 						label={'m'}
 						min={0.2}
-						max={gebäudeHöhe}
+						max={maxPaneelHöhe}
 						state={paneelHöhe}
 						setState={setPaneelHöhe}
 					/>
 				</div>
+
+				{/*
+				<div style={{
+					display: 'flex',
+					gap: '10px',
+					alignItems: 'center',
+					marginBottom: "10px",
+					justifyContent: 'space-between',
+					marginRight: "10px"
+				}}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield
+						label={'m'}
+						min={0}
+						max={maxAbstand}
+						state={abstandLinks}
+						setState={setAbstandLinks}
+					/>
+				</div>
+
+				<div style={{
+					display: 'flex',
+					gap: '10px',
+					alignItems: 'center',
+					marginBottom: "18px",
+					justifyContent: 'space-between',
+					marginRight: "10px"
+				}}>
+					<div style={{ display: 'flex', flexDirection: 'column' }}>
+						<span className='text' style={{ fontWeight: 200 }}>Abstand Rechts</span>
+						<span className='text' style={{ fontSize: 12 }}>Mitte bis Wandrand</span>
+					</div>
+					<MuiNumberfield
+						label={'m'}
+						min={0}
+						max={maxAbstand}
+						state={abstandRechts}
+						setState={setAbstandRechts}
+					/>
+				</div>
+				*/}
 
 				<div style={{
 					display: 'flex',
