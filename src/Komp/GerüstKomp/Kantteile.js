@@ -40,7 +40,7 @@ export default function Kantteile({
     const leeröffnungenVolumes = (objs || [])
         .filter(obj =>
             obj.type === 'leeröffnung' &&
-            (obj.bereich === 'wand' || (obj.bereich === undefined && obj.lang !== false))
+            (obj.bereich === 'wand' || obj.bereich === undefined)
         )
         .map((obj, index) => {
             const istLangeWand = obj?.lang ?? true
@@ -58,6 +58,57 @@ export default function Kantteile({
                     : [1.4, öffnungsHöhe, öffnungsBreite]
             }
         })
+
+    const fensterVolumes = (objs || [])
+        .filter(obj =>
+            obj.type === 'fenster'
+        )
+        .map((obj, index) => {
+            const istLangeWand = obj?.lang ?? true
+            const istRechts = obj?.rechts ?? true
+            const öffnungsBreite = (obj?.value?.[0] ?? 8) * 2.5
+            const öffnungsHöhe = (obj?.value?.[1] ?? 6) * 2.5
+            const worldY = obj?.startPos?.y !== undefined
+                ? obj.startPos.y + 4
+                : (öffnungsHöhe / 2)
+
+            return {
+                id: `fenster-${obj.id ?? index}`,
+                position: istLangeWand
+                    ? [obj?.startPos?.x ?? x, worldY, istRechts ? zHinten - 1 : zVorne + 1]
+                    : [istRechts ? xLinks - 1 : xRechts + 1, worldY, obj?.startPos?.z ?? z],
+                size: istLangeWand
+                    ? [öffnungsBreite, öffnungsHöhe, 1.4]
+                    : [1.4, öffnungsHöhe, öffnungsBreite]
+            }
+        })
+
+    const transparentePaneeleVolumes = (objs || [])
+        .filter(obj =>
+            obj.type === 'transparentespaneel' &&
+            (obj.bereich === 'wand' || obj.bereich === undefined)
+        )
+        .map((obj, index) => {
+            const istLangeWand = obj?.lang ?? true
+            const istRechts = obj?.rechts ?? true
+            const öffnungsBreite = (obj?.value?.[0] ?? 3) * 2.5
+            const öffnungsHöhe = (obj?.value?.[1] ?? 3) * 2.5
+            const worldY = obj?.startPos?.y !== undefined
+                ? obj.startPos.y
+                : (sockelHöhe + öffnungsHöhe / 2)
+
+            return {
+                id: `paneel-${obj.id ?? index}`,
+                position: istLangeWand
+                    ? [obj?.startPos?.x ?? x, worldY, istRechts ? zHinten - 1 : zVorne + 1]
+                    : [istRechts ? xLinks - 1 : xRechts + 1, worldY, obj?.startPos?.z ?? z],
+                size: istLangeWand
+                    ? [öffnungsBreite, öffnungsHöhe, 1.4]
+                    : [1.4, öffnungsHöhe, öffnungsBreite]
+            }
+        })
+
+    const alleÖffnungenVolumes = [...leeröffnungenVolumes, ...fensterVolumes, ...transparentePaneeleVolumes]
 
     const boxIntersect = (positionA, sizeA, positionB, sizeB) => {
         const [ax, ay, az] = positionA
@@ -86,10 +137,28 @@ export default function Kantteile({
         )
     }
 
-    const renderKantteilMitAusschnitten = (key, position, size, rotation = [0, 0, 0]) => {
-        const überdeckendeÖffnungen = leeröffnungenVolumes.filter(öffnung =>
+    const getÜberdeckendeÖffnungen = (position, size) =>
+        alleÖffnungenVolumes.filter(öffnung =>
             boxIntersect(position, size, öffnung.position, öffnung.size)
         )
+
+    const höheVordereEcken = dachArt === 'pultdach'
+        ? (traufhöhe + 1 + pultdachHöheDifferenz) - rahmenHöhe
+        : eckbalkenHöhe
+
+    const horizontaleWandKantteile = [
+        { position: [(xLinks + xRechts) / 2, rahmenHöhe, zVorne + 1], size: [längeLangeSeite + 2, 0.5, 1] },
+        { position: [(xLinks + xRechts) / 2, rahmenHöhe, zHinten - 1], size: [längeLangeSeite + 2, 0.5, 1] },
+        { position: [xRechts + 1, rahmenHöhe, (zHinten + zVorne) / 2], size: [1, 0.5, längeKurzeSeite + 3] },
+        { position: [xLinks - 1, rahmenHöhe, (zHinten + zVorne) / 2], size: [1, 0.5, längeKurzeSeite + 3] }
+    ]
+
+    const hatAusschnittAnHorizontalenWandkantteilen = horizontaleWandKantteile.some(kantteil =>
+        getÜberdeckendeÖffnungen(kantteil.position, kantteil.size).length > 0
+    )
+
+    const renderKantteilMitAusschnitten = (key, position, size, rotation = [0, 0, 0], istHorizontalesWandkantteil = false) => {
+        const überdeckendeÖffnungen = getÜberdeckendeÖffnungen(position, size)
 
         const hatAusschnitt = überdeckendeÖffnungen.length > 0
 
@@ -134,12 +203,12 @@ export default function Kantteile({
                             {renderCsgGeometry()}
                             <meshBasicMaterial color="black" wireframe />
                         </mesh>
-                    ) : (
+                    ) : !(istHorizontalesWandkantteil && hatAusschnittAnHorizontalenWandkantteilen) ? (
                         <lineSegments position={position} rotation={rotation}>
                             <edgesGeometry args={[new THREE.BoxGeometry(size[0], size[1], size[2])]} />
                             <lineBasicMaterial color="black" />
                         </lineSegments>
-                    )
+                    ) : null
                 )}
             </group>
         )
@@ -151,34 +220,42 @@ export default function Kantteile({
             {renderKantteilMitAusschnitten(
                 'kantteil-vorne',
                 [(xLinks + xRechts) / 2, rahmenHöhe, zVorne + 1],
-                [längeLangeSeite + 2, 0.5, 1]
+                [längeLangeSeite + 2, 0.5, 1],
+                [0, 0, 0],
+                true
             )}
             
             {/* Hinterer Balken */}
             {renderKantteilMitAusschnitten(
                 'kantteil-hinten',
                 [(xLinks + xRechts) / 2, rahmenHöhe, zHinten - 1],
-                [längeLangeSeite + 2, 0.5, 1]
+                [längeLangeSeite + 2, 0.5, 1],
+                [0, 0, 0],
+                true
             )}
             
             {/* Rechter Balken */}
             {renderKantteilMitAusschnitten(
                 'kantteil-rechts',
                 [xRechts + 1, rahmenHöhe, (zHinten + zVorne) / 2],
-                [1, 0.5, längeKurzeSeite + 3]
+                [1, 0.5, längeKurzeSeite + 3],
+                [0, 0, 0],
+                true
             )}
             
             {/* Linker Balken */}
             {renderKantteilMitAusschnitten(
                 'kantteil-links',
                 [xLinks - 1, rahmenHöhe, (zHinten + zVorne) / 2],
-                [1, 0.5, längeKurzeSeite + 3]
+                [1, 0.5, längeKurzeSeite + 3],
+                [0, 0, 0],
+                true
             )}
 
             {/* Eckbalken (vertikal) */}
             {/* Vorne rechts */}
             {(() => {
-                const höhe = dachArt === 'pultdach' ? (traufhöhe + 1 + pultdachHöheDifferenz) - rahmenHöhe : eckbalkenHöhe
+                const höhe = höheVordereEcken
                 const yPos = rahmenHöhe + höhe / 2
                 return (
                     <>
@@ -193,7 +270,7 @@ export default function Kantteile({
             
             {/* Vorne links */}
             {(() => {
-                const höhe = dachArt === 'pultdach' ? (traufhöhe + 1 + pultdachHöheDifferenz) - rahmenHöhe : eckbalkenHöhe
+                const höhe = höheVordereEcken
                 const yPos = rahmenHöhe + höhe / 2
                 return (
                     <>

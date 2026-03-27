@@ -113,6 +113,12 @@ export default function Wand({
             })
 
         const alleÖffnungenLang = [...leeröffnungenFuerWand, ...fensterFuerWand, ...transparentePaneeleFuerWand]
+
+        const obereKanteYLang = koordinate[1] + sockelHöhe
+        const hatÖffnungAnOberkanteLang = alleÖffnungenLang.some((öffnung) => {
+            const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
+            return öffnungMaxY >= obereKanteYLang - 0.01
+        })
         
         // Berechne Platten-Höhe und Position wie bei Kantteilen
         const traufhöhe = y + 4.5 + gebäudeHöhe
@@ -234,12 +240,16 @@ export default function Wand({
             
             frag.push(
                 <group key={`lang-frame-${rechts ? 'rechts' : 'links'}`} position={[(xLinks - 1 + xRechts + 1) / 2, koordinate[1] + (sockelHöhe / 2), zWert]}>
-                    <line geometry={geometryObenVorne}>
-                        <lineBasicMaterial color="black" />
-                    </line>
-                    <line geometry={geometryObenHinten}>
-                        <lineBasicMaterial color="black" />
-                    </line>
+                    {!hatÖffnungAnOberkanteLang && (
+                        <line geometry={geometryObenVorne}>
+                            <lineBasicMaterial color="black" />
+                        </line>
+                    )}
+                    {!hatÖffnungAnOberkanteLang && (
+                        <line geometry={geometryObenHinten}>
+                            <lineBasicMaterial color="black" />
+                        </line>
+                    )}
                     <line geometry={geometryUntenVorne}>
                         <lineBasicMaterial color="black" />
                     </line>
@@ -336,6 +346,12 @@ export default function Wand({
 
         const alleÖffnungenKurz = [...leeröffnungenFuerWand, ...fensterFuerKurzeWand, ...transparentePaneeleFuerKurzeWand]
 
+        const obereKanteYKurz = koordinate[1] + sockelHöhe
+        const hatÖffnungAnOberkanteKurz = alleÖffnungenKurz.some((öffnung) => {
+            const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
+            return öffnungMaxY >= obereKanteYKurz - 0.01
+        })
+
         const lüfterObjs = (objs || []).filter(obj => obj.type === "lüfter")
 
         const traufhöhe = y + 4.5 + gebäudeHöhe
@@ -422,7 +438,7 @@ export default function Wand({
         }
         
         // Durchgehende Umrandung für die gesamte Wand
-        if (massivWand && kantenAnzeigen) {
+        if (massivWand && kantenAnzeigen && !hatÖffnungAnOberkanteKurz) {
             frag.push(
                 <lineSegments key={`kurz-frame-${rechts ? 'rechts' : 'links'}`} position={[xWert, koordinate[1] + (sockelHöhe / 2), (zHinten - 1 + zVorne + 1) / 2]}>
                     <edgesGeometry args={[new THREE.BoxGeometry(1, sockelHöhe, wandLänge)]} />
