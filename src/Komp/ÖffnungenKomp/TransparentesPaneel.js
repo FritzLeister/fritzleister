@@ -67,7 +67,7 @@ export default function TransparentesPaneel({
 	const minZ = kurzeWandMin + halbePaneelBreite + randPuffer
 	const maxZ = kurzeWandMax - halbePaneelBreite - randPuffer
 
-	const minY = position[1] + sockelhöhe + (paneelHöhe / 2)
+	const minY = position[1] + 0.35 + (paneelHöhe / 2)
 	const maxY = position[1] + 0.2 + wandHöhe - (paneelHöhe / 2) + 0.48
 
 	useEffect(() => {

@@ -463,6 +463,7 @@ export default function App({
             pultdachHöheDifferenz={dachneigung * 2.5}
             sockelhöhe={sockelhöhe * 2.6}
             wandGeometrieVorgaben={wandGeometrieVorgaben}
+            wandOrientierung={wandOrientierung}
             außenFarbe={außenFarbe}
             />
             

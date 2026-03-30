@@ -259,7 +259,7 @@ export default function SchiebeTür({
                         <>
                             {/* ========== LINKER TÜRFLÜGEL ========== */}
                             {/* Linker Flügel - Vorderseite */}
-                            <mesh position={[flügel1X, 0, tiefe / 2 + 0.1]}>
+                            <mesh position={[flügel1X+0.05, 0, tiefe / 2 + 0.1]}>
                                 <boxGeometry args={[flügelBreite, höhe - 0.15, tiefe * 0.1]} />
                                 <meshStandardMaterial color={türFüllFarbe} />
                             </mesh>
@@ -302,7 +302,7 @@ export default function SchiebeTür({
 
                             {/* ========== RECHTER TÜRFLÜGEL ========== */}
                             {/* Rechter Flügel - Vorderseite */}
-                            <mesh position={[flügel2X, 0, tiefe / 2 + 0.1]}>
+                            <mesh position={[flügel2X-0.05, 0, tiefe / 2 + 0.1]}>
                                 <boxGeometry args={[flügelBreite, höhe - 0.15, tiefe * 0.1]} />
                                 <meshStandardMaterial color={türFüllFarbe} />
                             </mesh>

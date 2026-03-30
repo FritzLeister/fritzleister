@@ -56,6 +56,7 @@ export default function Halle({
     pultdachHöheDifferenz,
     sockelhöhe,
     wandGeometrieVorgaben,
+    wandOrientierung,
     außenFarbe,
 }) {
 
@@ -155,6 +156,7 @@ export default function Halle({
         balkenAbstand={20}
         abgrenzung={true} // unterteilung der Wände
         originalBreite={originalBreite}
+        wandOrientierung={wandOrientierung}
         setEditMenü={setEditMenü}
         setClickedButtonPos={setClickedButtonPos}
         editMenü={editMenü}

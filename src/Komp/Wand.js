@@ -26,6 +26,7 @@ export default function Wand({
     balkenAbstand = 15,
     abgrenzung,
     originalBreite,
+    wandOrientierung = 'vertikal',
     setEditMenü,
     editMenü,
     setClickedButtonPos,
@@ -42,6 +43,21 @@ export default function Wand({
     const url = "/wand-textur.jpg"
     const ref = useRef()
     const texture = useLoader(TextureLoader, url)
+    const PLATTEN_ZIEL_BREITE = 2.5
+    const PLATTEN_ZIEL_HOEHE = 2.5
+    const PLATTEN_LINIEN_DICKE = 1
+
+    const getDefaultFensterWorldY = (fensterHöheEinheit = 6) => {
+        const initialGridY = koordinate[1]
+            + (gebäudeHöhe / 6)
+            - 0.4
+            - ((gebäudeHöhe - 15) / 6)
+            - 2
+            + ((fensterHöheEinheit - 1) / 4)
+
+        // In WandFenster wird beim Rendern +4 addiert.
+        return initialGridY + 4
+    }
 
     function langeWand(rechts) {
         // Berechne Positionen wie bei Kantteilen
@@ -53,8 +69,6 @@ export default function Wand({
         
         // Wand zwischen den Kantteilen
         const wandLänge = längeLangeSeite+1.75
-        const fragBreite = wandLänge / wievieleFragmente
-        const startX = (xLinks - 1) + fragBreite / 2
 
         const frag = []
         const zWert = rechts ? zHinten - 1 : zVorne + 1
@@ -79,11 +93,12 @@ export default function Wand({
         const fensterFuerWand = (objs || [])
             .filter(obj => obj.type === "fenster" && (obj.lang ?? true) === true && (obj.rechts ?? true) === rechts)
             .map((obj, index) => {
+                const fensterHöheEinheit = obj?.value?.[1] ?? 6
                 const öffnungsBreite = (obj?.value?.[0] ?? 8) * 2.5
-                const öffnungsHöhe = (obj?.value?.[1] ?? 6) * 2.5
+                const öffnungsHöhe = fensterHöheEinheit * 2.5
                 const worldY = obj?.startPos?.y !== undefined
                     ? obj.startPos.y + 4
-                    : koordinate[1] + öffnungsHöhe / 2
+                    : getDefaultFensterWorldY(fensterHöheEinheit)
                 return {
                     id: `fenster-lang-${rechts ? 'hinten' : 'vorne'}-${obj.id ?? index}`,
                     position: [obj?.startPos?.x ?? x, worldY, zWert],
@@ -122,6 +137,7 @@ export default function Wand({
         
         // Berechne Platten-Höhe und Position wie bei Kantteilen
         const traufhöhe = y + 4.5 + gebäudeHöhe
+        const globalRasterStartY = sockelHöhe
         
         // Bei Pultdach: vordere Wand höher, hintere Wand niedriger
         let plattenHöhe, plattenYPosition;
@@ -134,24 +150,71 @@ export default function Wand({
             plattenYPosition = sockelHöhe + 0.3 + plattenHöhe / 2;
         }
 
-        for (let i = 0; i < wievieleFragmente; i++) {
-            frag.push(
-                <>
-                <Platten
-                    fragBreite={fragBreite}
-                    position={[startX + i * fragBreite, plattenYPosition, zWert]}
-                    key={`lang-mesh-${rechts ? 'rechts' : 'links'}-${i}`}
-                    sockelHöhe={sockelHöhe}
-                    lang={true}
-                    gebäudeHöhe={plattenHöhe}
-                    öffnungen={alleÖffnungenLang}
-                    oberflächenAnzeigen={oberflächenAnzeigen}
-                    plattenAnzeigen={plattenAnzeigen}
-                    kantenAnzeigen={kantenAnzeigen}
-                    color={color}
-                />
-                </>
-            ); 
+        if (wandOrientierung === 'horizontal') {
+            const streifenMinY = plattenYPosition - (plattenHöhe / 2)
+            const streifenMaxY = plattenYPosition + (plattenHöhe / 2)
+            const startIndex = Math.floor((streifenMinY - globalRasterStartY) / PLATTEN_ZIEL_HOEHE)
+            const endIndex = Math.ceil((streifenMaxY - globalRasterStartY) / PLATTEN_ZIEL_HOEHE)
+
+            for (let reihe = startIndex; reihe < endIndex; reihe++) {
+                const rasterMinY = globalRasterStartY + (reihe * PLATTEN_ZIEL_HOEHE)
+                const rasterMaxY = rasterMinY + PLATTEN_ZIEL_HOEHE
+                const reiheMinY = Math.max(streifenMinY, rasterMinY)
+                const reiheMaxY = Math.min(streifenMaxY, rasterMaxY)
+                const reihenHöhe = reiheMaxY - reiheMinY
+
+                if (reihenHöhe <= 1e-6) continue
+
+                const reihenMitteY = reiheMinY + (reihenHöhe / 2)
+
+                const öffnungenFürReihe = alleÖffnungenLang.filter((öffnung) => {
+                    const öffnungMinY = öffnung.position[1] - (öffnung.size[1] / 2)
+                    const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
+                    return öffnungMaxY >= reiheMinY && öffnungMinY <= reiheMaxY
+                })
+
+                frag.push(
+                    <Platten
+                        fragBreite={wandLänge}
+                        position={[(xLinks - 1 + xRechts + 1) / 2, reihenMitteY, zWert]}
+                        key={`lang-mesh-h-${rechts ? 'rechts' : 'links'}-r${reihe}`}
+                        sockelHöhe={sockelHöhe}
+                        lang={true}
+                        gebäudeHöhe={reihenHöhe}
+                        öffnungen={öffnungenFürReihe}
+                        oberflächenAnzeigen={oberflächenAnzeigen}
+                        plattenAnzeigen={plattenAnzeigen}
+                        kantenAnzeigen={kantenAnzeigen}
+                        wandOrientierung={wandOrientierung}
+                        linienDicke={PLATTEN_LINIEN_DICKE}
+                        color={color}
+                    />
+                )
+            }
+        } else {
+            const spalten = Math.max(1, Math.ceil(wandLänge / PLATTEN_ZIEL_BREITE))
+            const spaltenBreite = wandLänge / spalten
+            const lokalerStartX = (xLinks - 1) + (spaltenBreite / 2)
+
+            for (let spalte = 0; spalte < spalten; spalte++) {
+                frag.push(
+                    <Platten
+                        fragBreite={spaltenBreite}
+                        position={[lokalerStartX + spalte * spaltenBreite, plattenYPosition, zWert]}
+                        key={`lang-mesh-v-${rechts ? 'rechts' : 'links'}-${spalte}`}
+                        sockelHöhe={sockelHöhe}
+                        lang={true}
+                        gebäudeHöhe={plattenHöhe}
+                        öffnungen={alleÖffnungenLang}
+                        oberflächenAnzeigen={oberflächenAnzeigen}
+                        plattenAnzeigen={plattenAnzeigen}
+                        kantenAnzeigen={kantenAnzeigen}
+                        wandOrientierung={wandOrientierung}
+                        linienDicke={PLATTEN_LINIEN_DICKE}
+                        color={color}
+                    />
+                )
+            }
         }
 
         if (massivWand) {
@@ -311,11 +374,12 @@ export default function Wand({
         const fensterFuerKurzeWand = (objs || [])
             .filter(obj => obj.type === "fenster" && (obj.lang ?? true) === false && (obj.rechts ?? true) === rechts)
             .map((obj, index) => {
+                const fensterHöheEinheit = obj?.value?.[1] ?? 6
                 const öffnungsBreite = (obj?.value?.[0] ?? 8) * 2.5
-                const öffnungsHöhe = (obj?.value?.[1] ?? 6) * 2.5
+                const öffnungsHöhe = fensterHöheEinheit * 2.5
                 const worldY = obj?.startPos?.y !== undefined
                     ? obj.startPos.y + 4
-                    : koordinate[1] + öffnungsHöhe / 2
+                    : getDefaultFensterWorldY(fensterHöheEinheit)
                 return {
                     id: `fenster-kurz-${rechts ? 'links' : 'rechts'}-${obj.id ?? index}`,
                     position: [xWert, worldY, obj?.startPos?.z ?? z],
@@ -355,10 +419,10 @@ export default function Wand({
         const lüfterObjs = (objs || []).filter(obj => obj.type === "lüfter")
 
         const traufhöhe = y + 4.5 + gebäudeHöhe
+        const globalRasterStartY = sockelHöhe
         
-        // Erstelle viele dünne vertikale Platten für eine glatte schräge Fläche
-        const anzahlPlatten = 150; // Erhöhe für glattere Oberfläche
-        const plattenDicke = wandLänge / anzahlPlatten;
+        const anzahlPlatten = Math.max(1, Math.ceil(wandLänge / PLATTEN_ZIEL_BREITE))
+        const plattenDicke = wandLänge / anzahlPlatten
         
         for (let i = 0; i < anzahlPlatten; i++) {
             const zPos = (zHinten - 1) + (i + 0.5) * plattenDicke;
@@ -386,41 +450,81 @@ export default function Wand({
             const streifenMinZ = zPos - (plattenDicke / 2)
             const streifenMaxZ = zPos + (plattenDicke / 2)
 
-            const öffnungenFürStreifen = alleÖffnungenKurz.filter((öffnung) => {
-                const öffnungMinY = öffnung.position[1] - (öffnung.size[1] / 2)
-                const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
-                const öffnungMinZ = öffnung.position[2] - (öffnung.size[2] / 2)
-                const öffnungMaxZ = öffnung.position[2] + (öffnung.size[2] / 2)
+            if (wandOrientierung === 'horizontal') {
+                const startIndex = Math.floor((streifenMinY - globalRasterStartY) / PLATTEN_ZIEL_HOEHE)
+                const endIndex = Math.ceil((streifenMaxY - globalRasterStartY) / PLATTEN_ZIEL_HOEHE)
 
-                const überschneidungY = öffnungMaxY >= streifenMinY && öffnungMinY <= streifenMaxY
-                const überschneidungZ = öffnungMaxZ >= streifenMinZ && öffnungMinZ <= streifenMaxZ
-                return überschneidungY && überschneidungZ
-            })
-            
-            frag.push(
-                <>
-                <Platten
-                    key={`kurz-platte-${rechts ? 'rechts' : 'links'}-${i}`}
-                    fragBreite={plattenDicke}
-                    position={[xWert, plattenYPosition, zPos]}
-                    sockelHöhe={sockelHöhe}
-                    lang={false}
-                    gebäudeHöhe={plattenHöhe}
-                    öffnungen={öffnungenFürStreifen}
-                    oberflächenAnzeigen={oberflächenAnzeigen}
-                    plattenAnzeigen={plattenAnzeigen}
-                    kantenAnzeigen={false}
-                    color={color}
-                />
-                {/* {plattenAnzeigen && kantenAnzeigen && (
-                    <lineSegments key={`kurz-platte-kante-${rechts ? 'rechts' : 'links'}-${i}`} position={[xWert, plattenYPosition, zPos]}>
-                        <edgesGeometry args={[new THREE.BoxGeometry(0.4, plattenHöhe, plattenDicke)]} />
-                        <lineBasicMaterial color="black" />
-                    </lineSegments>
-                )} */}
-                
-                </>
-            )
+                for (let reihe = startIndex; reihe < endIndex; reihe++) {
+                    const rasterMinY = globalRasterStartY + (reihe * PLATTEN_ZIEL_HOEHE)
+                    const rasterMaxY = rasterMinY + PLATTEN_ZIEL_HOEHE
+                    const reiheMinY = Math.max(streifenMinY, rasterMinY)
+                    const reiheMaxY = Math.min(streifenMaxY, rasterMaxY)
+                    const reihenHöhe = reiheMaxY - reiheMinY
+
+                    if (reihenHöhe <= 1e-6) continue
+
+                    const reihenMitteY = reiheMinY + (reihenHöhe / 2)
+
+                    const öffnungenFürReihe = alleÖffnungenKurz.filter((öffnung) => {
+                        const öffnungMinY = öffnung.position[1] - (öffnung.size[1] / 2)
+                        const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
+                        const öffnungMinZ = öffnung.position[2] - (öffnung.size[2] / 2)
+                        const öffnungMaxZ = öffnung.position[2] + (öffnung.size[2] / 2)
+
+                        const überschneidungY = öffnungMaxY >= reiheMinY && öffnungMinY <= reiheMaxY
+                        const überschneidungZ = öffnungMaxZ >= streifenMinZ && öffnungMinZ <= streifenMaxZ
+                        return überschneidungY && überschneidungZ
+                    })
+
+                    frag.push(
+                        <Platten
+                            key={`kurz-platte-h-${rechts ? 'rechts' : 'links'}-${i}-r${reihe}`}
+                            fragBreite={plattenDicke}
+                            position={[xWert, reihenMitteY, zPos]}
+                            sockelHöhe={sockelHöhe}
+                            lang={false}
+                            gebäudeHöhe={reihenHöhe}
+                            öffnungen={öffnungenFürReihe}
+                            oberflächenAnzeigen={oberflächenAnzeigen}
+                            plattenAnzeigen={plattenAnzeigen}
+                            kantenAnzeigen={kantenAnzeigen}
+                            nurHorizontaleKanten={true}
+                            wandOrientierung={wandOrientierung}
+                            linienDicke={PLATTEN_LINIEN_DICKE}
+                            color={color}
+                        />
+                    )
+                }
+            } else {
+                const öffnungenFürStreifen = alleÖffnungenKurz.filter((öffnung) => {
+                    const öffnungMinY = öffnung.position[1] - (öffnung.size[1] / 2)
+                    const öffnungMaxY = öffnung.position[1] + (öffnung.size[1] / 2)
+                    const öffnungMinZ = öffnung.position[2] - (öffnung.size[2] / 2)
+                    const öffnungMaxZ = öffnung.position[2] + (öffnung.size[2] / 2)
+
+                    const überschneidungY = öffnungMaxY >= streifenMinY && öffnungMinY <= streifenMaxY
+                    const überschneidungZ = öffnungMaxZ >= streifenMinZ && öffnungMinZ <= streifenMaxZ
+                    return überschneidungY && überschneidungZ
+                })
+
+                frag.push(
+                    <Platten
+                        key={`kurz-platte-v-${rechts ? 'rechts' : 'links'}-${i}`}
+                        fragBreite={plattenDicke}
+                        position={[xWert, plattenYPosition, zPos]}
+                        sockelHöhe={sockelHöhe}
+                        lang={false}
+                        gebäudeHöhe={plattenHöhe}
+                        öffnungen={öffnungenFürStreifen}
+                        oberflächenAnzeigen={oberflächenAnzeigen}
+                        plattenAnzeigen={plattenAnzeigen}
+                        kantenAnzeigen={kantenAnzeigen}
+                        wandOrientierung={wandOrientierung}
+                        linienDicke={PLATTEN_LINIEN_DICKE}
+                        color={color}
+                    />
+                )
+            }
         }
         
         if (massivWand) {
