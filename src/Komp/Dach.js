@@ -25,6 +25,9 @@ export default function Dach({
     setEditMenü,
     editMenü,
     setClickedButtonPos,
+    dachIsolierung = 'isoliert',
+    dachPaneeltyp = 'trapez',
+    dachPaneelBreiteMm = 2500,
     plattenAnzeigen = true,
     color = 'grey'
 }) {
@@ -214,6 +217,50 @@ export default function Dach({
 
     const alleÖffnungen = [...dachLeeröffnungen, ...lichtkuppelÖffnungen, ...transparentePaneelÖffnungen]
 
+    const buildEvenSegments = (gesamtLänge, zielAbstand) => {
+        const anzahlSegmente = Math.max(1, Math.floor(gesamtLänge / zielAbstand) + 1)
+        return Array.from({ length: anzahlSegmente }, () => gesamtLänge / anzahlSegmente)
+    }
+
+    const buildTargetWidthSegments = (gesamtLänge, zielBreite) => {
+        const sichereZielBreite = Math.max(zielBreite ?? 0, 0.001)
+
+        if (gesamtLänge <= sichereZielBreite) {
+            return [gesamtLänge]
+        }
+
+        const segmente = []
+        const volleSegmente = Math.floor(gesamtLänge / sichereZielBreite)
+        const restBreite = gesamtLänge - (volleSegmente * sichereZielBreite)
+
+        for (let index = 0; index < volleSegmente; index++) {
+            segmente.push(sichereZielBreite)
+        }
+
+        if (restBreite > 0.001) {
+            segmente.push(restBreite)
+        }
+
+        return segmente.length > 0 ? segmente : [gesamtLänge]
+    }
+
+    const getRoofSegmentWidths = () => {
+        if (dachIsolierung === 'isoliert') {
+            return buildEvenSegments(wandLänge, balkenAbstand)
+        }
+
+        if (dachPaneeltyp === 'wellplatte') {
+            return buildTargetWidthSegments(wandLänge, 2.4 * 2.5)
+        }
+
+        if (dachPaneeltyp === 'pvc-folie') {
+            const pvcBreiteSzene = THREE.MathUtils.clamp(((dachPaneelBreiteMm ?? 2500) / 1000) * 2.5, 1.25, 15)
+            return buildTargetWidthSegments(wandLänge, pvcBreiteSzene)
+        }
+
+        return buildTargetWidthSegments(wandLänge, 2.5 * 2.5)
+    }
+
     const dachLeeröffnungenVersion = alleÖffnungen
         .map(öffnung => `${öffnung.id}:${öffnung.position[0].toFixed(3)}:${öffnung.position[1].toFixed(3)}:${öffnung.position[2].toFixed(3)}:${öffnung.size[0].toFixed(3)}:${öffnung.size[1].toFixed(3)}:${öffnung.seite}`)
         .join('|')
@@ -260,10 +307,9 @@ export default function Dach({
     const dachplatten = []
     const buttons = []
     
-    // Berechne die gleichen Positionen wie die Abgrenzungsbalken
     const wandLänge = längeLangeSeite + 1.75
-    const anzahlBalken = Math.floor(wandLänge / balkenAbstand)
-    const gleichmäßigerAbstand = anzahlBalken > 0 ? wandLänge / (anzahlBalken + 1) : wandLänge
+    const segmentBreiten = getRoofSegmentWidths()
+    const dachSegmentVersion = `${dachIsolierung}-${dachPaneeltyp}-${dachPaneelBreiteMm}-${segmentBreiten.map((breite) => breite.toFixed(3)).join(':')}`
 
     // Berechne für Pultdach
     if (dachArt === 'pultdach') {
@@ -280,16 +326,17 @@ export default function Dach({
         const rotation = -Math.atan2(yDiff, zLänge)
         const zMitte = (zStart + zEnd) / 2
         
-        // Erstelle die Dachplatten parallel zu den Abgrenzungsbalken
-        for (let i = 0; i <= anzahlBalken; i++) {
-            const xStart = i === 0 ? (xLinks - 1) : ((xLinks - 1) + (i * gleichmäßigerAbstand))
-            const xEnd = i === anzahlBalken ? (xRechts + 1) : ((xLinks - 1) + ((i + 1) * gleichmäßigerAbstand))
-            const plattenBreite = xEnd - xStart
+        let laufendesX = xLinks - 1
+
+        for (let i = 0; i < segmentBreiten.length; i++) {
+            const plattenBreite = segmentBreiten[i]
+            const xStart = laufendesX
+            const xEnd = xStart + plattenBreite
             const plattenX = (xStart + xEnd) / 2
             
             dachplatten.push(
                 renderDachplatteCSG({
-                    key: `dachplatte-${i}`,
+                    key: `dachplatte-${dachSegmentVersion}-${i}`,
                     position: [plattenX, yMitte, zMitte],
                     rotationX: rotation,
                     size: [plattenBreite - 0.05, 0.15, plattenLänge],
@@ -299,7 +346,7 @@ export default function Dach({
             
             // Button für diese Dachplatte
             if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl")) {
-                const buttonId = `pultdach-${i}`
+                const buttonId = `pultdach-${dachSegmentVersion}-${i}`
                 const isHovered = hoveredButton === buttonId
                 
                 buttons.push(
@@ -338,6 +385,8 @@ export default function Dach({
                     </group>
                 )
             }
+
+            laufendesX = xEnd
         }
     }
     
@@ -371,17 +420,19 @@ export default function Dach({
         const rotationHinten = Math.atan2(yDiffHinten, zLängeHinten)
         const zMitteHinten = (zStartHinten + zEndHinten) / 2
         
-        // Erstelle die Dachplatten für beide Seiten parallel zu den Abgrenzungsbalken
-        for (let i = 0; i <= anzahlBalken; i++) {
-            const xStart = i === 0 ? (xLinks - 1) : ((xLinks - 1) + (i * gleichmäßigerAbstand))
-            const xEnd = i === anzahlBalken ? (xRechts + 1) : ((xLinks - 1) + ((i + 1) * gleichmäßigerAbstand))
-            const plattenBreite = xEnd - xStart+0.1
+        let laufendesX = xLinks - 1
+
+        for (let i = 0; i < segmentBreiten.length; i++) {
+            const segmentBreite = segmentBreiten[i]
+            const xStart = laufendesX
+            const xEnd = xStart + segmentBreite
+            const plattenBreite = segmentBreite + 0.1
             const plattenX = (xStart + xEnd) / 2
             
             // Vordere Dachplatte
             dachplatten.push(
                 renderDachplatteCSG({
-                    key: `dachplatte-vorne-${i}`,
+                    key: `dachplatte-vorne-${dachSegmentVersion}-${i}`,
                     position: [plattenX, yMitteVorne, zMitteVorne],
                     rotationX: rotationVorne,
                     size: [plattenBreite - 0.05, 0.15, plattenLängeVorne],
@@ -391,7 +442,7 @@ export default function Dach({
             
             // Button für vordere Dachplatte
             if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl")) {
-                const buttonIdVorne = `satteldach-vorne-${i}`
+                const buttonIdVorne = `satteldach-vorne-${dachSegmentVersion}-${i}`
                 const isHoveredVorne = hoveredButton === buttonIdVorne
                 
                 buttons.push(
@@ -432,7 +483,7 @@ export default function Dach({
             // Hintere Dachplatte
             dachplatten.push(
                 renderDachplatteCSG({
-                    key: `dachplatte-hinten-${i}`,
+                    key: `dachplatte-hinten-${dachSegmentVersion}-${i}`,
                     position: [plattenX, yMitteHinten, zMitteHinten],
                     rotationX: rotationHinten,
                     size: [plattenBreite - 0.05, 0.15, plattenLängeHinten],
@@ -442,7 +493,7 @@ export default function Dach({
             
             // Button für hintere Dachplatte
             if (showButtons && (setEditMenü === undefined || editMenü === "Öffnungen" || editMenü === "Öffnungen-Auswahl" || editMenü === "Öffnungen-Dach-Auswahl")) {
-                const buttonIdHinten = `satteldach-hinten-${i}`
+                const buttonIdHinten = `satteldach-hinten-${dachSegmentVersion}-${i}`
                 const isHoveredHinten = hoveredButton === buttonIdHinten
                 
                 buttons.push(
@@ -479,6 +530,8 @@ export default function Dach({
                     </group>
                 )
             }
+
+            laufendesX = xEnd
         }
     }
 

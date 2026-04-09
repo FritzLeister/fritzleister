@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
+import { Base, Geometry, Subtraction } from '@react-three/csg'
 import { useRef, useState, useEffect } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
@@ -190,11 +191,17 @@ export default function SektionalTor({
     const panelCount = 4
     const panelHeight = höhe / panelCount
     const panelGap = 0.05
+    const panelInsetX = 0.15
+    const panelInsetY = panelGap
+    const transparentPanelMarginX = 0.35
+    const transparentPanelMarginY = 0.2
+    const glassThickness = 0.05
 
     // Transparente Füllung
     const transparenteFüllung = obj?.transparenteFüllung === 'ja'
     const transparentePaneele = obj?.transparentePaneele ? String(obj.transparentePaneele).split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= panelCount) : []
     const fensterstreifenHöhe = obj?.fensterstreifenHöhe != null ? obj.fensterstreifenHöhe * 2.5 : null
+    const transparentePaneeleSet = new Set(transparentePaneele)
 
     // Schlupftür
     const hatSchlupftür = obj?.schlupftür === 'ja'
@@ -207,6 +214,64 @@ export default function SektionalTor({
     const schlupftürXOffset = schlupftürOrientierung === 'rechts' ? schlupftürDistanzXBegrenzt : -schlupftürDistanzXBegrenzt
     const schlupftürRahmenTiefe = 0.077
     const schlupftürRahmenFarbe = '#776c6c'
+
+    const panelOpeningVolumes = Array.from({ length: panelCount }, (_, i) => {
+        const panelIndex = panelCount - i
+        const yPos = (höhe / 2) - (i * panelHeight) - (panelHeight / 2)
+        const isTransparent = transparentePaneeleSet.has(panelIndex)
+        const hasFensterstreifen = transparentePaneele.length === 0 && fensterstreifenHöhe && fensterstreifenHöhe > 0
+        const fensterstreifenRelativeHöhe = hasFensterstreifen ? Math.min(fensterstreifenHöhe, panelHeight - 0.2) : 0
+
+        if (isTransparent) {
+            return {
+                id: `sektional-panel-${panelIndex}`,
+                position: [0, yPos, 0],
+                size: [
+                    Math.max(0.1, breite - (transparentPanelMarginX * 2)),
+                    Math.max(0.1, panelHeight - panelGap - transparentPanelMarginY),
+                    tiefe + 0.3
+                ],
+                glassSize: [
+                    Math.max(0.1, breite - (transparentPanelMarginX * 2)),
+                    Math.max(0.1, panelHeight - panelGap - transparentPanelMarginY),
+                    glassThickness
+                ]
+            }
+        }
+
+        if (hasFensterstreifen && fensterstreifenRelativeHöhe > 0) {
+            return {
+                id: `sektional-fensterstreifen-${panelIndex}`,
+                position: [0, yPos, 0],
+                size: [Math.max(0.1, breite - 0.5), fensterstreifenRelativeHöhe, tiefe + 0.3],
+                glassSize: [Math.max(0.1, breite - 0.5), fensterstreifenRelativeHöhe, glassThickness]
+            }
+        }
+
+        return null
+    }).filter(Boolean)
+
+    const renderTransparentGlass = (volume, side) => (
+        <mesh
+            key={`${volume.id}-${side}`}
+            position={[
+                volume.position[0],
+                volume.position[1],
+                side === 'front' ? (tiefe / 2) + 0.03 : (-tiefe / 2) - 0.03
+            ]}
+        >
+            <boxGeometry args={volume.glassSize} />
+            <meshStandardMaterial
+                color="#BFEFFF"
+                transparent
+                opacity={0.18}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+                metalness={0.15}
+                roughness={0.08}
+            />
+        </mesh>
+    )
 
     return (
         <group
@@ -222,7 +287,16 @@ export default function SektionalTor({
                 <>
                     {/* Rahmen Hintergrund */}
                     <mesh position={[0, 0, 0]}>
-                        <boxGeometry args={[breite, höhe, tiefe]} />
+                        <Geometry>
+                            <Base>
+                                <boxGeometry args={[breite, höhe, tiefe]} />
+                            </Base>
+                            {panelOpeningVolumes.map((volume) => (
+                                <Subtraction key={volume.id} position={volume.position}>
+                                    <boxGeometry args={volume.size} />
+                                </Subtraction>
+                            ))}
+                        </Geometry>
                         <meshStandardMaterial color={sektionalTorFarbe} />
                     </mesh>
 
@@ -241,12 +315,14 @@ export default function SektionalTor({
                             <group key={`panel-${i}`}>
                                 {/* Panel Vorderseite */}
                                 <mesh position={[0, yPos, tiefe / 2]}>
-                                    <boxGeometry args={[breite - 0.15, panelHeight - panelGap, tiefe * 0.1]} />
+                                    <boxGeometry args={[breite - panelInsetX, panelHeight - panelInsetY, tiefe * 0.1]} />
                                     {isTransparent ? (
                                         <meshStandardMaterial 
                                             color="lightblue" 
                                             transparent={true} 
-                                            opacity={0.4} 
+                                            opacity={0.18} 
+                                            depthWrite={false}
+                                            side={THREE.DoubleSide}
                                         />
                                     ) : (
                                         <meshStandardMaterial color={panelColor} />
@@ -255,12 +331,14 @@ export default function SektionalTor({
 
                                 {/* Panel Rückseite */}
                                 <mesh position={[0, yPos, -tiefe / 2]}>
-                                    <boxGeometry args={[breite - 0.15, panelHeight - panelGap, tiefe * 0.1]} />
+                                    <boxGeometry args={[breite - panelInsetX, panelHeight - panelInsetY, tiefe * 0.1]} />
                                     {isTransparent ? (
                                         <meshStandardMaterial 
                                             color="lightblue" 
                                             transparent={true} 
-                                            opacity={0.4} 
+                                            opacity={0.18} 
+                                            depthWrite={false}
+                                            side={THREE.DoubleSide}
                                         />
                                     ) : (
                                         <meshStandardMaterial color={sektionalTorFüllFarbeInnen} />
@@ -275,7 +353,7 @@ export default function SektionalTor({
                                             <meshStandardMaterial 
                                                 color="lightblue" 
                                                 transparent={true} 
-                                                opacity={0.6} 
+                                                opacity={0.22} 
                                             />
                                         </mesh>
                                         <mesh position={[0, yPos, -tiefe / 2 - 0.05]}>
@@ -283,7 +361,7 @@ export default function SektionalTor({
                                             <meshStandardMaterial 
                                                 color="lightblue" 
                                                 transparent={true} 
-                                                opacity={0.6} 
+                                                opacity={0.22} 
                                             />
                                         </mesh>
                                     </>
@@ -299,12 +377,15 @@ export default function SektionalTor({
 
                                 {/* Panel Umrandung - alle Kanten des 3D-Quaders */}
                                 <lineSegments position={[0, yPos, 0]}>
-                                    <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(breite - 0.15, panelHeight - panelGap, tiefe * 0.1)]} />
+                                    <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(breite - panelInsetX, panelHeight - panelInsetY, tiefe * 0.1)]} />
                                     <lineBasicMaterial attach="material" color="#000000" linewidth={2} />
                                 </lineSegments>
                             </group>
                         )
                     })}
+
+                    {panelOpeningVolumes.map((volume) => renderTransparentGlass(volume, 'front'))}
+                    {panelOpeningVolumes.map((volume) => renderTransparentGlass(volume, 'back'))}
 
                     {/* Rahmen oben */}
                     <mesh position={[0, höhe / 2 - 0.075, 0]}>

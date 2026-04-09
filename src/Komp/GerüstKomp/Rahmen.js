@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { boxIntersectsAnyOpening, getVisibleBoxSegments } from '../openingUtils'
 
 export default function Rahmen({
     x, 
@@ -14,8 +15,77 @@ export default function Rahmen({
     pultdachHöheDifferenz = 5, // Höhenunterschied zwischen vorne und hinten beim Pultdach
     frame,
     oberfläche,
-    color
+    color,
+    openingVolumes = [],
+    sightOpeningVolumes = []
 }) {
+
+    const renderClippedBox = (key, position, size, axis) => {
+        const segments = getVisibleBoxSegments(position, size, openingVolumes, axis)
+
+        return segments.map((segment, index) => (
+            <group key={`${key}-${index}`}>
+                {oberfläche && (
+                    <mesh position={segment.position}>
+                        <boxGeometry args={segment.size} />
+                        <meshStandardMaterial color={color} />
+                    </mesh>
+                )}
+                {frame && (
+                    <lineSegments position={segment.position}>
+                        <edgesGeometry args={[new THREE.BoxGeometry(...segment.size)]} />
+                        <lineBasicMaterial color="black" />
+                    </lineSegments>
+                )}
+            </group>
+        ))
+    }
+
+    const renderWallPlaneBeam = (key, position, size, rotation, approxSize) => {
+        if (boxIntersectsAnyOpening(position, approxSize, openingVolumes)) {
+            return null
+        }
+
+        return (
+            <group key={key}>
+                {oberfläche && (
+                    <mesh position={position} rotation={rotation}>
+                        <boxGeometry args={size} />
+                        <meshStandardMaterial color={color} />
+                    </mesh>
+                )}
+                {frame && (
+                    <lineSegments position={position} rotation={rotation}>
+                        <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
+                        <lineBasicMaterial color="black" />
+                    </lineSegments>
+                )}
+            </group>
+        )
+    }
+
+    const renderSightClippedBeam = (key, position, size, rotation, clipVolumes = sightOpeningVolumes) => {
+        if (boxIntersectsAnyOpening(position, size, clipVolumes)) {
+            return null
+        }
+
+        return (
+            <group key={key}>
+                {oberfläche && (
+                    <mesh position={position} rotation={rotation}>
+                        <boxGeometry args={size} />
+                        <meshStandardMaterial color={color} />
+                    </mesh>
+                )}
+                {frame && (
+                    <lineSegments position={position} rotation={rotation}>
+                        <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
+                        <lineBasicMaterial color="black" />
+                    </lineSegments>
+                )}
+            </group>
+        )
+    }
 
     function langeStelzen(vorne) {
         // Positionen der Eck-Stelzen
@@ -39,61 +109,35 @@ export default function Rahmen({
             
             // Beginne bei 1, um die Eckstelzen zu überspringen, ende bei anzahlStelzen-2
             for (let i = 1; i < anzahlStelzen - 1; i++) {
-                frag.push(
-                    <group key={`lang-${vorne ? 'vorne' : 'hinten'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xLinks + i * abstand, y+4.5+yOffset, zWert]}>
-                            <boxGeometry args={[0.5, höhe, 0.5]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xLinks + i * abstand, y+4.5+yOffset, zWert]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, höhe, 0.5)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                frag.push(...renderClippedBox(
+                    `lang-${vorne ? 'vorne' : 'hinten'}-${i}`,
+                    [xLinks + i * abstand, y + 4.5 + yOffset, zWert],
+                    [0.5, höhe, 0.5],
+                    'y'
+                ));
             }
         } else {
             // Satteldach: Mittlere Stelzen höher
             // Beginne bei 1, um die Eckstelzen zu überspringen, ende bei anzahlStelzen-2
             for (let i = 1; i < anzahlStelzen - 1; i++) {
-                frag.push(
-                    <group key={`lang-${vorne ? 'vorne' : 'hinten'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xLinks + i * abstand, y+4.5, zWert]}>
-                            <boxGeometry args={[0.5, gebäudeHöhe, 0.5]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xLinks + i * abstand, y+4.5, zWert]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, gebäudeHöhe, 0.5)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                frag.push(...renderClippedBox(
+                    `lang-${vorne ? 'vorne' : 'hinten'}-${i}`,
+                    [xLinks + i * abstand, y + 4.5, zWert],
+                    [0.5, gebäudeHöhe, 0.5],
+                    'y'
+                ));
 
                 if (vorne) {
-                    frag.push(
-                        <group key={`lang-mitte-${i}`}>
-                            {oberfläche && (
-                            <mesh position={[xLinks + i * abstand, y+4.5+(zusatzHöheMitte/2), 0]}>
-                                <boxGeometry args={[0.5, gebäudeHöhe+zusatzHöheMitte, 0.5]} />
-                                <meshStandardMaterial color={color} />
-                            </mesh>
-                            )}
-                            {frame && (
-                            <lineSegments position={[xLinks + i * abstand, y+4.5+(zusatzHöheMitte/2), 0]}>
-                                <edgesGeometry args={[new THREE.BoxGeometry(0.5, gebäudeHöhe+zusatzHöheMitte, 0.5)]} />
-                                <lineBasicMaterial color="black" />
-                            </lineSegments>
-                            )}
-                        </group>
-                    );
+                    const beam = renderSightClippedBeam(
+                        `lang-mitte-${i}`,
+                        [xLinks + i * abstand, y + 4.5 + (zusatzHöheMitte / 2), 0],
+                        [0.5, gebäudeHöhe + zusatzHöheMitte, 0.5],
+                        [0, 0, 0]
+                    )
+
+                    if (beam) {
+                        frag.push(beam)
+                    }
                 }
             }
         }
@@ -131,22 +175,12 @@ export default function Rahmen({
                 const factor = i / (gesamtAnzahl - 1)
                 const höhe = minHöhe + (maxHöhe - minHöhe) * factor
                 
-                frag.push(
-                    <group key={`kurz-${rechts ? 'rechts' : 'links'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xWert, y+4.5 + (höhe - gebäudeHöhe) / 2, zHinten + i * abstand]}>
-                            <boxGeometry args={[0.5, höhe, 0.5]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xWert, y+4.5 + (höhe - gebäudeHöhe) / 2, zHinten + i * abstand]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, höhe, 0.5)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                frag.push(...renderClippedBox(
+                    `kurz-${rechts ? 'rechts' : 'links'}-${i}`,
+                    [xWert, y + 4.5 + (höhe - gebäudeHöhe) / 2, zHinten + i * abstand],
+                    [0.5, höhe, 0.5],
+                    'y'
+                ));
             }
         } else {
             // Satteldach: Maximale Höhe in der Mitte, Minimale an den Ecken
@@ -163,22 +197,12 @@ export default function Rahmen({
                 const höhenFaktor = 1 - (abstandVonMitte / mittlererIndex)
                 const höhe = minHöhe + (maxHöhe - minHöhe) * höhenFaktor
                 
-                frag.push(
-                    <group key={`kurz-${rechts ? 'rechts' : 'links'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xWert, y+4.5 + (höhe - gebäudeHöhe) / 2, zHinten + i * abstand]}>
-                            <boxGeometry args={[0.5, höhe, 0.5]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xWert, y+4.5 + (höhe - gebäudeHöhe) / 2, zHinten + i * abstand]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, höhe, 0.5)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                frag.push(...renderClippedBox(
+                    `kurz-${rechts ? 'rechts' : 'links'}-${i}`,
+                    [xWert, y + 4.5 + (höhe - gebäudeHöhe) / 2, zHinten + i * abstand],
+                    [0.5, höhe, 0.5],
+                    'y'
+                ));
             }
         }
         return frag;
@@ -226,23 +250,19 @@ export default function Rahmen({
                 // Berechne Länge und Rotation für schrägen Balken
                 const länge = Math.sqrt(Math.pow(abstand, 2) + Math.pow(höhenDifferenz, 2))
                 const rotation = -Math.atan2(höhenDifferenz, abstand)
+                const approxSize = [0.5, Math.abs(höhenDifferenz) + 0.5, Math.abs(abstand) + 0.5]
                 
-                balken.push(
-                    <group key={`verbindung-${rechts ? 'rechts' : 'links'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xWert, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <boxGeometry args={[0.5, 0.5, länge]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xWert, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, 0.5, länge)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                const beam = renderWallPlaneBeam(
+                    `verbindung-${rechts ? 'rechts' : 'links'}-${i}`,
+                    [xWert, yMitte, zMitte],
+                    [0.5, 0.5, länge],
+                    [rotation, 0, 0],
+                    approxSize
+                )
+
+                if (beam) {
+                    balken.push(beam)
+                }
             }
         } else {
             // Satteldach: Höhe variiert mit Mitte als Maximum
@@ -276,23 +296,19 @@ export default function Rahmen({
                 // Berechne Länge und Rotation für schrägen Balken
                 const länge = Math.sqrt(Math.pow(abstand, 2) + Math.pow(höhenDifferenz, 2))
                 const rotation = -Math.atan2(höhenDifferenz, abstand)
+                const approxSize = [0.5, Math.abs(höhenDifferenz) + 0.5, Math.abs(abstand) + 0.5]
                 
-                balken.push(
-                    <group key={`verbindung-${rechts ? 'rechts' : 'links'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xWert, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <boxGeometry args={[0.5, 0.5, länge]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xWert, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, 0.5, länge)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                const beam = renderWallPlaneBeam(
+                    `verbindung-${rechts ? 'rechts' : 'links'}-${i}`,
+                    [xWert, yMitte, zMitte],
+                    [0.5, 0.5, länge],
+                    [rotation, 0, 0],
+                    approxSize
+                )
+
+                if (beam) {
+                    balken.push(beam)
+                }
             }
         }
         
@@ -324,22 +340,12 @@ export default function Rahmen({
                 const xPos2 = xLinks + (i + 1) * abstand
                 const xMitte = (xPos1 + xPos2) / 2
                 
-                balken.push(
-                    <group key={`verbindung-lang-${vorne ? 'vorne' : 'hinten'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xMitte, yOben, zWert]} rotation={[0, 0, 0]}>
-                            <boxGeometry args={[abstand, 0.5, 0.5]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xMitte, yOben, zWert]} rotation={[0, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(abstand, 0.5, 0.5)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                balken.push(...renderClippedBox(
+                    `verbindung-lang-${vorne ? 'vorne' : 'hinten'}-${i}`,
+                    [xMitte, yOben, zWert],
+                    [abstand, 0.5, 0.5],
+                    'x'
+                ));
             }
         } else {
             // Satteldach: Horizontale Verbindungen auf gleicher Höhe
@@ -350,22 +356,12 @@ export default function Rahmen({
                 const xPos2 = xLinks + (i + 1) * abstand
                 const xMitte = (xPos1 + xPos2) / 2
                 
-                balken.push(
-                    <group key={`verbindung-lang-${vorne ? 'vorne' : 'hinten'}-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xMitte, yOben, zWert]} rotation={[0, 0, 0]}>
-                            <boxGeometry args={[abstand, 0.5, 0.5]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xMitte, yOben, zWert]} rotation={[0, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(abstand, 0.5, 0.5)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                balken.push(...renderClippedBox(
+                    `verbindung-lang-${vorne ? 'vorne' : 'hinten'}-${i}`,
+                    [xMitte, yOben, zWert],
+                    [abstand, 0.5, 0.5],
+                    'x'
+                ));
             }
         }
         
@@ -403,22 +399,16 @@ export default function Rahmen({
                 const länge = Math.sqrt(Math.pow(zDifferenz, 2) + Math.pow(yDifferenz, 2))
                 const rotation = -Math.atan2(yDifferenz, zDifferenz)
                 
-                balken.push(
-                    <group key={`zusatz-verbindung-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xPos, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <boxGeometry args={[0.5, 0.5, länge]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xPos, yMitte, zMitte]} rotation={[rotation, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, 0.5, länge)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                const beam = renderSightClippedBeam(
+                    `zusatz-verbindung-${i}`,
+                    [xPos, yMitte, zMitte],
+                    [0.5, 0.5, länge],
+                    [rotation, 0, 0]
+                )
+
+                if (beam) {
+                    balken.push(beam)
+                }
             }
         } else {
             // Satteldach: Verbindungen von außen zur Mitte
@@ -435,44 +425,32 @@ export default function Rahmen({
                 const längeVorne = Math.sqrt(Math.pow(zVorne, 2) + Math.pow(yObenInnen - yObenAußen, 2))
                 const rotationVorne = Math.atan2(yObenInnen - yObenAußen, zVorne)
                 
-                balken.push(
-                    <group key={`zusatz-verbindung-vorne-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xPos, yMitteVorne, zMitteVorne]} rotation={[rotationVorne, 0, 0]}>
-                            <boxGeometry args={[0.5, 0.5, längeVorne]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xPos, yMitteVorne, zMitteVorne]} rotation={[rotationVorne, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, 0.5, längeVorne)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                const vorneBeam = renderSightClippedBeam(
+                    `zusatz-verbindung-vorne-${i}`,
+                    [xPos, yMitteVorne, zMitteVorne],
+                    [0.5, 0.5, längeVorne],
+                    [rotationVorne, 0, 0]
+                )
+
+                if (vorneBeam) {
+                    balken.push(vorneBeam)
+                }
                 
                 // Schräge Verbindung von Mitte zur hinteren Stelze (nach links/hinten)
                 const zMitteHinten = zHinten / 2
                 const längeHinten = Math.sqrt(Math.pow(zHinten, 2) + Math.pow(yObenInnen - yObenAußen, 2))
                 const rotationHinten = Math.atan2(yObenInnen - yObenAußen, -zHinten)
                 
-                balken.push(
-                    <group key={`zusatz-verbindung-hinten-${i}`}>
-                        {oberfläche && (
-                        <mesh position={[xPos, yMitteVorne, zMitteHinten]} rotation={[-rotationHinten, 0, 0]}>
-                            <boxGeometry args={[0.5, 0.5, längeHinten]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xPos, yMitteVorne, zMitteHinten]} rotation={[-rotationHinten, 0, 0]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.5, 0.5, längeHinten)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                    </group>
-                );
+                const hintenBeam = renderSightClippedBeam(
+                    `zusatz-verbindung-hinten-${i}`,
+                    [xPos, yMitteVorne, zMitteHinten],
+                    [0.5, 0.5, längeHinten],
+                    [-rotationHinten, 0, 0]
+                )
+
+                if (hintenBeam) {
+                    balken.push(hintenBeam)
+                }
             }
         }
         return balken;
@@ -487,116 +465,68 @@ export default function Rahmen({
             // Pultdach: Vordere Ecken höher, hintere Ecken niedriger
             <>
                 {/* Vorne rechts - hoch */}
-                {oberfläche && (
-                <mesh position={[x+9+(0.5*(bodenLänge-20)), y+4.5+(pultdachHöheDifferenz/2), z+6.5+(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5, gebäudeHöhe+pultdachHöheDifferenz, 0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x+9+(0.5*(bodenLänge-20)), y+4.5+(pultdachHöheDifferenz/2), z+6.5+(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5, gebäudeHöhe+pultdachHöheDifferenz, 0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-vorne-rechts',
+                    [x+9+(0.5*(bodenLänge-20)), y+4.5+(pultdachHöheDifferenz/2), z+6.5+(0.5*(bodenBreite-15))],
+                    [0.5, gebäudeHöhe+pultdachHöheDifferenz, 0.5],
+                    'y'
                 )}
 
                 {/* Hinten rechts - niedrig */}
-                {oberfläche && (
-                <mesh position={[x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5,gebäudeHöhe,0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-hinten-rechts',
+                    [x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))],
+                    [0.5,gebäudeHöhe,0.5],
+                    'y'
                 )}
 
                 {/* Hinten links - niedrig */}
-                {oberfläche && (
-                <mesh position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5,gebäudeHöhe,0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-hinten-links',
+                    [x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))],
+                    [0.5,gebäudeHöhe,0.5],
+                    'y'
                 )}
 
                 {/* Vorne links - hoch */}
-                {oberfläche && (
-                <mesh position={[x-9-(0.5*(bodenLänge-20)),y+4.5+(pultdachHöheDifferenz/2),z+6.5+(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5,gebäudeHöhe+pultdachHöheDifferenz,0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x-9-(0.5*(bodenLänge-20)),y+4.5+(pultdachHöheDifferenz/2),z+6.5+(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5,gebäudeHöhe+pultdachHöheDifferenz,0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-vorne-links',
+                    [x-9-(0.5*(bodenLänge-20)),y+4.5+(pultdachHöheDifferenz/2),z+6.5+(0.5*(bodenBreite-15))],
+                    [0.5,gebäudeHöhe+pultdachHöheDifferenz,0.5],
+                    'y'
                 )}
             </>
         ) : (
             // Satteldach oder Standard: Alle Ecken gleich hoch
             <>
-                {oberfläche && (
-                <mesh position={[x+9+(0.5*(bodenLänge-20)), y+4.5, z+6.5+(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5, gebäudeHöhe, 0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x+9+(0.5*(bodenLänge-20)), y+4.5, z+6.5+(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5, gebäudeHöhe, 0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-vorne-rechts',
+                    [x+9+(0.5*(bodenLänge-20)), y+4.5, z+6.5+(0.5*(bodenBreite-15))],
+                    [0.5, gebäudeHöhe, 0.5],
+                    'y'
                 )}
 
-                {oberfläche && (
-                <mesh position={[x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5,gebäudeHöhe,0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-hinten-rechts',
+                    [x+9+(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))],
+                    [0.5,gebäudeHöhe,0.5],
+                    'y'
                 )}
 
                 {/* Hinten links - niedrig */}
-                {oberfläche && (
-                <mesh position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5,gebäudeHöhe,0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-hinten-links',
+                    [x-9-(0.5*(bodenLänge-20)),y+4.5,z-6.5-(0.5*(bodenBreite-15))],
+                    [0.5,gebäudeHöhe,0.5],
+                    'y'
                 )}
 
                 {/* Vorne links - hoch */}
-                {oberfläche && (
-                <mesh position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z+6.5+(0.5*(bodenBreite-15))]}>
-                    <boxGeometry args={[0.5,gebäudeHöhe,0.5]} />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-                )}
-                {frame && (
-                <lineSegments position={[x-9-(0.5*(bodenLänge-20)),y+4.5,z+6.5+(0.5*(bodenBreite-15))]}>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.5,gebäudeHöhe,0.5)]} />
-                    <lineBasicMaterial color="black" />
-                </lineSegments>
+                {renderClippedBox(
+                    'ecke-vorne-links',
+                    [x-9-(0.5*(bodenLänge-20)),y+4.5,z+6.5+(0.5*(bodenBreite-15))],
+                    [0.5,gebäudeHöhe,0.5],
+                    'y'
                 )}
             </>
         )}

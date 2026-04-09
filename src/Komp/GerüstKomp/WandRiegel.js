@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { getVisibleBoxSegments } from '../openingUtils'
 
 export default function WandRiegel({
     x,
@@ -13,8 +14,31 @@ export default function WandRiegel({
     pultdachHöheDifferenz = 5,
     riegelFaktor = 4,
     frame,
-    oberfläche
+    oberfläche,
+    openingVolumes = [],
+    color = '#7d7d75'
 }) {
+
+    const renderClippedBox = (key, position, size, axis) => {
+        const segments = getVisibleBoxSegments(position, size, openingVolumes, axis)
+
+        return segments.map((segment, index) => (
+            <group key={`${key}-${index}`}>
+                {oberfläche && (
+                    <mesh position={segment.position}>
+                        <boxGeometry args={segment.size} />
+                        <meshStandardMaterial color={color} />
+                    </mesh>
+                )}
+                {frame && (
+                    <lineSegments position={segment.position}>
+                        <edgesGeometry args={[new THREE.BoxGeometry(...segment.size)]} />
+                        <lineBasicMaterial color="black" />
+                    </lineSegments>
+                )}
+            </group>
+        ))
+    }
 
     function erstelleWandRiegel() {
         const riegel = []
@@ -35,82 +59,42 @@ export default function WandRiegel({
         
         // Vordere Riegel (horizontal)
         for (let i = 0; i <= wievieleRiegel; i++) {
-            riegel.push(
-                <group key={`riegel-vorne-${i}`}>
-                    {oberfläche && (
-                    <mesh position={[(xLinks + xRechts) / 2, riegelHöhe-0.5 - i * riegelFaktor, zVorne+0.4]}>
-                        <boxGeometry args={[längeLangeSeite, 0.3, 0.3]} />
-                        <meshStandardMaterial color={"#7d7d75"} />
-                    </mesh>
-                    )}
-                    {frame && (
-                    <lineSegments position={[(xLinks + xRechts) / 2, riegelHöhe-0.5 - i * riegelFaktor, zVorne+0.4]}>
-                        <edgesGeometry args={[new THREE.BoxGeometry(längeLangeSeite, 0.3, 0.3)]} />
-                        <lineBasicMaterial color="black" />
-                    </lineSegments>
-                    )}
-                </group>
-            )
+            riegel.push(...renderClippedBox(
+                `riegel-vorne-${i}`,
+                [(xLinks + xRechts) / 2, riegelHöhe - 0.5 - i * riegelFaktor, zVorne + 0.4],
+                [längeLangeSeite, 0.3, 0.3],
+                'x'
+            ))
         }
         
         // Hintere Riegel (horizontal)
         for (let i = 0; i <= wievieleRiegel; i++) {
-            riegel.push(
-                <group key={`riegel-hinten-${i}`}>
-                    {oberfläche && (
-                    <mesh position={[(xLinks + xRechts) / 2, riegelHöhe-0.5 - i * riegelFaktor, zHinten-0.4]}>
-                        <boxGeometry args={[längeLangeSeite, 0.3, 0.3]} />
-                        <meshStandardMaterial color={"#7d7d75"} />
-                    </mesh>
-                    )}
-                    {frame && (
-                    <lineSegments position={[(xLinks + xRechts) / 2, riegelHöhe-0.5 - i * riegelFaktor, zHinten-0.4]}>
-                        <edgesGeometry args={[new THREE.BoxGeometry(längeLangeSeite, 0.3, 0.3)]} />
-                        <lineBasicMaterial color="black" />
-                    </lineSegments>
-                    )}
-                </group>
-            )
+            riegel.push(...renderClippedBox(
+                `riegel-hinten-${i}`,
+                [(xLinks + xRechts) / 2, riegelHöhe - 0.5 - i * riegelFaktor, zHinten - 0.4],
+                [längeLangeSeite, 0.3, 0.3],
+                'x'
+            ))
         }
         
         // Rechte Riegel (horizontal)
         for (let i = 0; i <= wievieleRiegel; i++) {
-            riegel.push(
-                <group key={`riegel-rechts-${i}`}>
-                    {oberfläche && (
-                    <mesh position={[xRechts+0.4, riegelHöhe-0.5 - i * riegelFaktor, (zHinten + zVorne) / 2]}>
-                        <boxGeometry args={[0.3, 0.3, längeKurzeSeite]} />
-                        <meshStandardMaterial color={"#7d7d75"} />
-                    </mesh>
-                    )}
-                    {frame && (
-                    <lineSegments position={[xRechts+0.4, riegelHöhe-0.5 - i * riegelFaktor, (zHinten + zVorne) / 2]}>
-                        <edgesGeometry args={[new THREE.BoxGeometry(0.3, 0.3, längeKurzeSeite)]} />
-                        <lineBasicMaterial color="black" />
-                    </lineSegments>
-                    )}
-                </group>
-            )
+            riegel.push(...renderClippedBox(
+                `riegel-rechts-${i}`,
+                [xRechts + 0.4, riegelHöhe - 0.5 - i * riegelFaktor, (zHinten + zVorne) / 2],
+                [0.3, 0.3, längeKurzeSeite],
+                'z'
+            ))
         }
         
         // Linke Riegel (horizontal)
         for (let i = 0; i <= wievieleRiegel; i++) {
-            riegel.push(
-                <group key={`riegel-links-${i}`}>
-                    {oberfläche && (
-                    <mesh position={[xLinks-0.4, riegelHöhe-0.5 - i * riegelFaktor, (zHinten + zVorne) / 2]}>
-                        <boxGeometry args={[0.3, 0.3, längeKurzeSeite]} />
-                        <meshStandardMaterial color={"#7d7d75"} />
-                    </mesh>
-                    )}
-                    {frame && (
-                    <lineSegments position={[xLinks-0.4, riegelHöhe-0.5 - i * riegelFaktor, (zHinten + zVorne) / 2]}>
-                        <edgesGeometry args={[new THREE.BoxGeometry(0.3, 0.3, längeKurzeSeite)]} />
-                        <lineBasicMaterial color="black" />
-                    </lineSegments>
-                    )}
-                </group>
-            )
+            riegel.push(...renderClippedBox(
+                `riegel-links-${i}`,
+                [xLinks - 0.4, riegelHöhe - 0.5 - i * riegelFaktor, (zHinten + zVorne) / 2],
+                [0.3, 0.3, längeKurzeSeite],
+                'z'
+            ))
         }
         
         return riegel
@@ -154,29 +138,17 @@ export default function WandRiegel({
                 <>
                 {zusatzHöheMitte > 4 && (
                     <>
-                        {oberfläche && (
-                        <mesh position={[xRechts+0.4, extraRiegelHöhe, (zHinten + zVorne) / 2]}>
-                            <boxGeometry args={[0.3, 0.3, kurzeRiegel]} />
-                            <meshStandardMaterial color={"#7d7d75"} />
-                        </mesh>
+                        {renderClippedBox(
+                            'extra-riegel-rechts',
+                            [xRechts + 0.4, extraRiegelHöhe, (zHinten + zVorne) / 2],
+                            [0.3, 0.3, kurzeRiegel],
+                            'z'
                         )}
-                        {frame && (
-                        <lineSegments position={[xRechts+0.4, extraRiegelHöhe, (zHinten + zVorne) / 2]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.3, 0.3, kurzeRiegel)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
-                        )}
-                        {oberfläche && (
-                        <mesh position={[xLinks-0.4, extraRiegelHöhe, (zHinten + zVorne) / 2]}>
-                            <boxGeometry args={[0.3, 0.3, kurzeRiegel]} />
-                            <meshStandardMaterial color={"#7d7d75"} />
-                        </mesh>
-                        )}
-                        {frame && (
-                        <lineSegments position={[xLinks-0.4, extraRiegelHöhe, (zHinten + zVorne) / 2]}>
-                            <edgesGeometry args={[new THREE.BoxGeometry(0.3, 0.3, kurzeRiegel)]} />
-                            <lineBasicMaterial color="black" />
-                        </lineSegments>
+                        {renderClippedBox(
+                            'extra-riegel-links',
+                            [xLinks - 0.4, extraRiegelHöhe, (zHinten + zVorne) / 2],
+                            [0.3, 0.3, kurzeRiegel],
+                            'z'
                         )}
                     </>
                 )}

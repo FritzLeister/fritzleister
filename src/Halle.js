@@ -3,14 +3,11 @@ import Gerüst from "./Komp/Gerüst"
 import Wand from "./Komp/Wand"
 import Dach from "./Komp/Dach"
 import { OrbitControls } from "@react-three/drei"
-import { useState } from "react"
+import { memo, useCallback, useMemo, useRef } from "react"
 import Tür from "./Komp/Tür"
 import LeerÖffnung from "./Komp/ÖffnungenKomp/LeerÖffnung"
 import WandFenster from "./Komp/ÖffnungenKomp/WandFenster"
 import DachLeeröffnung from "./Komp/ÖffnungenKomp/DachLeeröffnung"
-import { useLoader } from "@react-three/fiber"
-import { TextureLoader, TextureUtils } from "three"
-import { useRef } from "react"
 import Abmessungen from "./Komp/Abmessungen"
 import Bodenplatte from "./Komp/Bodenplatte"
 import Achsen from "./Komp/Achsen"
@@ -25,7 +22,7 @@ import DachTransparentesPaneel from "./Komp/ÖffnungenKomp/DachTransparentesPane
 import Laderampe from "./Komp/ÖffnungenKomp/Laderampe"
 import LichtKuppel from "./Komp/ÖffnungenKomp/LichtKuppel"
 
-export default function Halle({ 
+export default memo(function Halle({ 
     bodenLänge, 
     bodenBreite, 
     gebäudeHöhe, 
@@ -51,39 +48,93 @@ export default function Halle({
     wandriegelAnzeigen,
     kantteileAnzeigen,
     bodenplatteAnzeigen,
+    bodenplatteFarbe,
+    rahmenFarbe,
+    sekundärKonstruktionsFarbe,
     dachArt,
     diffTraufFirst,
     pultdachHöheDifferenz,
     sockelhöhe,
     wandGeometrieVorgaben,
     wandOrientierung,
+    paneeltyp,
+    farbSchema,
+    außenFarbeMuster,
+    musterVerortung,
+        paneelBreiteMm,
+    dachIsolierung,
+    dachPaneeltyp,
+    dachPaneelBreiteMm,
     außenFarbe,
+    dachAußenFarbe,
 }) {
 
-    const [orbitKontrolle, setOrbitKontrolle] = useState(true)
-    const türObjs = objs.filter(obj => obj.type === "tür-öffnung")
-    const leeröffnungen = objs.filter(obj =>
-        obj.type === "leeröffnung" &&
-        (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined)))
-    )
-    const wandFenster = objs.filter(obj => obj.type === "fenster")
-    const sektionalTore = objs.filter(obj => obj.type === "sektionaltor")
-    const schiebetüren = objs.filter(obj => obj.type === "schiebetür")
-    const rolltore = objs.filter(obj => obj.type === "rolltor")
-    const laderampen = objs.filter(obj => obj.type === "laderampe")
-    const transparentePaneeleWand = objs.filter(obj =>
-        obj.type === "transparentespaneel" &&
-        (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined)))
-    )
-    const transparentePaneeleDach = objs.filter(obj =>
-        obj.type === "transparentespaneel" &&
-        (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false))
-    )
-    const dachLeeröffnungen = objs.filter(obj =>
-        obj.type === "leeröffnung" &&
-        (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false))
-    )
-    const lichtkuppeln = objs.filter(obj => obj.type === "kleinlichtskuppel")
+    const orbitControlsRef = useRef(null)
+    const setOrbitKontrolle = useCallback((enabled) => {
+        if (orbitControlsRef.current) {
+            orbitControlsRef.current.enabled = enabled
+        }
+    }, [])
+
+    const {
+        türObjs,
+        leeröffnungen,
+        wandFenster,
+        sektionalTore,
+        schiebetüren,
+        rolltore,
+        laderampen,
+        transparentePaneeleWand,
+        transparentePaneeleDach,
+        dachLeeröffnungen,
+        lichtkuppeln
+    } = useMemo(() => {
+        const next = {
+            türObjs: [],
+            leeröffnungen: [],
+            wandFenster: [],
+            sektionalTore: [],
+            schiebetüren: [],
+            rolltore: [],
+            laderampen: [],
+            transparentePaneeleWand: [],
+            transparentePaneeleDach: [],
+            dachLeeröffnungen: [],
+            lichtkuppeln: []
+        }
+
+        for (const obj of objs ?? []) {
+            if (obj.type === "tür-öffnung") next.türObjs.push(obj)
+            if (obj.type === "fenster") next.wandFenster.push(obj)
+            if (obj.type === "sektionaltor") next.sektionalTore.push(obj)
+            if (obj.type === "schiebetür") next.schiebetüren.push(obj)
+            if (obj.type === "rolltor") next.rolltore.push(obj)
+            if (obj.type === "laderampe") next.laderampen.push(obj)
+            if (obj.type === "kleinlichtskuppel") next.lichtkuppeln.push(obj)
+
+            if (obj.type === "leeröffnung") {
+                if (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false)) {
+                    next.dachLeeröffnungen.push(obj)
+                }
+
+                if (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined))) {
+                    next.leeröffnungen.push(obj)
+                }
+            }
+
+            if (obj.type === "transparentespaneel") {
+                if (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false)) {
+                    next.transparentePaneeleDach.push(obj)
+                }
+
+                if (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined))) {
+                    next.transparentePaneeleWand.push(obj)
+                }
+            }
+        }
+
+        return next
+    }, [objs])
 
     // Flachdach wird wie Satteldach behandelt, aber mit diffTraufFirst = 0
     const effektiveDachArt = dachArt === 'flachdach' ? 'satteldach' : dachArt
@@ -91,11 +142,6 @@ export default function Halle({
     
     // Sockelhöhe für Gerüst: 0.5 wenn nur verkleidete Wand, sonst sockelhöhe
     const gerüstSockelHöhe = wandGeometrieVorgaben === 'verkleidete-wand' ? 0.8 : sockelhöhe
-
-    //const url = "pastellGrün.png"
-    const url = "blaupause.jpg"
-    const ref = useRef()
-    const texture = useLoader(TextureLoader, url)
 
     return(
         <>
@@ -114,6 +160,7 @@ export default function Halle({
         ) : (
             objs={objs}
             <> */}
+            <group name="product-snapshot-focus-root">
             {/* Stahlrahmen, Pfetten, Wandriegel, Kantteile */}
             <Gerüst 
             bodenLänge={bodenLänge}
@@ -131,6 +178,8 @@ export default function Halle({
             oberflächenAnzeigen={oberflächenAnzeigen}
             sockelHöhe={gerüstSockelHöhe}
             objs={objs}
+            rahmenFarbe={rahmenFarbe}
+            sekundärKonstruktionsFarbe={sekundärKonstruktionsFarbe}
             />
 
 
@@ -157,13 +206,18 @@ export default function Halle({
         abgrenzung={true} // unterteilung der Wände
         originalBreite={originalBreite}
         wandOrientierung={wandOrientierung}
+        paneeltyp={paneeltyp}
+            paneelBreiteMm={paneelBreiteMm}
+        farbSchema={farbSchema}
+        baseColor={außenFarbe}
+        patternColor={außenFarbeMuster}
+        musterVerortung={musterVerortung}
         setEditMenü={setEditMenü}
         setClickedButtonPos={setClickedButtonPos}
         editMenü={editMenü}
         kantenAnzeigen={kantenAnzeigen}
         oberflächenAnzeigen={oberflächenAnzeigen}
         plattenAnzeigen={plattenAnzeigen}
-        color={außenFarbe}
         />
         
 
@@ -188,9 +242,13 @@ export default function Halle({
         setEditMenü={setEditMenü}
         editMenü={editMenü}
         setClickedButtonPos={setClickedButtonPos}
+        dachIsolierung={dachIsolierung}
+        dachPaneeltyp={dachPaneeltyp}
+        dachPaneelBreiteMm={dachPaneelBreiteMm}
         oberflächenAnzeigen={oberflächenAnzeigen}
         plattenAnzeigen={plattenAnzeigen}
         pultdachHöheDifferenz={pultdachHöheDifferenz-10}
+        color={dachAußenFarbe}
         />
         
         
@@ -508,10 +566,17 @@ export default function Halle({
 
         {/* Bodenplatte */}
         {bodenplatteAnzeigen && (
-            <Bodenplatte bodenLänge={bodenLänge} bodenBreite={bodenBreite} koordinate={koordinate} />
+            <Bodenplatte
+                bodenLänge={bodenLänge}
+                bodenBreite={bodenBreite}
+                koordinate={koordinate}
+                color={bodenplatteFarbe}
+            />
         )}
 
-        <OrbitControls enabled={orbitKontrolle} maxDistance={350} />
+        </group>
+
+    <OrbitControls ref={orbitControlsRef} maxDistance={350} />
         </>
     )
-}
+})

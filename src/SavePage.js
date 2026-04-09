@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./styles.css";
 import AnfrageFormular from "./AnfrageFormular";
 
@@ -12,15 +12,20 @@ export default function SavePage({
     setDachSelection,
     hallenSave,
     setObjs,
+    onKontaktSubmit,
     initialSchirm = "preis"
 }) {
 
     const [schirm, setSchirm] = useState(initialSchirm)
 
+    useEffect(() => {
+        setSchirm(initialSchirm)
+    }, [initialSchirm])
+
     return(
         <>
             {schirm === "preis" && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#ffffff", position: "fixed", inset: 0, zIndex: 2000 }}>
                     <div
                     style={{
                         display: "flex",
@@ -71,6 +76,8 @@ export default function SavePage({
             {schirm === "kontakt" && (
                 <AnfrageFormular
                 setSchirm={setSchirm}
+                setShowApp={setShowApp}
+                onSubmitSuccess={onKontaktSubmit}
                 setBreite={setBreite}
                 setLänge={setLänge}
                 setHöhe={setHöhe}
@@ -80,7 +87,7 @@ export default function SavePage({
             )}
 
             {schirm === "ende" && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#ffffff", position: "fixed", inset: 0, zIndex: 2000 }}>
                     <div
                     style={{
                         display: "flex",

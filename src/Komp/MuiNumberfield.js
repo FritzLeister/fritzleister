@@ -58,8 +58,21 @@ export default function MuiNumberfield({ label = 'Number', min = 0, max = 100, s
   };
 
   const handleChange = (e) => {
-    // allow user to type anything
-    setInternalValue(e.target.value);
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+
+    if (!setState || typeof setState !== 'function') {
+      return;
+    }
+
+    if (newValue === '' || newValue === '-' || newValue === '.') {
+      return;
+    }
+
+    const num = toNumber(newValue);
+    if (num !== null && num >= min && num <= max) {
+      setState(num);
+    }
   };
 
   const handleBlur = () => {

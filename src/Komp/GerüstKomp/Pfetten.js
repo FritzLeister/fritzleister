@@ -14,7 +14,8 @@ export default function Pfetten({
     pultdachHöheDifferenz = 5,
     pfettenAbstand, // Abstand zwischen den Pfetten in z-Richtung
     frame,
-    oberfläche
+    oberfläche,
+    color = '#7d7d75'
 }) {
 
     function erstellePfetten() {
@@ -55,7 +56,7 @@ export default function Pfetten({
                         {oberfläche && (
                         <mesh position={[(xLinks + xRechts) / 2, yPos, zPos]} rotation={[0, 0, 0]}>
                             <boxGeometry args={[pfettenLänge, 0.3, 0.3]} />
-                            <meshStandardMaterial color={"#7d7d75"} />
+                            <meshStandardMaterial color={color} />
                         </mesh>
                         )}
                         {frame && (
@@ -91,7 +92,7 @@ export default function Pfetten({
                         {oberfläche && (
                         <mesh position={[(xLinks + xRechts) / 2, yPos, zPos]}>
                             <boxGeometry args={[pfettenLänge, 0.3, 0.3]} />
-                            <meshStandardMaterial color={"rgba(129, 108, 108, 1)"} />
+                            <meshStandardMaterial color={color} />
                         </mesh>
                         )}
                         {frame && (
@@ -116,7 +117,7 @@ export default function Pfetten({
                         {oberfläche && (
                         <mesh position={[(xLinks + xRechts) / 2, yPos, zPos]}>
                             <boxGeometry args={[pfettenLänge, 0.3, 0.3]} />
-                            <meshStandardMaterial color={"rgba(129, 108, 108, 1)"} />
+                            <meshStandardMaterial color={color} />
                         </mesh>
                         )}
                         {frame && (

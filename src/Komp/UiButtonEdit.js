@@ -36,6 +36,8 @@ export default function UiButtonEdit({
     setIsolierung,
     paneeltyp,
     setPaneeltyp,
+        paneelBreiteMm,
+        setPaneelBreiteMm,
     wandOrientierung,
     setWandOrientierung,
     farbSchema,
@@ -50,6 +52,8 @@ export default function UiButtonEdit({
     setDachIsolierung,
     dachPaneeltyp,
     setDachPaneeltyp,
+    dachPaneelBreiteMm,
+    setDachPaneelBreiteMm,
     dachAußenFarbe,
     setDachAußenFarbe,
     dachPvcName,
@@ -123,7 +127,9 @@ export default function UiButtonEdit({
     useEffect(() => {
         if (paneeltyp === 'holzverkleidung') {
             setAußenFarbe('#9f764e');
+            return;
         }
+        setAußenFarbe('white');
     }, [paneeltyp]);
 
     function abmessungsUI() {
@@ -402,9 +408,9 @@ export default function UiButtonEdit({
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
-                                    <span className='text' style={{ fontSize: 12}}>500-6000</span>
+                                    <span className='text' style={{ fontSize: 12}}>500-2500</span>
                                 </div>
-                                <MuiNumberfield label={'mm'} min={500} max={6000} />
+                                    <MuiNumberfield label={'mm'} min={500} max={2500} state={paneelBreiteMm} setState={setPaneelBreiteMm} />
                             </div>
 
                             <div style={{ 
@@ -448,7 +454,9 @@ export default function UiButtonEdit({
                             />
                         </div>
 
-                        <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px', marginLeft: '10px' }}>Farbschema:</p>
+                        {paneeltyp !== 'holzverkleidung' && (
+                            <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px', marginLeft: '10px' }}>Farbschema:</p>
+                        )}
 
                         {(isolierung === "nicht-isoliert" && paneeltyp !== "holzverkleidung") && (
                             <div style={{ 
@@ -498,26 +506,30 @@ export default function UiButtonEdit({
                             </div>
                         )}
 
-                        <div style={{ 
-                            display: 'flex', 
-                            gap: '10px', 
-                            alignItems: 'center', 
-                            marginBottom: "8px", 
-                            justifyContent: 'space-between', 
-                            marginRight: "15px",
-                            marginLeft: '10px'
-                        }}>
-                            <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '25px' }}>Außenfarbe</span>
-                            <MuiSelect
-                            option1={'!'}
-                            value1={'!'}
-                            option2={'?'}
-                            value2={'?'}
-                            label={'Farbe'}
-                            state={außenFarbe}
-                            setState={setAußenFarbe}
-                            />
-                        </div>
+                        {paneeltyp !== 'holzverkleidung' && (
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "8px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "15px",
+                                marginLeft: '10px'
+                            }}>
+                                <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '25px' }}>Außenfarbe</span>
+                                <MuiSelect
+                                option1={'Grau'}
+                                value1={'grey'}
+                                option2={'Weiß'}
+                                value2={'white'}
+                                option3={'Grün'}
+                                value3={'green'}
+                                label={'Farbe'}
+                                state={außenFarbe}
+                                setState={setAußenFarbe}
+                                />
+                            </div>
+                        )}
 
                         {(farbSchema === 'musterfarbe'
                         || 
@@ -525,7 +537,7 @@ export default function UiButtonEdit({
                         ||
                         farbSchema === 'gleichmäßige-streifen' 
                         ||
-                        farbSchema === 'jede-zweite-platte') && (
+                        farbSchema === 'jede-zweite-platte') && paneeltyp !== 'holzverkleidung' && (
                             <div style={{ 
                                 display: 'flex', 
                                 gap: '10px', 
@@ -537,10 +549,12 @@ export default function UiButtonEdit({
                             }}>
                                 <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '28px' }}>Farbe Außenseite Muster</span>
                                 <MuiSelect
-                                option1={'!'}
-                                value1={'!'}
-                                option2={'?'}
-                                value2={'?'}
+                                option1={'Grau'}
+                                value1={'grey'}
+                                option2={'Weiß'}
+                                value2={'white'}
+                                option3={'Grün'}
+                                value3={'green'}
                                 label={'Farbe'}
                                 state={außenFarbeMuster}
                                 setState={setAußenFarbeMuster}
@@ -599,7 +613,7 @@ export default function UiButtonEdit({
                         {/* Gebäudeverkleidung Dach */}
                         <p className='text' style={{ fontSize: 12, marginBottom: "6px", marginTop: '8px' }}>Gebäudeverkleidung:</p>
 
-                        {dachPaneeltyp === 'pvc-folie' && (
+                        {dachPaneeltyp === 'pvc-folie' && dachIsolierung === 'nicht-isoliert' && (
                             <>
 
                             <div style={{ 
@@ -635,7 +649,7 @@ export default function UiButtonEdit({
                                     <span className='text' style={{ fontWeight: 200}}>Breite</span>
                                     <span className='text' style={{ fontSize: 12}}>500-6000</span>
                                 </div>
-                                <MuiNumberfield label={'mm'} min={500} max={6000} />
+                                <MuiNumberfield label={'mm'} min={500} max={6000} state={dachPaneelBreiteMm} setState={setDachPaneelBreiteMm} />
                             </div>
 
                             <div style={{ 
@@ -672,10 +686,12 @@ export default function UiButtonEdit({
                             }}>
                                 <span className='text' style={{ fontWeight: 200, marginLeft: '6px', fontSize: 12, marginRight: '25px' }}>Außenfarbe</span>
                                 <MuiSelect
-                                option1={'!'}
-                                value1={'!'}
-                                option2={'?'}
-                                value2={'?'}
+                                option1={'Grau'}
+                                value1={'grey'}
+                                option2={'Weiß'}
+                                value2={'white'}
+                                option3={'Grün'}
+                                value3={'green'}
                                 label={'Farbe'}
                                 state={dachAußenFarbe}
                                 setState={setDachAußenFarbe}
@@ -1014,10 +1030,12 @@ export default function UiButtonEdit({
                         }}>
                             <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Bodenplatte</span>
                             <MuiSelect
-                                option1={'?'}
-                                value1={'?'}
-                                option2={'!'}
-                                value2={'!'}
+                                option1={'Weiß'}
+                                value1={'white'}
+                                option2={'Grau'}
+                                value2={'grey'}
+                                option3={'Grün'}
+                                value3={'green'}
                                 label={'Farbe'}
                                 state={bodenplatteFarbe}
                                 setState={setBodenplatteFarbe}
@@ -1034,10 +1052,14 @@ export default function UiButtonEdit({
                         }}>
                             <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Rahmenfarbe</span>
                             <MuiSelect
-                                option1={'?'}
-                                value1={'?'}
-                                option2={'!'}
-                                value2={'!'}
+                                option1={'Blau'}
+                                value1={'lightblue'}
+                                option2={'Weiß'}
+                                value2={'white'}
+                                option3={'Grau'}
+                                value3={'grey'}
+                                option4={'Grün'}
+                                value4={'green'}
                                 label={'Farbe'}
                                 state={rahmenFarbe}
                                 setState={setRahmenFarbe}
@@ -1054,17 +1076,19 @@ export default function UiButtonEdit({
                         }}>
                             <span className='text' style={{ fontWeight: 200, fontSize: 13 }}>Sekundärkonstruktionsfarbe</span>
                             <MuiSelect
-                                option1={'?'}
-                                value1={'?'}
-                                option2={'! '}
-                                value2={'!'}
+                                option1={'Weiß'}
+                                value1={'white'}
+                                option2={'Grau'}
+                                value2={'grey'}
+                                option3={'Grün'}
+                                value3={'green'}
                                 label={'Farbe'}
                                 state={sekundärKonstruktionsFarbe}
                                 setState={setSekundärKonstruktionsFarbe}
                             />
                         </div>
 
-                        <div style={{ 
+                        {/* <div style={{ 
                             display: 'flex', 
                             gap: '10px', 
                             alignItems: 'center', 
@@ -1082,7 +1106,7 @@ export default function UiButtonEdit({
                                 state={sekundärHolzKonstruktionsFarbe}
                                 setState={setSekundärHolzKonstruktionsFarbe}
                             />
-                        </div>
+                        </div> */}
 
                     </div>
 

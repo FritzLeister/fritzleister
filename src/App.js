@@ -2,14 +2,35 @@ import { Canvas } from '@react-three/fiber'
 import "./styles.css"
 import Halle from './Halle'
 import SliderMui from "./Komp/SliderMui"
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import LoadingPage from "./LoadingPage";
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
-import { useLoader } from '@react-three/drei'
-import { TextureLoader } from 'three'
 import DarstellungUI from './Komp/DarstellungUI'
+import { registerProductSnapshotCapture } from './utils/productSnapshotRegistry'
+import { useProductSnapshots } from './hooks/useProductSnapshots'
+
+const DEFAULT_CAMERA_POSITION = [0, 30, 50]
+
+function SnapshotCaptureBridge({ breite, länge, höhe }) {
+    const captureSnapshots = useProductSnapshots({
+        rootObjectName: 'product-snapshot-focus-root',
+        hallWidthMeters: breite,
+        hallLengthMeters: länge,
+        hallHeightMeters: höhe,
+    })
+
+    useEffect(() => {
+        registerProductSnapshotCapture(captureSnapshots)
+
+        return () => {
+            registerProductSnapshotCapture(null)
+        }
+    }, [captureSnapshots])
+
+    return null
+}
 
 export default function App({ 
     setShowApp, 
@@ -36,6 +57,9 @@ export default function App({
     setEditMenü
  }) {
 
+     const canvasCamera = useMemo(() => ({ position: DEFAULT_CAMERA_POSITION }), [])
+     const canvasGl = useMemo(() => ({ powerPreference: 'high-performance' }), [])
+
     /*
     const [bodenLänge, setBodenLänge] = useState(40) // max 40
     const [bodenBreite, setBodenBreite] = useState(25) // max 25
@@ -56,14 +80,16 @@ export default function App({
     const [wandGeometrieVorgaben, setWandGeometrieVorgaben] = useState('verkleidete-wand-mit-sockel')
     const [isolierung, setIsolierung] = useState('isoliert')
     const [paneeltyp, setPaneeltyp] = useState('trapez')
+    const [paneelBreiteMm, setPaneelBreiteMm] = useState(2500)
     const [wandOrientierung, setWandOrientierung] = useState('vertikal')
     const [farbSchema, setFarbSchema] = useState('einfarbig')
-    const [außenFarbe, setAußenFarbe] = useState('?')
-    const [außenFarbeMuster, setAußenFarbeMuster] = useState('!')
+    const [außenFarbe, setAußenFarbe] = useState('white')
+    const [außenFarbeMuster, setAußenFarbeMuster] = useState('white')
     const [musterVerortung, setMusterVerortung] = useState('4, 5')
     const [dachIsolierung, setDachIsolierung] = useState('isoliert')
     const [dachPaneeltyp, setDachPaneeltyp] = useState('trapez')
-    const [dachAußenFarbe, setDachAußenFarbe] = useState('?')
+    const [dachPaneelBreiteMm, setDachPaneelBreiteMm] = useState(2500)
+    const [dachAußenFarbe, setDachAußenFarbe] = useState('grey')
     const [dachPvcName, setDachPvcName] = useState('PVC-Folie')
     const [pvcName, setPvcName] = useState('PVC-Folie')
 
@@ -83,9 +109,9 @@ export default function App({
     const [größeGebäudeM2, setGrößeGebäudeM2] = useState(760)
 
     // 'Arbeits' - States (Konstruktion) aus UiButtonEdit
-    const [bodenplatteFarbe, setBodenplatteFarbe] = useState('?')
-    const [rahmenFarbe, setRahmenFarbe] = useState('?')
-    const [sekundärKonstruktionsFarbe, setSekundärKonstruktionsFarbe] = useState('?')
+    const [bodenplatteFarbe, setBodenplatteFarbe] = useState('white')
+    const [rahmenFarbe, setRahmenFarbe] = useState('lightblue')
+    const [sekundärKonstruktionsFarbe, setSekundärKonstruktionsFarbe] = useState('grey')
     const [sekundärHolzKonstruktionsFarbe, setSekundärHolzKonstruktionsFarbe] = useState('?')
 
     // 'Arbeits' - States (Zubehör) aus UiButtonEdit
@@ -221,10 +247,6 @@ export default function App({
     }
         */
 
-    useEffect(() => {
-        console.log("selected objs:", selectedObject);
-    }, [selectedObject]);
-
     function handleOnChange(index, newValue) {
         setSelectedObject(prev => {
             if (!prev) return prev;
@@ -291,6 +313,11 @@ export default function App({
         setHallenId(prev => Number(prev) + 1);
     }
 
+
+    const konstruktionFokusAktiv = editMenü === 'Konstruktion'
+    const effektivePlattenAnzeigen = konstruktionFokusAktiv ? false : plattenAnzeigen
+    const effektiveMassivwändeAnzeigen = konstruktionFokusAktiv ? false : massivwändeAnzeigen
+    const effektiveKantteileAnzeigen = konstruktionFokusAktiv ? false : kantteileAnzeigen
 
     return(
         <>
@@ -423,49 +450,66 @@ export default function App({
         
 
         <Canvas 
-        camera={{position: [0,30,50]}} 
+        camera={canvasCamera}
+        dpr={[1, 1.5]}
+        gl={canvasGl}
+        shadows={false}
         className='canvasOverlay'
         // style={{backgroundImage: "url(/himmel.jpg)", backgroundSize: "cover", backgroundPosition: "center"}}
         >
             <directionalLight position={[5,5,5]} intensity={1} />
             <ambientLight intensity={0.9} />
+            <SnapshotCaptureBridge breite={breite} länge={länge} höhe={höhe} />
 
-            
-            <Halle 
-            bodenLänge={länge*2.5} // +17
-            bodenBreite={breite*2.5} // +15
-            gebäudeHöhe={höhe*2.5} // +3
-            koordinate={koordinate}
-            selectedObj={selectedObject}
-            setTürAttribute={setTürAttribute}
-            setSelectedObject={setSelectedObject}
-            setObjs={setObjs}
-            objs={objs}
-            flach={dachSelection === "flachdach" ? true : false}
-            originalBreite={breite}
-            setEditMenü={setEditMenü}
-            editMenü={editMenü}
-            setClickedButtonPos={setClickedButtonPos}
+            <group>
+                <Halle 
+                bodenLänge={länge*2.5} // +17
+                bodenBreite={breite*2.5} // +15
+                gebäudeHöhe={höhe*2.5} // +3
+                koordinate={koordinate}
+                selectedObj={selectedObject}
+                setTürAttribute={setTürAttribute}
+                setSelectedObject={setSelectedObject}
+                setObjs={setObjs}
+                objs={objs}
+                flach={dachSelection === "flachdach" ? true : false}
+                originalBreite={breite}
+                setEditMenü={setEditMenü}
+                editMenü={editMenü}
+                setClickedButtonPos={setClickedButtonPos}
 
-            kantenAnzeigen={kantenAnzeigen}
-            oberflächenAnzeigen={oberflächenAnzeigen}
-            abmessungenAnzeigen={abmessungenAnzeigen}
-            plattenAnzeigen={plattenAnzeigen}
-            massivwändeAnzeigen={massivwändeAnzeigen}
-            rahmenAnzeigen={rahmenAnzeigen}
-            pfettenAnzeigen={pfettenAnzeigen}
-            wandriegelAnzeigen={wandriegelAnzeigen}
-            kantteileAnzeigen={kantteileAnzeigen}
-            bodenplatteAnzeigen={bodenplatteAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                abmessungenAnzeigen={abmessungenAnzeigen}
+                plattenAnzeigen={effektivePlattenAnzeigen}
+                massivwändeAnzeigen={effektiveMassivwändeAnzeigen}
+                rahmenAnzeigen={rahmenAnzeigen}
+                pfettenAnzeigen={pfettenAnzeigen}
+                wandriegelAnzeigen={wandriegelAnzeigen}
+                kantteileAnzeigen={effektiveKantteileAnzeigen}
+                bodenplatteAnzeigen={bodenplatteAnzeigen}
+                bodenplatteFarbe={bodenplatteFarbe}
+                rahmenFarbe={rahmenFarbe}
+                sekundärKonstruktionsFarbe={sekundärKonstruktionsFarbe}
 
-            dachArt={dachArt}
-            diffTraufFirst={diffTraufFirst}
-            pultdachHöheDifferenz={dachneigung * 2.5}
-            sockelhöhe={sockelhöhe * 2.6}
-            wandGeometrieVorgaben={wandGeometrieVorgaben}
-            wandOrientierung={wandOrientierung}
-            außenFarbe={außenFarbe}
-            />
+                dachArt={dachArt}
+                diffTraufFirst={diffTraufFirst}
+                pultdachHöheDifferenz={dachneigung * 2.5}
+                sockelhöhe={sockelhöhe * 2.6}
+                wandGeometrieVorgaben={wandGeometrieVorgaben}
+                wandOrientierung={wandOrientierung}
+                paneeltyp={paneeltyp}
+                farbSchema={farbSchema}
+                außenFarbeMuster={außenFarbeMuster}
+                    musterVerortung={musterVerortung}
+                   paneelBreiteMm={paneelBreiteMm}
+                    dachIsolierung={dachIsolierung}
+                    dachPaneeltyp={dachPaneeltyp}
+                    dachPaneelBreiteMm={dachPaneelBreiteMm}
+                außenFarbe={außenFarbe}
+                dachAußenFarbe={dachAußenFarbe}
+                />
+            </group>
             
 
             {/* <OrbitControls /> */}
@@ -524,7 +568,6 @@ export default function App({
 
         {türAttribute && (
             <>
-                {console.log(selectedObject)}
                 <ButtonMui multiplier={2} title={"Löschen"} onClick={() => deleteObj(selectedObject.id)} />
                 
                 <SliderMui 
@@ -555,12 +598,7 @@ export default function App({
         editMenü={editMenü} 
         setEditMenü={setEditMenü}
         setShowApp3={setShowApp3}
-        setShowAppKontakt={() => {
-            saveCurrentHalle();
-            setTimeout(() => {
-                setShowAppKontakt();
-            }, 100);
-        }}
+        setShowAppKontakt={setShowAppKontakt}
         clickedButtonPos={clickedButtonPos}
         selectedObject={selectedObject}
         objs={objs}
@@ -589,6 +627,8 @@ export default function App({
         setIsolierung={setIsolierung}
         paneeltyp={paneeltyp}
         setPaneeltyp={setPaneeltyp}
+        paneelBreiteMm={paneelBreiteMm}
+        setPaneelBreiteMm={setPaneelBreiteMm}
         wandOrientierung={wandOrientierung}
         setWandOrientierung={setWandOrientierung}
         farbSchema={farbSchema}
@@ -603,6 +643,8 @@ export default function App({
         setDachIsolierung={setDachIsolierung}
         dachPaneeltyp={dachPaneeltyp}
         setDachPaneeltyp={setDachPaneeltyp}
+        dachPaneelBreiteMm={dachPaneelBreiteMm}
+        setDachPaneelBreiteMm={setDachPaneelBreiteMm}
         dachAußenFarbe={dachAußenFarbe}
         setDachAußenFarbe={setDachAußenFarbe}
         dachPvcName={dachPvcName}

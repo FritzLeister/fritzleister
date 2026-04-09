@@ -67,6 +67,8 @@ export default function Add({
     setIsolierung,
     paneeltyp,
     setPaneeltyp,
+      paneelBreiteMm,
+      setPaneelBreiteMm,
     wandOrientierung,
     setWandOrientierung,
     farbSchema,
@@ -81,6 +83,8 @@ export default function Add({
     setDachIsolierung,
     dachPaneeltyp,
     setDachPaneeltyp,
+    dachPaneelBreiteMm,
+    setDachPaneelBreiteMm,
     dachAußenFarbe,
     setDachAußenFarbe,
     dachPvcName,
@@ -292,6 +296,8 @@ export default function Add({
             setIsolierung={setIsolierung}
             paneeltyp={paneeltyp}
             setPaneeltyp={setPaneeltyp}
+              paneelBreiteMm={paneelBreiteMm}
+              setPaneelBreiteMm={setPaneelBreiteMm}
             wandOrientierung={wandOrientierung}
             setWandOrientierung={setWandOrientierung}
             farbSchema={farbSchema}
@@ -379,6 +385,8 @@ export default function Add({
             setIsolierung={setIsolierung}
             paneeltyp={paneeltyp}
             setPaneeltyp={setPaneeltyp}
+            paneelBreiteMm={paneelBreiteMm}
+            setPaneelBreiteMm={setPaneelBreiteMm}
             wandOrientierung={wandOrientierung}
             setWandOrientierung={setWandOrientierung}
             farbSchema={farbSchema}
@@ -393,6 +401,8 @@ export default function Add({
             setDachIsolierung={setDachIsolierung}
             dachPaneeltyp={dachPaneeltyp}
             setDachPaneeltyp={setDachPaneeltyp}
+            dachPaneelBreiteMm={dachPaneelBreiteMm}
+            setDachPaneelBreiteMm={setDachPaneelBreiteMm}
             dachAußenFarbe={dachAußenFarbe}
             setDachAußenFarbe={setDachAußenFarbe}
             dachPvcName={dachPvcName}

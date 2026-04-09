@@ -175,6 +175,23 @@ function Root() {
     })
   }
 
+  function saveKontaktHalle() {
+    setHallenSave(prev => {
+      const newObj = {
+        id: Date.now(),
+        breite,
+        höhe,
+        länge,
+        dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
+        hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
+        objs: Array.isArray(objs) ? objs.map(obj => ({ ...obj })) : [],
+        name: ""
+      };
+
+      return [...prev, newObj];
+    })
+  }
+
   // Hydrate saved objects into runtime-ready objects with handlers that use the
   // root `setObjs`. This recreates `onChange` handlers so loaded objects are
   // editable after being restored from a saved hall.
@@ -222,7 +239,8 @@ function Root() {
         />
       )}
 
-      {showApp === "app" && (
+      {/* Kontakt lässt die konfigurierte Halle im Hintergrund gemountet, damit Snapshots den echten Live-Zustand erfassen. */}
+      {(showApp === "app" || showApp === "kontakt") && (
         <AppPageFunc 
         setShowApp={setShowApp} 
         flach={flach} 
@@ -247,6 +265,7 @@ function Root() {
 
       {showApp === "preis" && (
         <SavePage 
+        key="save-preis"
         setShowApp={setShowApp}
         setLänge={setLänge}
         setBreite={setBreite}
@@ -255,11 +274,13 @@ function Root() {
         setDachSelection={setDachSelection}
         hallenSave={hallenSave}
         setObjs={setObjs}
+        onKontaktSubmit={saveKontaktHalle}
         />
       )}
 
       {showApp === "kontakt" && (
         <SavePage 
+        key="save-kontakt"
         setShowApp={setShowApp}
         setLänge={setLänge}
         setBreite={setBreite}
@@ -268,6 +289,7 @@ function Root() {
         setDachSelection={setDachSelection}
         hallenSave={hallenSave}
         setObjs={setObjs}
+        onKontaktSubmit={saveKontaktHalle}
         initialSchirm="kontakt"
         />
       )}

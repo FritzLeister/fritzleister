@@ -1,16 +1,48 @@
 
 
+import { useState } from "react";
+import { generateOrderPdf } from "./utils/generateOrderPdf";
+import { captureRegisteredProductSnapshots } from "./utils/productSnapshotRegistry";
+
 export default function AnfrageFormular({
     setSchirm,
+    setShowApp,
+    onSubmitSuccess,
     setBreite,
     setLänge,
     setHöhe,
     setDachSelection,
     setHallenartSelection
 }) {
+    const [hasSubmitted, setHasSubmitted] = useState(false);
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
+
+        if (hasSubmitted) {
+            return;
+        }
+
+        setHasSubmitted(true);
+
+        let snapshots = [];
+
+        try {
+            snapshots = await captureRegisteredProductSnapshots();
+        } catch (snapshotError) {
+            console.error("Snapshot-Serie konnte nicht vollständig erzeugt werden.", snapshotError);
+        }
+
+        try {
+            await generateOrderPdf({ snapshots });
+        } catch (pdfError) {
+            console.error("PDF-Dokumentation konnte nicht erstellt werden.", pdfError);
+        }
+
+        if (typeof onSubmitSuccess === "function") {
+            onSubmitSuccess();
+        }
+
         setSchirm("ende");
         setBreite(30);
         setLänge(70);
@@ -21,7 +53,7 @@ export default function AnfrageFormular({
 
     return(
         <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", padding: "20px", background: "#ffffff", position: "fixed", inset: 0, zIndex: 2000 }}>
                     <div
                     style={{
                         display: "flex",
@@ -45,6 +77,23 @@ export default function AnfrageFormular({
                         position: "relative",
                     }}
                     >
+                        <button
+                            type="button"
+                            className="buttonDark"
+                            onClick={() => setShowApp("app")}
+                            style={{
+                                position: "absolute",
+                                top: 18,
+                                left: 18,
+                                minHeight: "auto",
+                                padding: "10px 16px",
+                                fontSize: 14,
+                                lineHeight: 1,
+                                zIndex: 1,
+                            }}
+                        >
+                            Zur Halle
+                        </button>
                         <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 0 }} />
                         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
                         
@@ -129,8 +178,17 @@ export default function AnfrageFormular({
                             ></textarea>
                         </p>
 
-                        <button type="submit" className="buttonDark" style={{ height: 10 }}>
-                            Anfrage senden
+                        <button
+                            type="submit"
+                            className="buttonDark"
+                            disabled={hasSubmitted}
+                            style={{
+                                height: 10,
+                                opacity: hasSubmitted ? 0.6 : 1,
+                                cursor: hasSubmitted ? "not-allowed" : "pointer"
+                            }}
+                        >
+                            {hasSubmitted ? "Anfrage wird erstellt..." : "Anfrage senden"}
                         </button>
                         </form>
 

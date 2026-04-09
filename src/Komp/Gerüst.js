@@ -4,6 +4,7 @@ import Rahmen from "./GerüstKomp/Rahmen"
 import WandRiegel from "./GerüstKomp/WandRiegel"
 import Kantteile from "./GerüstKomp/Kantteile"
 import { Triangle } from "three"
+import { getWallOpeningSightVolumes, getWallOpeningVolumes } from "./openingUtils"
 
 
 export default function Gerüst({
@@ -21,7 +22,9 @@ export default function Gerüst({
     kantenAnzeigen,
     oberflächenAnzeigen,
     sockelHöhe,
-    objs
+    objs,
+    rahmenFarbe = '#6a93b0',
+    sekundärKonstruktionsFarbe = '#7d7d75'
 }) {
 
     const bodenDicke = 0.3
@@ -31,6 +34,23 @@ export default function Gerüst({
     const x = koordinate[0]
     const y = koordinate[1] - 0.35 + 0.5*(gebäudeHöhe-9)
     const z = koordinate[2]
+    const wallOpeningVolumes = getWallOpeningVolumes({
+        objs,
+        x,
+        z,
+        koordinateY: koordinate[1],
+        gebäudeHöhe,
+        sockelHöhe,
+        bodenLänge,
+        bodenBreite,
+    })
+    const wallOpeningSightVolumes = getWallOpeningSightVolumes({
+        wallOpeningVolumes,
+        x,
+        z,
+        bodenLänge,
+        bodenBreite,
+    })
 
     console.log("Gerüst", bodenBreite)
 
@@ -57,7 +77,9 @@ export default function Gerüst({
                 pultdachHöheDifferenz={pultdachHöheDifferenz}
                 frame={kantenAnzeigen}
                 oberfläche={oberflächenAnzeigen}
-                color={'#6a93b0'}
+                color={rahmenFarbe}
+                openingVolumes={wallOpeningVolumes}
+                sightOpeningVolumes={wallOpeningSightVolumes}
             />
         )}
 
@@ -75,6 +97,7 @@ export default function Gerüst({
                 pultdachHöheDifferenz={pultdachHöheDifferenz}
                 frame={kantenAnzeigen}
                 oberfläche={oberflächenAnzeigen}
+                color={sekundärKonstruktionsFarbe}
             />
         )}
     
@@ -92,6 +115,8 @@ export default function Gerüst({
                 frame={kantenAnzeigen}
                 oberfläche={oberflächenAnzeigen}
                 objs={objs}
+                openingVolumes={wallOpeningVolumes}
+                color={sekundärKonstruktionsFarbe}
             /> 
         )}
 
