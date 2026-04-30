@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
+import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 
 export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge, dachArt = 'satteldach', dachneigung = 0 }) {
     const istLangeWand = selectedObject?.lang ?? true
@@ -17,6 +18,12 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
     const [posSegment] = useState(selectedObject?.posSegment ?? 'mittig')
     const [abstandLinks, setAbstandLinks] = useState(() => clampValue(selectedObject?.abstandLinks ?? 0, 0, maxAbstand))
     const [abstandRechts, setAbstandRechts] = useState(() => clampValue(selectedObject?.abstandRechts ?? 0, 0, maxAbstand))
+    const positionFields = [
+        { key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
+        { key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' },
+        { key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
+    ]
+    const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
 
     useEffect(() => {
         setÖffnungsBreite((prev) => clampValue(prev, 1, maxÖffnungsBreite))
@@ -27,13 +34,14 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
 
     const handleUpdate = () => {
         if (selectedObject) {
+            handleRefreshPosition()
             const sichereBreite = clampValue(öffnungsBreite, 1, maxÖffnungsBreite)
             const sichereHöhe = clampValue(öffnungsHöhe, 1, maxÖffnungsHöhe)
-                const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
-                const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
+                const sichererAbstandLinks = clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand)
+                const sichererAbstandRechts = clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand)
             setObjs(objs => objs.map(obj => 
                 obj.id === selectedObject.id 
-                    ? { ...obj, value: [sichereBreite, sichereHöhe], posSegment, abstandLinks: sichererAbstandLinks, abstandRechts: sichererAbstandRechts }
+                    ? { ...obj, value: [sichereBreite, sichereHöhe], posSegment, abstandLinks: sichererAbstandLinks, abstandRechts: sichererAbstandRechts, abstandUnten: displayValues.abstandUnten ?? obj.abstandUnten }
                     : obj
             ))
             setEditMenü(null)
@@ -78,6 +86,8 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
             
 
             <div style={{ margin: '15px', marginTop: '12px', marginRight: '12px' }}>
+                            <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+
                 <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 
                 <div style={{ 

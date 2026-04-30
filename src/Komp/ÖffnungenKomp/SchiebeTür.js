@@ -1,8 +1,10 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
+import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
+import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition } from './wallOpeningPositionUtils'
 
 // Schiebetür für Wände – zwei horizontal verschiebbare Flügel
 export default function SchiebeTür({
@@ -12,6 +14,7 @@ export default function SchiebeTür({
     bodenLänge,
     setOrbitKontrolle,
     setSelectedObject,
+    setObjs,
     objId,
     objs,
     setEditMenü,
@@ -47,6 +50,7 @@ export default function SchiebeTür({
     const initialZ = obj?.startPos?.z ?? position[2]
     const initialY = obj?.startPos?.y ?? y
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
+    const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
     const [isHovered, setIsHovered] = useState(false)
 
     const skaliertBreite = openingArgs[0] * 2.5
@@ -89,6 +93,42 @@ export default function SchiebeTür({
     // Grenzen für kurze Wände (Z-Achse)
     const zRichtungsVorzeichen = rechts ? 1 : -1
     const { min: minZ, max: maxZ } = getAchsenGrenzen(kurzeWandMin, kurzeWandMax, zRichtungsVorzeichen)
+
+    useEffect(() => {
+        gridPosiRef.current = gridPosi
+    }, [gridPosi])
+
+    const persistPosition = useCallback((nextPos) => {
+        const halfWidth = Math.max(Math.abs(minOffsetHorizontal), Math.abs(maxOffsetHorizontal))
+        const distances = computeWallSideDistances({
+            nextPos,
+            lang,
+            xLinks,
+            xRechts,
+            zHinten,
+            zVorne,
+            halfWidth
+        })
+
+        dispatchOpeningPositionValues(objId, distances)
+        persistOpeningPosition({
+            objId,
+            setObjs,
+            setSelectedObject,
+            startPos: nextPos,
+            distances
+        })
+    }, [lang, maxOffsetHorizontal, minOffsetHorizontal, objId, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
+
+    useEffect(() => {
+        const handleRefreshPosition = (event) => {
+            if (event?.detail?.id !== objId) return
+            persistPosition(gridPosiRef.current)
+        }
+
+        window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+        return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+    }, [objId, persistPosition])
 
     // Grenzen für Y-Achse (vertikal auf der Wand)
     const handleClick = () => {

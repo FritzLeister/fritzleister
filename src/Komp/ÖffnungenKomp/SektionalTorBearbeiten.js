@@ -2,6 +2,7 @@ import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import MuiTextfeld from "../MuiTextfeld"
+import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 
 export default function SektionalTorBearbeiten({
 	selectedObject,
@@ -34,6 +35,11 @@ export default function SektionalTorBearbeiten({
 	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
 	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
 	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const positionFields = [
+		{ key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
+		{ key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' }
+	]
+	const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
 
 	const clampValue = (value, min, max) => {
 		const num = Number(value)
@@ -43,6 +49,7 @@ export default function SektionalTorBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		handleRefreshPosition()
 		const geklemmteSektionalTorBreite = clampValue(sektionalTorBreite, 0.2, maxSektionalTorBreite)
 		const geklemmteSektionalTorHöhe = clampValue(sektionalTorHöhe, 0.2, maxSektionalTorHöhe)
 
@@ -52,8 +59,8 @@ export default function SektionalTorBearbeiten({
 		const schlupftürHöheValue = schlupftür === 'ja' ? clampValue(schlupftürHöhe, 0.2, maxSektionalTorHöhe) : null
 		const schlupftürDistanzXValue = schlupftür === 'ja' ? clampValue(schlupftürDistanzX, 0, maxSektionalTorBreite) : null
 		const schlupftürOrientierungValue = schlupftür === 'ja' ? schlupftürOrientierung : null
-		const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
-		const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
+		const sichererAbstandLinks = clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand)
+		const sichererAbstandRechts = clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
@@ -119,6 +126,8 @@ export default function SektionalTorBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+
 				{/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
 
 				<div style={{

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
+import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 
 export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
     const istLangeWand = selectedObject?.lang ?? true
@@ -22,13 +23,19 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
     const [türFüllFarbeInnen, setTürFüllFarbeInnen] = useState(selectedObject?.türFüllFarbeInnen ?? 'Weiß')
     const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
     const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+    const positionFields = [
+        { key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
+        { key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' }
+    ]
+    const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
 
     const handleUpdate = () => {
         if (selectedObject) {
+            handleRefreshPosition()
             const sichereTürBreite = clampValue(türBreite, 0.2, maxTürBreite)
             const sichereTürHöhe = clampValue(türHöhe, 0.2, maxTürHöhe)
-            const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
-            const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
+            const sichererAbstandLinks = clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand)
+            const sichererAbstandRechts = clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand)
             setObjs(objs => objs.map(obj => 
                 obj.id === selectedObject.id 
                     ? { 
@@ -89,6 +96,8 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
             </div>
 
             <div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
+                <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+
                 {/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
 
                 <div style={{ 

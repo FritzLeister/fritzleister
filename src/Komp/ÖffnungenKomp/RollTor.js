@@ -1,8 +1,10 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
+import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
+import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition } from './wallOpeningPositionUtils'
 
 // Rolltor für Wände – mit Lamellen, Rollkasten und Motor
 export default function RollTor({
@@ -12,6 +14,7 @@ export default function RollTor({
 	bodenLänge,
 	setOrbitKontrolle,
 	setSelectedObject,
+	setObjs,
 	objId,
 	objs,
 	setEditMenü,
@@ -42,6 +45,7 @@ export default function RollTor({
 	const initialZ = obj?.startPos?.z ?? position[2]
 	const initialY = obj?.startPos?.y ?? y
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
+	const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
 	const [isHovered, setIsHovered] = useState(false)
 
 	const skaliertBreite = openingArgs[0] * 2.5
@@ -64,6 +68,41 @@ export default function RollTor({
 	const maxX = langeWandMax - halbeRolltorBreite - randPuffer
 	const minZ = kurzeWandMin + halbeRolltorBreite + randPuffer
 	const maxZ = kurzeWandMax - halbeRolltorBreite - randPuffer
+
+	useEffect(() => {
+		gridPosiRef.current = gridPosi
+	}, [gridPosi])
+
+	const persistPosition = useCallback((nextPos) => {
+		const distances = computeWallSideDistances({
+			nextPos,
+			lang,
+			xLinks,
+			xRechts,
+			zHinten,
+			zVorne,
+			halfWidth: halbeRolltorBreite
+		})
+
+		dispatchOpeningPositionValues(objId, distances)
+		persistOpeningPosition({
+			objId,
+			setObjs,
+			setSelectedObject,
+			startPos: nextPos,
+			distances
+		})
+	}, [halbeRolltorBreite, lang, objId, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
+
+	useEffect(() => {
+		const handleRefreshPosition = (event) => {
+			if (event?.detail?.id !== objId) return
+			persistPosition(gridPosiRef.current)
+		}
+
+		window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+		return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+	}, [objId, persistPosition])
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {

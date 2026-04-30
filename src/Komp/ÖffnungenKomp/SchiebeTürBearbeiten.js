@@ -1,6 +1,7 @@
 import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
+import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 
 export default function SchiebeTürBearbeiten({
 	selectedObject,
@@ -22,6 +23,11 @@ export default function SchiebeTürBearbeiten({
 	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
 	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
 	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const positionFields = [
+		{ key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
+		{ key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' }
+	]
+	const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
 
 	const clampValue = (value, min, max) => {
 		const num = Number(value)
@@ -31,10 +37,11 @@ export default function SchiebeTürBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		handleRefreshPosition()
 		const geklemmteSchiebetürBreite = clampValue(schiebetürBreite, 0.5, maxSchiebetürBreite)
 		const geklemmteSchiebetürHöhe = clampValue(schiebetürHöhe, 0.2, maxSchiebetürHöhe)
-		const sichererAbstandLinks = clampValue(abstandLinks, 0, maxAbstand)
-		const sichererAbstandRechts = clampValue(abstandRechts, 0, maxAbstand)
+		const sichererAbstandLinks = clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand)
+		const sichererAbstandRechts = clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
@@ -89,6 +96,8 @@ export default function SchiebeTürBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 
 				<div style={{

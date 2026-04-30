@@ -259,6 +259,7 @@ export default memo(function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 setEditMenü={setEditMenü}
                 key={obj.id}
                 objId={obj.id}
@@ -320,6 +321,7 @@ export default memo(function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
@@ -337,6 +339,7 @@ export default memo(function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
@@ -354,6 +357,7 @@ export default memo(function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}
@@ -373,6 +377,7 @@ export default memo(function Halle({
                 bodenLänge={bodenLänge}
                 setSelectedObject={setSelectedObject}
                 setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
                 objId={obj.id}
                 objs={objs}
                 setEditMenü={setEditMenü}

@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
+import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
+import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos } from './wallOpeningPositionUtils'
 
 // Transparentes Paneel für Wände – Glasfläche mit vertikalen Profilen
 export default function TransparentesPaneel({
@@ -74,36 +76,71 @@ export default function TransparentesPaneel({
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
 
-	const persistPosition = useCallback((nextPos) => {
-		if (!setObjs) return
+	const updateStartPos = useCallback((nextPos) => {
+		const surfaceOffset = tiefe / 2 + 0.05
+		const normalSign = rechts ? -1 : 1
+		const realX = lang ? nextPos.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
+		const realZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : nextPos.z
 
-		setObjs(prevObjs => prevObjs.map(item =>
-			item.id === objId
-				? {
-					...item,
-					startPos: {
-						...(item.startPos ?? {}),
-						x: nextPos.x,
-						y: nextPos.y,
-						z: nextPos.z
-					}
-				}
-				: item
-		))
-
-		setSelectedObject(prev => {
-			if (!prev || prev.id !== objId) return prev
-			return {
-				...prev,
-				startPos: {
-					...(prev.startPos ?? {}),
-					x: nextPos.x,
-					y: nextPos.y,
-					z: nextPos.z
-				}
+		updateOpeningStartPos({
+			objId,
+			setObjs,
+			setSelectedObject,
+			startPos: {
+				x: realX,
+				y: nextPos.y,
+				z: realZ
 			}
 		})
-	}, [objId, setObjs, setSelectedObject])
+	}, [lang, objId, rechts, setObjs, setSelectedObject, xLinks, xRechts, z])
+
+	const persistPosition = useCallback((nextPos) => {
+		const distances = {
+			...computeWallSideDistances({
+				nextPos,
+				lang,
+				xLinks,
+				xRechts,
+				zHinten,
+				zVorne,
+				halfWidth: halbePaneelBreite
+			}),
+			abstandUnten: computeBottomDistance({
+				nextPos,
+				baseY: position[1],
+				halfHeight: paneelHöhe / 2
+			})
+		}
+
+		dispatchOpeningPositionValues(objId, distances)
+		persistOpeningPosition({
+			objId,
+			setObjs,
+			setSelectedObject,
+			startPos: nextPos,
+			distances
+		})
+	}, [halbePaneelBreite, lang, objId, paneelHöhe, position, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
+
+	useEffect(() => {
+		const hasAbstandLinks = obj?.abstandLinks !== undefined && obj?.abstandLinks !== null
+		const hasAbstandRechts = obj?.abstandRechts !== undefined && obj?.abstandRechts !== null
+		const hasAbstandUnten = obj?.abstandUnten !== undefined && obj?.abstandUnten !== null
+
+		if (hasAbstandLinks && hasAbstandRechts && hasAbstandUnten) return
+
+		persistPosition(gridPosiRef.current)
+	}, [obj?.id, obj?.abstandLinks, obj?.abstandRechts, obj?.abstandUnten, persistPosition])
+
+	useEffect(() => {
+		const handleRefreshPosition = (event) => {
+			if (event?.detail?.id !== objId) return
+			persistPosition(gridPosiRef.current)
+		}
+
+		window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+		return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+	}, [objId, persistPosition])
 
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
@@ -164,12 +201,12 @@ export default function TransparentesPaneel({
 			const nextPos = { x: newX, z: newZ, y: newY }
 			gridPosiRef.current = nextPos
 			setGridPosi(nextPos)
-			persistPosition(nextPos)
+			updateStartPos(nextPos)
 		}
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, persistPosition])
+	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, updateStartPos])
 
 	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 80 / size.width
@@ -209,7 +246,7 @@ export default function TransparentesPaneel({
 		}
 
 		if (last) {
-			persistPosition(nextPos)
+			updateStartPos(nextPos)
 			setOrbitKontrolle(true)
 		}
 
