@@ -1,9 +1,7 @@
-import { useState } from "react"
 import Pfetten from "./GerüstKomp/Pfetten"
 import Rahmen from "./GerüstKomp/Rahmen"
 import WandRiegel from "./GerüstKomp/WandRiegel"
 import Kantteile from "./GerüstKomp/Kantteile"
-import { Triangle } from "three"
 import { getWallOpeningSightVolumes, getWallOpeningVolumes } from "./openingUtils"
 
 
@@ -26,9 +24,6 @@ export default function Gerüst({
     rahmenFarbe = '#6a93b0',
     sekundärKonstruktionsFarbe = '#7d7d75'
 }) {
-
-    const bodenDicke = 0.3
-
     const abstandFaktor = 18
 
     const x = koordinate[0]
@@ -51,9 +46,6 @@ export default function Gerüst({
         bodenLänge,
         bodenBreite,
     })
-
-    console.log("Gerüst", bodenBreite)
-
     return(
         <>
 

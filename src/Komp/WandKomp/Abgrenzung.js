@@ -75,7 +75,6 @@ export default function Abgrenzung({
                 const balkenZ = rechts ? zWert - 0.7 : zWert + 0.7
                 
                 // Erstelle gestrichelte Linie aus mehreren Segmenten
-                const segmentHöhe = plattenHöhe / linienEinheiten
                 const lückenHöhe = plattenHöhe / (linienEinheiten * 2)
                 
                 for (let seg = 0; seg < linienEinheiten; seg++) {
@@ -168,7 +167,6 @@ export default function Abgrenzung({
                 const balkenX = rechts ? xWert - 0.7 : xWert + 0.7
                 
                 // Erstelle gestrichelte Linie aus mehreren Segmenten
-                const segmentHöhe = balkenHöhe / linienEinheiten
                 const lückenHöhe = balkenHöhe / (linienEinheiten * 2)
                 
                 for (let seg = 0; seg < linienEinheiten; seg++) {

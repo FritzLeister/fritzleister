@@ -37,13 +37,8 @@ export default function SektionalTor({
     const xLinks = position[0] - 6.5 - (0.5 * (bodenLänge - 15))
     const xRechts = position[0] + 6.5 + (0.5 * (bodenLänge - 15))
 
-    const { size, camera } = useThree()
+    const { size } = useThree()
     const groupRef = useRef()
-
-    let wandHöhe = gebäudeHöhe
-    if (dachArt === 'pultdach') {
-        wandHöhe = rechts ? gebäudeHöhe : gebäudeHöhe + pultdachHöheDifferenz
-    }
 
     const initialX = obj?.startPos?.x ?? x
     const initialZ = obj?.startPos?.z ?? position[2]
@@ -66,9 +61,6 @@ export default function SektionalTor({
     const maxX = langeWandMax - halbeTorBreite - randPuffer
     const minZ = kurzeWandMin + halbeTorBreite + randPuffer
     const maxZ = kurzeWandMax - halbeTorBreite - randPuffer
-    const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
-    const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
-
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
@@ -198,7 +190,6 @@ export default function SektionalTor({
     const glassThickness = 0.05
 
     // Transparente Füllung
-    const transparenteFüllung = obj?.transparenteFüllung === 'ja'
     const transparentePaneele = obj?.transparentePaneele ? String(obj.transparentePaneele).split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= panelCount) : []
     const fensterstreifenHöhe = obj?.fensterstreifenHöhe != null ? obj.fensterstreifenHöhe * 2.5 : null
     const transparentePaneeleSet = new Set(transparentePaneele)

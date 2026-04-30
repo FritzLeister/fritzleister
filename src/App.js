@@ -3,7 +3,6 @@ import "./styles.css"
 import Halle from './Halle'
 import SliderMui from "./Komp/SliderMui"
 import { useMemo, useState } from 'react'
-import LoadingPage from "./LoadingPage";
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
@@ -66,7 +65,7 @@ export default function App({
     const [gebäudeHöhe, setGebäudeHöhe] = useState(15)
     */
     
-    const [koordinate, setKoordinate] = useState([0,0.3,0])
+    const koordinate = useMemo(() => [0, 0.3, 0], [])
 
     // Abmessungs-States (aus UiButtonEdit)
     const [dachArt, setDachArt] = useState('satteldach')
@@ -143,14 +142,6 @@ export default function App({
 
     // State für die geklickte Button-Position
     const [clickedButtonPos, setClickedButtonPos] = useState(null);
-
-    // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
-    const [hallenId, setHallenId] = useState(() => {
-        const maxId = hallenSave?.reduce((max, halle) =>
-            (typeof halle?.id === 'number' && !Number.isNaN(halle.id) && halle.id > max) ? halle.id : max
-        , 0) ?? 0;
-        return Number(maxId) + 1;
-    });
 
     const [türAttribute, setTürAttribute] = useState(false)
     const [selectedObject, setSelectedObject] = useState(null)
@@ -309,8 +300,6 @@ export default function App({
             };
             return [...prev, newObj];
         });
-
-        setHallenId(prev => Number(prev) + 1);
     }
 
 
@@ -386,11 +375,10 @@ export default function App({
                 transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
-            onClick={() => (
-                setShowApp2(),
+            onClick={() => {
+                setShowApp2()
                 setObjs([])
-                )
-            }
+            }}
             onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
                 e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';

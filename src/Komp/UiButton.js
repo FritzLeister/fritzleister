@@ -1,5 +1,4 @@
 import '../styles.css';
-import UiButtonEdit from './UiButtonEdit';
 
 export default function UiButton({ name, icon, onClick, isActive }) {
 

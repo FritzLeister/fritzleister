@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import '../styles.css';
 import MuiNumberfield from './MuiNumberfield';
 import MuiSelect from './MuiSelect';
 import MuiTextfeld from './MuiTextfeld';
-import { Center } from '@react-three/drei';
+
+const HOLZ_FARBE = '#9f764e';
 
 export default function UiButtonEdit({ 
     height, 
@@ -114,23 +115,25 @@ export default function UiButtonEdit({
             }, 10);
             return () => clearTimeout(timeout);
         }
-    }, [länge, breite, höhe, dachArt]);
+    }, [abmessungenAnzeigen, breite, dachArt, höhe, länge, setAbmessungenAnzeigen]);
 
     // Setze sockelhöhe auf 0, wenn "Verkleidete Wand" ohne Sockel gewählt wird
     useEffect(() => {
         if (wandGeometrieVorgaben === 'verkleidete-wand') {
             setSockelhöhe(0);
         }
-    }, [wandGeometrieVorgaben]);
+    }, [setSockelhöhe, wandGeometrieVorgaben]);
 
-    // Setze Wandfarbe auf Holzfarbe, wenn Holzverkleidung gewählt wird
+    // Holzverkleidung soll keinen alten Muster-/Streifen-Zustand behalten.
     useEffect(() => {
         if (paneeltyp === 'holzverkleidung') {
-            setAußenFarbe('#9f764e');
+            setFarbSchema('einfarbig');
+            setAußenFarbe(HOLZ_FARBE);
+            setAußenFarbeMuster(HOLZ_FARBE);
             return;
         }
         setAußenFarbe('white');
-    }, [paneeltyp]);
+    }, [paneeltyp, setAußenFarbe, setAußenFarbeMuster, setFarbSchema]);
 
     function abmessungsUI() {
         return(
@@ -252,7 +255,7 @@ export default function UiButtonEdit({
                         </>
                     )}
 
-                    {dachArt == 'satteldach' && (
+                    {dachArt === 'satteldach' && (
                         <>
                             <div style={{ 
                                 display: 'flex', 
@@ -954,7 +957,7 @@ export default function UiButtonEdit({
                             />
                         </div>
 
-                        {größeGebäudeM2 < 750 || größeGebäudeM2 === '?' && (
+                        {(größeGebäudeM2 < 750 || größeGebäudeM2 === '?') && (
                             <>
                                 <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Mind. Größe des Gebäudes muss 750m² betragen.</p>
                                 <div style={{ 

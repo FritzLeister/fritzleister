@@ -177,5 +177,5 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
     }
 
     return snapshots;
-  }, [camera, gl, hallHeightMeters, hallLengthMeters, hallWidthMeters, height, rootObjectName, scene, size.height, size.width, width]);
+  }, [camera, gl, hallHeightMeters, hallLengthMeters, hallWidthMeters, height, rootObjectName, scene, width]);
 }

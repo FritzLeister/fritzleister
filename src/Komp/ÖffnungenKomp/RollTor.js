@@ -22,9 +22,6 @@ export default function RollTor({
 }) {
 	const obj = objs.find(o => o.id === objId)
 	const openingArgs = obj ? [obj.value[0], obj.value[1]] : [3, 3]
-	const torBreite = openingArgs[0]
-	const torHöhe = openingArgs[1]
-
 	const rechts = obj?.rechts ?? true
 	const lang = obj?.lang ?? true
 
@@ -40,11 +37,6 @@ export default function RollTor({
 
 	const { size } = useThree()
 	const groupRef = useRef()
-
-	let wandHöhe = gebäudeHöhe
-	if (dachArt === 'pultdach') {
-		wandHöhe = rechts ? gebäudeHöhe : gebäudeHöhe + pultdachHöheDifferenz
-	}
 
 	const initialX = obj?.startPos?.x ?? x
 	const initialZ = obj?.startPos?.z ?? position[2]
@@ -72,9 +64,6 @@ export default function RollTor({
 	const maxX = langeWandMax - halbeRolltorBreite - randPuffer
 	const minZ = kurzeWandMin + halbeRolltorBreite + randPuffer
 	const maxZ = kurzeWandMax - halbeRolltorBreite - randPuffer
-	const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
-	const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
-
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
 		if (found) {

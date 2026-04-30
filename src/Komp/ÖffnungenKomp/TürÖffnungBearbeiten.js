@@ -12,7 +12,7 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
     // Pre-füllen mit aktuellen Werten
     const [türBreite, setTürBreite] = useState(selectedObject?.value[0] ?? 0.95)
     const [türHöhe, setTürHöhe] = useState(selectedObject?.value[1] ?? 2.05)
-    const [posSegment, setPosSegment] = useState(selectedObject?.posSegment ?? 'mittig')
+    const [posSegment] = useState(selectedObject?.posSegment ?? 'mittig')
     const [doppeltür, setDoppeltür] = useState(selectedObject?.doppeltür ?? 'nein')
     const [öffnet, setÖffnet] = useState(selectedObject?.öffnet ?? 'innen')
     const [orientierung, setOrientierung] = useState(selectedObject?.orientierung ?? 'links')
@@ -20,8 +20,8 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
     const [türFarbe, setTürFarbe] = useState(selectedObject?.türFarbe ?? 'Weiß')
     const [türFüllFarbe, setTürFüllFarbe] = useState(selectedObject?.türFüllFarbe ?? 'Weiß')
     const [türFüllFarbeInnen, setTürFüllFarbeInnen] = useState(selectedObject?.türFüllFarbeInnen ?? 'Weiß')
-    const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
-    const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+    const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+    const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
     const handleUpdate = () => {
         if (selectedObject) {

@@ -6,6 +6,8 @@ import Abgrenzung from "./WandKomp/Abgrenzung"
 import AddButtonWand from "./WandKomp/AddButtonWand"
 import MassivwandCSG from "./WandKomp/MassivwandCSG"
 
+const HOLZ_FARBE = '#9f764e'
+
 export default memo(function Wand({ 
     koordinate, 
     wievieleFragmente, 
@@ -36,8 +38,7 @@ export default memo(function Wand({
     setClickedButtonPos,
     kantenAnzeigen,
     oberflächenAnzeigen,
-    plattenAnzeigen,
-    color = 'white'
+    plattenAnzeigen
 }) {
 
     const x = koordinate[0]
@@ -57,6 +58,9 @@ export default memo(function Wand({
     const plattenKeySuffix = `${paneeltyp}-${PLATTEN_ZIEL_BREITE.toFixed(3)}-${PLATTEN_ZIEL_HOEHE.toFixed(3)}`
     const PLATTEN_LINIEN_DICKE = 1
     const GIEBEL_FEINSEGMENTE = 5
+    const effektivesFarbSchema = paneeltyp === 'holzverkleidung' ? 'einfarbig' : farbSchema
+    const effektiveBasisfarbe = paneeltyp === 'holzverkleidung' ? HOLZ_FARBE : baseColor
+    const effektiveMusterfarbe = paneeltyp === 'holzverkleidung' ? HOLZ_FARBE : patternColor
     const musterIndices = useMemo(() => new Set(
         String(musterVerortung ?? '')
             .split(',')
@@ -106,43 +110,43 @@ export default memo(function Wand({
     }, [objs])
 
     const getPlattenColor = (plattenIndexVonLinks) => {
-        if (farbSchema === 'musterfarbe-bei') {
-            return musterIndices.has(plattenIndexVonLinks) ? patternColor : baseColor
+        if (effektivesFarbSchema === 'musterfarbe-bei') {
+            return musterIndices.has(plattenIndexVonLinks) ? effektiveMusterfarbe : effektiveBasisfarbe
         }
 
-        if (farbSchema === 'gleichmäßige-streifen') {
-            return plattenIndexVonLinks % 2 === 1 ? patternColor : baseColor
+        if (effektivesFarbSchema === 'gleichmäßige-streifen') {
+            return plattenIndexVonLinks % 2 === 1 ? effektiveMusterfarbe : effektiveBasisfarbe
         }
 
-        if (farbSchema === 'jede-zweite-platte') {
-            return plattenIndexVonLinks % 2 === 1 ? baseColor : patternColor
+        if (effektivesFarbSchema === 'jede-zweite-platte') {
+            return plattenIndexVonLinks % 2 === 1 ? effektiveBasisfarbe : effektiveMusterfarbe
         }
 
-        if (farbSchema === 'einfarbig') {
-            return baseColor
+        if (effektivesFarbSchema === 'einfarbig') {
+            return effektiveBasisfarbe
         }
 
-        return patternColor
+        return effektiveMusterfarbe
     }
 
     const getStreifenColor = (streifenIndexVonUnten) => {
-        if (farbSchema === 'musterfarbe-bei') {
-            return musterIndices.has(streifenIndexVonUnten) ? patternColor : baseColor
+        if (effektivesFarbSchema === 'musterfarbe-bei') {
+            return musterIndices.has(streifenIndexVonUnten) ? effektiveMusterfarbe : effektiveBasisfarbe
         }
 
-        if (farbSchema === 'gleichmäßige-streifen') {
-            return streifenIndexVonUnten % 2 === 1 ? patternColor : baseColor
+        if (effektivesFarbSchema === 'gleichmäßige-streifen') {
+            return streifenIndexVonUnten % 2 === 1 ? effektiveMusterfarbe : effektiveBasisfarbe
         }
 
-        if (farbSchema === 'jede-zweite-platte') {
-            return streifenIndexVonUnten % 2 === 1 ? baseColor : patternColor
+        if (effektivesFarbSchema === 'jede-zweite-platte') {
+            return streifenIndexVonUnten % 2 === 1 ? effektiveBasisfarbe : effektiveMusterfarbe
         }
 
-        if (farbSchema === 'einfarbig') {
-            return baseColor
+        if (effektivesFarbSchema === 'einfarbig') {
+            return effektiveBasisfarbe
         }
 
-        return patternColor
+        return effektiveMusterfarbe
     }
 
     const buildTargetWidthSegments = (gesamtLänge, zielBreite) => {
@@ -466,7 +470,6 @@ export default memo(function Wand({
         
         // Wand zwischen den Kantteilen
         const wandLänge = längeKurzeSeite + 1.85
-        const fragBreite = wandLänge / wievieleFragmente
         
         const frag = []
         const xWert = rechts ? xLinks - 1 : xRechts + 1

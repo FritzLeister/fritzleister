@@ -26,8 +26,6 @@ export default function Tür({
     const x = position[0]
     const y = position[1] + (gebäudeHöhe/6) - 0.4 - ((gebäudeHöhe-15)/6) - 2 + ((türArgs[1]-1)/4)
     const z = position[2] + (lang ? (rechts ? (bodenBreite/2)/2 + 0.3 : -(bodenBreite/2)/2 - 0.3) : (bodenLänge/2)+0.3)
-
-    {/* Für Textur */}
     const url = "/grau-tür.png"
     // const url = "/grün-tür.png"
     const ref = useRef()

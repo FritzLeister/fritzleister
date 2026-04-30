@@ -111,7 +111,6 @@ export default function WandRiegel({
 
             const riegelHöhe = y + 4.5 + gebäudeHöhe / 2
         
-            const längeLangeSeite = xRechts - xLinks
             const längeKurzeSeite = zVorne - zHinten
             const wievieleRiegel = Math.floor(gebäudeHöhe / riegelFaktor)
 

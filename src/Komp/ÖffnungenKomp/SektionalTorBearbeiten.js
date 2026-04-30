@@ -14,7 +14,7 @@ export default function SektionalTorBearbeiten({
 }) {
 	const [sektionalTorBreite, setSektionalTorBreite] = useState(selectedObject?.value?.[0] ?? 3)
 	const [sektionalTorHöhe, setSektionalTorHöhe] = useState(selectedObject?.value?.[1] ?? 3)
-	const [posSegment, setPosSegment] = useState(selectedObject?.posSegment ?? 'mittig')
+	const [posSegment] = useState(selectedObject?.posSegment ?? 'mittig')
 	const [transparenteFüllung, setTransparenteFüllung] = useState(selectedObject?.transparenteFüllung ?? 'nein')
 	const [transparentePaneele, setTransparentePaneele] = useState(selectedObject?.transparentePaneele ?? '1,2,3,4')
 	const [fensterstreifenHöhe, setFensterstreifenHöhe] = useState(selectedObject?.fensterstreifenHöhe ?? 0.6)
@@ -32,8 +32,8 @@ export default function SektionalTorBearbeiten({
 	const maxSektionalTorBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
 	const maxSektionalTorHöhe = gebäudeHöhe
 	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
-	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
-	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
 	const clampValue = (value, min, max) => {
 		const num = Number(value)

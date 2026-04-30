@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Transparente Öffnung für Wände (long-side aktuell)
@@ -94,6 +94,37 @@ export default function LeerÖffnung({
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
 
+	const persistPosition = useCallback((nextPos) => {
+		if (!setObjs) return
+
+		setObjs(prevObjs => prevObjs.map(item =>
+			item.id === objId
+				? {
+					...item,
+					startPos: {
+						...(item.startPos ?? {}),
+						x: nextPos.x,
+						y: nextPos.y,
+						z: nextPos.z
+					}
+				}
+				: item
+		))
+
+		setSelectedObject(prev => {
+			if (!prev || prev.id !== objId) return prev
+			return {
+				...prev,
+				startPos: {
+					...(prev.startPos ?? {}),
+					x: nextPos.x,
+					y: nextPos.y,
+					z: nextPos.z
+				}
+			}
+		})
+	}, [objId, setObjs, setSelectedObject])
+
 	useEffect(() => {
 		const handleKeyDown = (event) => {
 			const active = window.activeArrowControl
@@ -149,38 +180,7 @@ export default function LeerÖffnung({
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY])
-
-	const persistPosition = (nextPos) => {
-		if (!setObjs) return
-
-		setObjs(prevObjs => prevObjs.map(item =>
-			item.id === objId
-				? {
-					...item,
-					startPos: {
-						...(item.startPos ?? {}),
-						x: nextPos.x,
-						y: nextPos.y,
-						z: nextPos.z
-					}
-				}
-				: item
-		))
-
-		setSelectedObject(prev => {
-			if (!prev || prev.id !== objId) return prev
-			return {
-				...prev,
-				startPos: {
-					...(prev.startPos ?? {}),
-					x: nextPos.x,
-					y: nextPos.y,
-					z: nextPos.z
-				}
-			}
-		})
-	}
+	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, persistPosition])
 
 	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 100 / size.width

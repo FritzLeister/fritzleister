@@ -1,5 +1,5 @@
 import { Text } from "@react-three/drei"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 
 function HöhenSkala({ position, outward, axis, center }) {
 	const meterEinheit = 2.5
@@ -78,10 +78,10 @@ export default function AbmessungenHöhe({ bodenLänge, bodenBreite, gebäudeHö
 	const istPultdach = dachArt === 'pultdach'
 	const hoheWandHöhe = gebäudeHöhe + pultdachHöheDifferenz
 
-	const höheFürZ = (zPosition) => {
+	const höheFürZ = useCallback((zPosition) => {
 		if (!istPultdach) return gebäudeHöhe
 		return zPosition > z ? hoheWandHöhe : gebäudeHöhe
-	}
+	}, [gebäudeHöhe, hoheWandHöhe, istPultdach, z])
 
 	const skalen = useMemo(() => ([
 		// Vordere Wand (links / rechts)
@@ -99,7 +99,7 @@ export default function AbmessungenHöhe({ bodenLänge, bodenBreite, gebäudeHö
 		// Rechte Wand (hinten / vorne)
 		{ position: { x: x + halbLänge + extraAbstand, y, z: z - halbBreite, höhe: höheFürZ(z - halbBreite) }, outward: [1, 0, 0], axis: 'z' },
 		{ position: { x: x + halbLänge + extraAbstand, y, z: z + halbBreite, höhe: höheFürZ(z + halbBreite) }, outward: [1, 0, 0], axis: 'z' },
-	]), [x, y, z, halbLänge, halbBreite, extraAbstand, gebäudeHöhe, istPultdach, hoheWandHöhe])
+	]), [x, y, z, halbLänge, halbBreite, extraAbstand, höheFürZ])
 
 	return (
 		<group>

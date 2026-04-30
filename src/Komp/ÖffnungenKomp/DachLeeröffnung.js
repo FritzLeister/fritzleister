@@ -37,7 +37,6 @@ export default function DachLeeröffnung({
     const zVorne = z + 6.5 + (0.5 * (bodenBreite - 15))
     const zHinten = z - 6.5 - (0.5 * (bodenBreite - 15))
 
-    const längeLangeSeite = xRechts - xLinks
     const traufhöhe = y + 4.5 + gebäudeHöhe
 
     const { size, camera } = useThree()
@@ -114,9 +113,6 @@ export default function DachLeeröffnung({
             finalX = gridPosi.x
         }
     } else if (dachArt === 'flachdach') {
-        const zStart = zVorne + 1
-        const zEnd = zHinten - 1
-        
         rotation = 0
         
         // Flachdach: Y-Position bleibt konstant

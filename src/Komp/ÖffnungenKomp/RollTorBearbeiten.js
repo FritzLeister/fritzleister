@@ -22,8 +22,8 @@ export default function RollTorBearbeiten({
 	const maxRolltorBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
 	const maxRolltorHöhe = gebäudeHöhe
 	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
-	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
-	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
 	const clampValue = (value, min, max) => {
 		const num = Number(value)

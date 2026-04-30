@@ -23,7 +23,7 @@ export default function WandLüfter({
     const y = koordinate[1] + 3
     const z = koordinate[2]
 
-    const [clickCount, setClickCount] = useState(0)
+    const [, setClickCount] = useState(0)
 
     const [gridPosi, setGridPosi] = useState({ y: y, z: z})
     const { size, camera } = useThree() 

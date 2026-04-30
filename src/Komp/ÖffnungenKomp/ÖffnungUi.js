@@ -36,7 +36,7 @@ export default function ÖffnungUi({
     // Fenster-UI State
     const [fensterBreite, setFensterBreite] = useState(4.1)
     const [fensterHöhe, setFensterHöhe] = useState(2.95)
-    const [fensterPosSegment, setFensterPosSegment] = useState('mittig')
+    const [fensterPosSegment] = useState('mittig')
     const [reflektor, setReflektor] = useState('keine')
     const [sprossenX, setSprossenX] = useState(0)
     const [sprossenY, setSprossenY] = useState(0)
@@ -48,7 +48,7 @@ export default function ÖffnungUi({
     // Tür-UI State
     const [türBreite, setTürBreite] = useState(0.95)
     const [türHöhe, setTürHöhe] = useState(2.05)
-    const [türPosSegment, setTürPosSegment] = useState('mittig')
+    const [türPosSegment] = useState('mittig')
     const [doppeltür, setDoppeltür] = useState('nein')
     const [öffnet, setÖffnet] = useState('innen')
     const [orientierung, setOrientierung] = useState('links')
@@ -60,7 +60,7 @@ export default function ÖffnungUi({
     // Sektionaltor-UI State
     const [sektionalTorBreite, setSektionalTorBreite] = useState(3)
     const [sektionalTorHöhe, setSektionalTorHöhe] = useState(3)
-    const [sektionalTorPosSegment, setSektionalTorPosSegment] = useState('mittig')
+    const [sektionalTorPosSegment] = useState('mittig')
     const [transparenteFüllung, setTransparenteFüllung] = useState('nein')
     const [transparentePaneele, setTransparentePaneele] = useState('1,2,3,4')
     const [fensterstreifenHöhe, setFensterstreifenHöhe] = useState(0.60)
@@ -78,15 +78,15 @@ export default function ÖffnungUi({
     // Schiebetür-UI State
     const [schiebetürBreite, setSchiebetürBreite] = useState(3)
     const [schiebetürHöhe, setSchiebetürHöhe] = useState(3)
-    const [schiebetürPosSegment, setSchiebetürPosSegment] = useState('mittig')
+    const [schiebetürPosSegment] = useState('mittig')
     const [schiebetürÖffnet, setSchiebetürÖffnet] = useState('außen')
     const [schiebeseite, setSchiebeseite] = useState('beide')
     const [schiebetürSchlupftür, setSchiebetürSchlupftür] = useState('nein')
-    const [schiebetürSchlupftürBreite, setSchiebetürSchlupftürBreite] = useState(1)
-    const [schiebetürSchlupftürHöhe, setSchiebetürSchlupftürHöhe] = useState(2)
-    const [schiebetürSchlupftürDistanz, setSchiebetürSchlupftürDistanz] = useState(0.50)
-    const [schiebetürSchlupftürTransparent, setSchiebetürSchlupftürTransparent] = useState('nein')
-    const [schiebetürSchlupftürOrientierung, setSchiebetürSchlupftürOrientierung] = useState('rechts')
+    const [schiebetürSchlupftürBreite] = useState(1)
+    const [schiebetürSchlupftürHöhe] = useState(2)
+    const [schiebetürSchlupftürDistanz] = useState(0.50)
+    const [schiebetürSchlupftürTransparent] = useState('nein')
+    const [schiebetürSchlupftürOrientierung] = useState('rechts')
     const [schiebetürReflektor, setSchiebetürReflektor] = useState('keine')
     const [schiebetürSchienenFarbe, setSchiebetürSchienenFarbe] = useState('Grau')
     const [schiebetürFüllFarbe, setSchiebetürFüllFarbe] = useState('Weiß')
@@ -94,7 +94,7 @@ export default function ÖffnungUi({
     // Rolltor-UI State
     const [rolltorBreite, setRolltorBreite] = useState(3)
     const [rolltorHöhe, setRolltorHöhe] = useState(3)
-    const [rolltorPosSegment, setRolltorPosSegment] = useState('mittig')
+    const [rolltorPosSegment] = useState('mittig')
     const [rolltorÖffnet, setRolltorÖffnet] = useState('innen')
     const [rolltorReflektor, setRolltorReflektor] = useState('keine')
     const [rolltorMotor, setRolltorMotor] = useState('rechts')
@@ -104,16 +104,16 @@ export default function ÖffnungUi({
     // Transparentes Paneel-UI State
     const [transparentesPaneelBreite, setTransparentesPaneelBreite] = useState(3)
     const [transparentesPaneelHöhe, setTransparentesPaneelHöhe] = useState(3)
-    const [transparentesPaneelPosSegment, setTransparentesPaneelPosSegment] = useState('mittig')
+    const [transparentesPaneelPosSegment] = useState('mittig')
 
     // Laderampe-UI State
     const [laderampeBreite, setLaderampeBreite] = useState(3.5)
     const [laderampeHöhe, setLaderampeHöhe] = useState(4.5)
     const [laderampeLänge, setLaderampeLänge] = useState(getLaderampeStartLängeByTyp('ladehaus'))
     const [laderampeRampenhöhe, setLaderampeRampenhöhe] = useState(0.8)
-    const [laderampePosSegment, setLaderampePosSegment] = useState('mittig')
+    const [laderampePosSegment] = useState('mittig')
     const [laderampeTyp, setLaderampeTyp] = useState('ladehaus')
-    const [laderampeTransparenteFüllung, setLaderampeTransparenteFüllung] = useState('nein')
+    const [laderampeTransparenteFüllung] = useState('nein')
     const [laderampeTransparentePaneele, setLaderampeTransparentePaneele] = useState('1,2,3')
     const [laderampeFensterstreifenHöhe, setLaderampeFensterstreifenHöhe] = useState(0.60)
     const [laderampeReflektor, setLaderampeReflektor] = useState('keine')
@@ -134,10 +134,10 @@ export default function ÖffnungUi({
     // Klein Lichtkuppel-UI State
     const [kleinLichtkuppelBreiteX, setKleinLichtkuppelBreiteX] = useState(1)
     const [kleinLichtkuppelBreiteY, setKleinLichtkuppelBreiteY] = useState(1)
-    const [kleinLichtkuppelPosSegment, setKleinLichtkuppelPosSegment] = useState('mittig')
-    const [kleinLichtkuppelDistanzX, setKleinLichtkuppelDistanzX] = useState(0.60)
+    const [kleinLichtkuppelPosSegment] = useState('mittig')
+    const [kleinLichtkuppelDistanzX] = useState(0.60)
     const [kleinLichtkuppelHorizontaleAusrichtung, setKleinLichtkuppelHorizontaleAusrichtung] = useState('mittig')
-    const [kleinLichtkuppelDistanzY, setKleinLichtkuppelDistanzY] = useState(0)
+    const [kleinLichtkuppelDistanzY] = useState(0)
     const [kleinLichtkuppelFarbe, setKleinLichtkuppelFarbe] = useState('Weiß')
 
     const [wandBilder] = useState([

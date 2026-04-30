@@ -31,22 +31,6 @@ export default function AbfragePage({
 
     const [actionState, setActionState] = useState(1)
 
-    const [popUp, setPopUp] = useState(false)
-
-    function handleAbschluss() {
-        setHallenartSelection("industrie")
-        setDachSelection("satteldach")
-        setShowApp(true)
-    }
-
-    // Initialisiere hallenId mit der höchsten vorhandenen ID + 1 oder 1
-    const [hallenId, setHallenId] = useState(() => {
-        const maxId = hallenSave?.reduce((max, halle) =>
-            (typeof halle?.id === 'number' && !Number.isNaN(halle.id) && halle.id > max) ? halle.id : max
-        , 0) ?? 0;
-        return Number(maxId) + 1;
-    });
-
     return(
         <>
 
@@ -390,13 +374,6 @@ export default function AbfragePage({
                             <h2 style={{ fontWeight: 50, marginBottom: 20 }} >Super, vielen Dank!</h2>
 
                             <h2 style={{ fontWeight: 30, fontSize: 20 }}>Ihre Angaben helfen uns, die Konfiguration vorzubereiten.</h2>
-
-                            {popUp && (
-                                <h4
-                                className="text"
-                                style={{ marginBottom: "5px", fontWeight: 200, fontSize: 12 }}
-                                >Halle gespeichert!</h4>
-                            )}
 
                             {/*
                             <button className="buttonDark" onClick={() => {

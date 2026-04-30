@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 // Transparentes Paneel für Wände – Glasfläche mit vertikalen Profilen
@@ -74,7 +74,7 @@ export default function TransparentesPaneel({
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
 
-	const persistPosition = (nextPos) => {
+	const persistPosition = useCallback((nextPos) => {
 		if (!setObjs) return
 
 		setObjs(prevObjs => prevObjs.map(item =>
@@ -103,7 +103,7 @@ export default function TransparentesPaneel({
 				}
 			}
 		})
-	}
+	}, [objId, setObjs, setSelectedObject])
 
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
@@ -169,7 +169,7 @@ export default function TransparentesPaneel({
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY])
+	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, persistPosition])
 
 	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 80 / size.width

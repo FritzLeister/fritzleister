@@ -1,6 +1,5 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
 import * as THREE from 'three'
-import DachFenster from "./DachFenster"
 import { Geometry, Base, Subtraction } from '@react-three/csg'
 
 export default function Dach({ 
@@ -31,8 +30,6 @@ export default function Dach({
     plattenAnzeigen = true,
     color = 'grey'
 }) {
-
-    const ref = useRef()
     const [hoveredButton, setHoveredButton] = useState(null) 
 
     const x = koordinate[0]
@@ -46,7 +43,6 @@ export default function Dach({
     const zHinten = z - 6.5 - (0.5 * (bodenBreite - 15))
     
     const längeLangeSeite = xRechts - xLinks
-    const längeKurzeSeite = zVorne - zHinten
     // Verwende die gleiche Berechnung wie in Kantteile.js für die Traufhöhe
     const traufhöhe = y + 4.5 + gebäudeHöhe
 

@@ -2,7 +2,6 @@
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EditIcon from '@mui/icons-material/Edit';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useState } from 'react';
 
 export default function GespeicherteHallen({ 
@@ -54,7 +53,6 @@ export default function GespeicherteHallen({
     }
 
     const [output, setOutput] = useState(false)
-    const inputWidth = hallenCount === 4 ? "80px" : "100%";
 
     function getWidthInput() {
         if (hallenCount >= 4) {

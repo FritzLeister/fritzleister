@@ -17,8 +17,8 @@ export default function TransparentesPaneelBearbeiten({
 	const clampValue = (value, min, max) => Math.min(Math.max(value, min), max)
 	const [paneelBreite, setPaneelBreite] = useState(selectedObject?.value?.[0] ?? 3)
 	const [paneelHöhe, setPaneelHöhe] = useState(selectedObject?.value?.[1] ?? 3)
-	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
-	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
 	const handleUpdate = () => {
 		if (!selectedObject) return

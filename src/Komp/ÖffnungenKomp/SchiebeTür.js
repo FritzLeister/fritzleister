@@ -38,15 +38,10 @@ export default function SchiebeTür({
     const xLinks = position[0] - 6.5 - (0.5 * (bodenLänge - 15))
     const xRechts = position[0] + 6.5 + (0.5 * (bodenLänge - 15))
 
-    const { size, camera } = useThree()
+    const { size } = useThree()
     const groupRef = useRef()
 
     // Berechne Wandhöhe basierend auf Dachtyp
-    let wandHöhe = gebäudeHöhe
-    if (dachArt === 'pultdach') {
-        wandHöhe = rechts ? gebäudeHöhe : gebäudeHöhe + pultdachHöheDifferenz
-    }
-
     // Verwende startPos, falls verfügbar
     const initialX = obj?.startPos?.x ?? x
     const initialZ = obj?.startPos?.z ?? position[2]
@@ -96,9 +91,6 @@ export default function SchiebeTür({
     const { min: minZ, max: maxZ } = getAchsenGrenzen(kurzeWandMin, kurzeWandMax, zRichtungsVorzeichen)
 
     // Grenzen für Y-Achse (vertikal auf der Wand)
-    const minY = position[1] + (skaliertHöhe / 2) + 0.5 - 4
-    const maxY = position[1] + wandHöhe - (skaliertHöhe / 2) - 1 - 4 + 1
-
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {

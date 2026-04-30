@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
-import MuiSelect from "../MuiSelect"
 
 export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge, dachArt = 'satteldach', dachneigung = 0 }) {
     const istLangeWand = selectedObject?.lang ?? true
@@ -15,7 +14,7 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
     // Pre-füllen mit aktuellen Werten
     const [öffnungsBreite, setÖffnungsBreite] = useState(() => clampValue(selectedObject?.value[0] ?? 12, 1, maxÖffnungsBreite))
     const [öffnungsHöhe, setÖffnungsHöhe] = useState(() => clampValue(selectedObject?.value[1] ?? 8, 1, maxÖffnungsHöhe))
-    const [posSegment, setPosSegment] = useState(selectedObject?.posSegment ?? 'mittig')
+    const [posSegment] = useState(selectedObject?.posSegment ?? 'mittig')
     const [abstandLinks, setAbstandLinks] = useState(() => clampValue(selectedObject?.abstandLinks ?? 0, 0, maxAbstand))
     const [abstandRechts, setAbstandRechts] = useState(() => clampValue(selectedObject?.abstandRechts ?? 0, 0, maxAbstand))
 

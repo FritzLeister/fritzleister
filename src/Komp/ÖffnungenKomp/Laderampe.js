@@ -215,25 +215,11 @@ export default function Laderampe({
 	const außenwandAbdeckungX = umrandungX - (umrandungDicke / 2) - (außenwandAbdeckungDicke / 2)
 	const außenwandAbdeckungOffset = 0.1
 	const außenwandAbdeckungPosX = außenwandAbdeckungX + außenwandAbdeckungOffset
-	const zwischenMeshBreite = Math.max(0.05, (außenwandAbdeckungPosX * 2) - außenwandAbdeckungDicke)
 	const zwischenMeshHöhe = außenwandAbdeckungHöhe / 8
 	const zwischenMeshY = (höhe / 2) - (zwischenMeshHöhe / 2)
 	const überdachungDicke = 0.12
 
-	const rollkastenBreite = breite + 0.3
-	const rollkastenHöhe = 0.55
-	const rollkastenTiefe = 0.45
-	const rollkastenFinalZ = -(tiefe / 2 + rollkastenTiefe / 2 + 0.05)
-	const rollkastenY = höhe / 2 + rollkastenHöhe / 2 - 0.02
 	const reflektorZ = normalSign * (tiefe / 2 + 0.22)
-
-	const motorBreite = 0.26
-	const motorHöhe = 0.32
-	const motorTiefe = 0.26
-	const motorPlatzierung = obj?.motorPlatzierung ?? 'rechts'
-	const motorX = motorPlatzierung === 'links'
-		? -rollkastenBreite / 2 - motorBreite / 2 + 0.02
-		: rollkastenBreite / 2 + motorBreite / 2 - 0.02
 
 	return (
 		<group

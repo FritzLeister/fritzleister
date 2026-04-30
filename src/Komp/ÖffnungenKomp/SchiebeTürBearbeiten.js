@@ -20,8 +20,8 @@ export default function SchiebeTürBearbeiten({
 	const maxSchiebetürBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
 	const maxSchiebetürHöhe = gebäudeHöhe
 	const maxAbstand = istLangeWand ? gebäudeLänge : gebäudeBreite
-	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
-	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 
 	const clampValue = (value, min, max) => {
 		const num = Number(value)

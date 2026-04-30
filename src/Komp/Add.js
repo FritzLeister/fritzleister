@@ -1,14 +1,5 @@
-
-import Box from '@mui/material/Box';
-import SpeedDial from '@mui/material/SpeedDial';
-import SpeedDialIcon from '@mui/material/SpeedDialIcon';
-import SpeedDialAction from '@mui/material/SpeedDialAction';
-import WindowIcon from '@mui/icons-material/Window';
-import DoorBackIcon from '@mui/icons-material/DoorBack';
 import DoorFrontIcon from '@mui/icons-material/DoorFront';
-import WindowOutlinedIcon from '@mui/icons-material/WindowOutlined';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
-import ViewWeekOutlinedIcon from '@mui/icons-material/ViewWeekOutlined';
 
 import StraightenIcon from '@mui/icons-material/Straighten';
 import HouseSidingIcon from '@mui/icons-material/HouseSiding';
@@ -16,7 +7,7 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
 import AppsIcon from '@mui/icons-material/Apps';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import UiButton from './UiButton';
 import UiButtonEdit from './UiButtonEdit';
@@ -137,33 +128,6 @@ export default function Add({
 }) {
     
   const [newId, setNewId] = useState(1);
-
-  const handleAddFenster = (rechts) => {
-    addObj([5,5], "dachfenster", newId, rechts);
-    setNewId(id => id + 1);
-  };
-
-  const handleAddTür = (hinten) => {
-    console.log("Tür")
-    addObj([12,9], "tür", newId, hinten);
-    setNewId(id => id + 1);
-  };
-
-  const handleAddLüfter = (lang) => {
-    console.log("Lüfter")
-    addObj([5,5], "lüfter", newId, lang)
-    setNewId(id => id + 1);
-  }
-
-  // WIESOOOOo geht das nicht maaannn
-  const actions = [
-  // { icon: <WindowIcon />, name: 'Fenster Vorne', func: () => handleAddFenster(true) },
-  { icon: <WindowOutlinedIcon />, name: 'Fenster Hinten', func: () => handleAddFenster(false) },
-  { icon: <DoorBackIcon />, name: 'Tür Rechts', func: () => handleAddTür(true) },
-  { icon: <DoorFrontIcon />, name: 'Tür Links', func: () => handleAddTür(false) },
-  { icon: <ViewWeekIcon />, name: 'Lüfter Vorne', func: () => handleAddLüfter(true) },
-  { icon: <ViewWeekOutlinedIcon />, name: 'Lüfter Hinten', func: () => handleAddLüfter(false) }
-  ];
 
   /*
   return (

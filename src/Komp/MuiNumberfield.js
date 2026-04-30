@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default function MuiNumberfield({ label = 'Number', min = 0, max = 100, step = 1, state, setState }) {
   const [internalValue, setInternalValue] = useState(state != null ? String(state) : String(min ?? ''));
@@ -25,36 +22,6 @@ export default function MuiNumberfield({ label = 'Number', min = 0, max = 100, s
     if (n < min) return min;
     if (n > max) return max;
     return n;
-  };
-
-  const updateValue = (newVal) => {
-    setInternalValue(newVal);
-    if (setState && typeof setState === 'function') {
-      const num = toNumber(newVal);
-      if (num !== null) {
-        setState(clamp(num));
-      }
-    }
-  };
-
-  const handleIncrement = () => {
-    const cur = toNumber(internalValue) ?? min;
-    const next = clamp(cur + step) ?? min;
-    const nextStr = String(next);
-    setInternalValue(nextStr);
-    if (setState && typeof setState === 'function') {
-      setState(next);
-    }
-  };
-
-  const handleDecrement = () => {
-    const cur = toNumber(internalValue) ?? min;
-    const next = clamp(cur - step) ?? min;
-    const nextStr = String(next);
-    setInternalValue(nextStr);
-    if (setState && typeof setState === 'function') {
-      setState(next);
-    }
   };
 
   const handleChange = (e) => {

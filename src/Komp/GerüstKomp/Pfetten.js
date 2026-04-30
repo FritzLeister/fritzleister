@@ -43,8 +43,6 @@ export default function Pfetten({
             const abstand = dachLängeHorizontal / (anzahlPfetten - 1)
             
             // Berechne Rotationswinkel des Daches
-            const dachNeigung = Math.atan2(pultdachHöheDifferenz, dachLängeHorizontal)
-            
             for (let i = 0; i < anzahlPfetten; i++) {
                 const zPos = zHinten + i * abstand
                 // Lineare Interpolation der Höhe

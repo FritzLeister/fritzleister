@@ -1,4 +1,3 @@
-import * as THREE from 'three'
 import { useRef } from 'react'
 
 // Reflektor-Komponente für Wandfenster und andere Öffnungen

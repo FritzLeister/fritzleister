@@ -24,7 +24,7 @@ export default function LaderampeBearbeiten({
 	const [länge, setLänge] = useState(selectedObject?.länge ?? getLaderampeStartLängeByTyp(selectedObject?.typ ?? 'ladehaus'))
 	const [rampenhöhe, setRampenhöhe] = useState(selectedObject?.rampenhöhe ?? 0.8)
 
-	const [transparenteFüllung, setTransparenteFüllung] = useState(selectedObject?.transparenteFüllung ?? 'nein')
+	const [transparenteFüllung] = useState(selectedObject?.transparenteFüllung ?? 'nein')
 	const [transparentePaneele, setTransparentePaneele] = useState(selectedObject?.transparentePaneele ?? '1,2,3')
 	const [fensterstreifenHöhe, setFensterstreifenHöhe] = useState(selectedObject?.fensterstreifenHöhe ?? 0.6)
 	const [reflektor, setReflektor] = useState(selectedObject?.reflektor ?? 'keine')
@@ -38,8 +38,8 @@ export default function LaderampeBearbeiten({
 	const [farbe, setFarbe] = useState(selectedObject?.farbe ?? 'Weiß')
 	const [füllFarbe, setFüllFarbe] = useState(selectedObject?.füllFarbe ?? 'Weiß')
 	const [verkleidungFarbe, setVerkleidungFarbe] = useState(selectedObject?.verkleidungFarbe ?? 'Weiß')
-	const [abstandLinks, setAbstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
-	const [abstandRechts, setAbstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
 	const istLangeWand = selectedObject?.lang ?? true
 	const maxLaderampeBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
 	const maxLaderampeRampenhöhe = Math.max(0, gebäudeHöhe - 0.2)

@@ -25,7 +25,6 @@ export default function AddButtonDach({
     const zHinten = z - 6.5 - (0.5 * (bodenBreite - 15))
     
     const längeLangeSeite = xRechts - xLinks
-    const längeKurzeSeite = zVorne - zHinten
     const traufhöhe = y + 4.5 + gebäudeHöhe
 
     const buttons = []
@@ -110,7 +109,6 @@ export default function AddButtonDach({
         const yMitteVorne = (yStartVorne + yEndVorne) / 2
         const yDiffVorne = yEndVorne - yStartVorne
         
-        const plattenLängeVorne = Math.sqrt(Math.pow(zLängeVorne, 2) + Math.pow(yDiffVorne, 2))
         const rotationVorne = Math.atan2(yDiffVorne, zLängeVorne)
         
         // Hintere Dachhälfte
@@ -124,7 +122,6 @@ export default function AddButtonDach({
         const yMitteHinten = (yStartHinten + yEndHinten) / 2
         const yDiffHinten = yEndHinten - yStartHinten
         
-        const plattenLängeHinten = Math.sqrt(Math.pow(zLängeHinten, 2) + Math.pow(yDiffHinten, 2))
         const rotationHinten = Math.atan2(yDiffHinten, zLängeHinten)
         
         // Offset für beide Dachhälften FUNKTIONIERT NICHT

@@ -1,11 +1,13 @@
-﻿
-import { memo, useMemo } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import { Geometry, Base, Subtraction } from '@react-three/csg'
 
 const PANEL_TIEFE = 0.4
 const PANEL_HALBE_TIEFE = PANEL_TIEFE / 2
-const KANTEN_OFFSET = PANEL_HALBE_TIEFE + 0.001
+const KANTEN_OFFSET = PANEL_HALBE_TIEFE + 0.02
+const KURZE_WAND_KANTEN_OFFSET = PANEL_HALBE_TIEFE + 0.02
 const CLIP_EPSILON = 0.0001
+const PLATTEN_RENDER_ORDER = 10
+const KANTEN_RENDER_ORDER = 11
 
 function haveEqualNumberArrays(left = [], right = []) {
     if (left === right) return true
@@ -54,8 +56,6 @@ function Platten({
     linienDicke,
     color = 'white'
 }) {
-
-    if (!plattenAnzeigen) return null;
 
     const openingProjektionen = useMemo(() => öffnungen.map((öffnung) => {
         const localX = öffnung.position[0] - position[0]
@@ -106,28 +106,30 @@ function Platten({
         return result
     }
 
-    const buildHorizontalSegments = (lineY, halfBreite) => {
+    const buildHorizontalSegments = useCallback((lineY, halfBreite) => {
         const intervals = openingProjektionen
             .filter((öffnung) => lineY >= öffnung.minY - CLIP_EPSILON && lineY <= öffnung.maxY + CLIP_EPSILON)
             .map((öffnung) => [öffnung.minU, öffnung.maxU])
 
         return subtractIntervals(-halfBreite, halfBreite, intervals)
-    }
+    }, [openingProjektionen])
 
-    const buildVerticalSegments = (lineU, halbeHöhe) => {
+    const buildVerticalSegments = useCallback((lineU, halbeHöhe) => {
         const intervals = openingProjektionen
             .filter((öffnung) => lineU >= öffnung.minU - CLIP_EPSILON && lineU <= öffnung.maxU + CLIP_EPSILON)
             .map((öffnung) => [öffnung.minY, öffnung.maxY])
 
         return subtractIntervals(-halbeHöhe, halbeHöhe, intervals)
-    }
+    }, [openingProjektionen])
 
     const kantenSegmente = useMemo(() => {
         if (!kantenAnzeigen) return []
 
         const halbeHöhe = gebäudeHöhe / 2
         const halbeBreite = fragBreite / 2
-        const faceOffsets = lang ? [-KANTEN_OFFSET, KANTEN_OFFSET] : [-0.201, 0.201]
+        const faceOffsets = lang
+            ? [-KANTEN_OFFSET, KANTEN_OFFSET]
+            : [-KURZE_WAND_KANTEN_OFFSET, KURZE_WAND_KANTEN_OFFSET]
 
         return faceOffsets.map((faceOffset) => {
             const positions = []
@@ -195,16 +197,16 @@ function Platten({
     const renderPlatteMitCSG = (größe) => {
         if (öffnungen.length === 0) {
             return (
-                <mesh position={position}>
+                <mesh position={position} renderOrder={PLATTEN_RENDER_ORDER}>
                     <boxGeometry args={größe} />
-                    <meshStandardMaterial color={color} />
+                    <meshStandardMaterial color={color} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
                 </mesh>
             )
         }
 
         return (
             <>
-            <mesh position={position}>
+            <mesh position={position} renderOrder={PLATTEN_RENDER_ORDER}>
                 <Geometry>
                     <Base>
                         <boxGeometry args={größe} />
@@ -218,11 +220,13 @@ function Platten({
                         </Subtraction>
                     ))}
                 </Geometry>
-                <meshStandardMaterial color={color} />
+                <meshStandardMaterial color={color} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} />
             </mesh>
             </>
         )
     }
+
+    if (!plattenAnzeigen) return null
 
     return(
         <>
@@ -232,11 +236,11 @@ function Platten({
                         renderPlatteMitCSG(platteGröße)
                     )}
                     {kantenSegmente.map((segmentDaten, faceIndex) => segmentDaten.length > 0 ? (
-                        <lineSegments key={`platte-kanten-${faceIndex}`} position={position}>
+                        <lineSegments key={`platte-kanten-${faceIndex}`} position={position} renderOrder={KANTEN_RENDER_ORDER}>
                             <bufferGeometry>
                                 <bufferAttribute attach="attributes-position" args={[new Float32Array(segmentDaten), 3]} />
                             </bufferGeometry>
-                            <lineBasicMaterial color="black" linewidth={linienDicke} />
+                            <lineBasicMaterial color="black" linewidth={linienDicke} depthWrite={false} />
                         </lineSegments>
                     ) : null)}
                 </group>
@@ -247,11 +251,11 @@ function Platten({
                         renderPlatteMitCSG(platteGröße)
                     )}
                     {kantenSegmente.map((segmentDaten, faceIndex) => segmentDaten.length > 0 ? (
-                        <lineSegments key={`platte-kanten-${faceIndex}`} position={position}>
+                        <lineSegments key={`platte-kanten-${faceIndex}`} position={position} renderOrder={KANTEN_RENDER_ORDER}>
                             <bufferGeometry>
                                 <bufferAttribute attach="attributes-position" args={[new Float32Array(segmentDaten), 3]} />
                             </bufferGeometry>
-                            <lineBasicMaterial color="black" linewidth={linienDicke} />
+                            <lineBasicMaterial color="black" linewidth={linienDicke} depthWrite={false} />
                         </lineSegments>
                     ) : null)}
                 </group>
