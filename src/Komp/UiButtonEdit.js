@@ -1122,6 +1122,8 @@ export default function UiButtonEdit({
 
         return(
             <>
+                {/* Zubehör aktuell nicht nötig deswegen auskommentiert */}
+                
                 <div style={{marginLeft: '15px'}}>
 
                     <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Zubehör:</p>

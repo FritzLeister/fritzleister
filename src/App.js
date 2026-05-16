@@ -441,6 +441,8 @@ export default function App({
         camera={canvasCamera}
         dpr={[1, 1.5]}
         gl={canvasGl}
+        frameloop="demand"
+        performance={{ min: 0.6 }}
         shadows={false}
         className='canvasOverlay'
         // style={{backgroundImage: "url(/himmel.jpg)", backgroundSize: "cover", backgroundPosition: "center"}}

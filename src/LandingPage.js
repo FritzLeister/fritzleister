@@ -24,7 +24,7 @@ export default function LandingPage({
                     <button className="button" onClick={() => setShowApp("saved")}>
                         Gespeichert
                     </button>
-                    <button className="button" onClick={() => setShowApp("custom")}>
+                    <button className="button" onClick={() => setShowApp("app")}>
                         Los Geht´s!
                     </button>
                 </div>

@@ -1,5 +1,4 @@
 import DoorFrontIcon from '@mui/icons-material/DoorFront';
-import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 
 import StraightenIcon from '@mui/icons-material/Straighten';
 import HouseSidingIcon from '@mui/icons-material/HouseSiding';
@@ -169,7 +168,7 @@ export default function Add({
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
             color: "#000000ff",                            // besserer Kontrast
             width: 250,
-            height: 472.5, // 500 : 250
+            height: 'fit-content',
             border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
             zIndex: 999,
             // visibility: türAttribute ? "inherit" : "hidden"
@@ -206,13 +205,15 @@ export default function Add({
           isActive={editMenü === 'Öffnungen'}
           />
 
-          {/* Zubehör */}
+          {/* Zubehör aktuell nicht nötig deswegen auskommentiert */}
+          {/*
           <UiButton 
           icon={<ViewWeekIcon fontSize='medium'/>} 
           name={'Zubehör'} 
           onClick={() => setEditMenü(editMenü === 'Zubehör' ? '' : 'Zubehör')}
           isActive={editMenü === 'Zubehör'}
           />
+          */}
 
           {/* Konstruktion */}
           <UiButton 
@@ -512,7 +513,9 @@ export default function Add({
         {editMenü === 'Laderampe-Bearbeiten' && selectedObject?.type === 'laderampe' && <LaderampeBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
         {editMenü === 'Lichtkuppel-Bearbeiten' && selectedObject?.type === 'kleinlichtskuppel' && <LichtKuppelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeBreite={breite} gebäudeLänge={länge} />}
 
-        {editMenü === 'Zubehör' && <UiButtonEdit 
+        {/* Zubehör aktuell nicht nötig deswegen auskommentiert */}
+        {/*
+        editMenü === 'Zubehör' && <UiButtonEdit 
             name={"Zubehör"} 
             height={4} 
             breite={breite}
@@ -597,7 +600,8 @@ export default function Add({
             setKranKapazität={setKranKapazität}
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
-        /> }
+        /> 
+        */}
 
         {editMenü === 'Konstruktion' && <UiButtonEdit 
             name={"Konstruktion"} 
