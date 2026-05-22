@@ -1,8 +1,10 @@
 import { Canvas } from '@react-three/fiber'
+import { Cloud, Clouds, GradientTexture } from '@react-three/drei'
+import { BackSide } from 'three'
 import "./styles.css"
 import Halle from './Halle'
 import SliderMui from "./Komp/SliderMui"
-import { useMemo, useState } from 'react'
+import { useMemo, useState, memo } from 'react'
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
@@ -10,8 +12,150 @@ import DarstellungUI from './Komp/DarstellungUI'
 import { registerProductSnapshotCapture } from './utils/productSnapshotRegistry'
 import { useProductSnapshots } from './hooks/useProductSnapshots'
 
-const DEFAULT_CAMERA_POSITION = [0, 30, 50]
+// Better seeded random number generator (Mulberry32)
+function createSeededRandom(seed) {
+    return function() {
+        seed |= 0
+        seed = (seed + 0x6d2b79f5) | 0
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+}
 
+const DEFAULT_CAMERA_POSITION = [0, 30, 50]
+const CLOUD_LAYER_COUNT = 0.25
+const CLOUD_SEGMENTS = 6
+const CLOUD_HEIGHT_MULTIPLIER = 2
+const CLOUD_HEIGHT_VARIATION = 60
+const CLOUD_SIZE_MULTIPLIER = 2.4
+const CLOUD_VOLUME = 26
+const CLOUD_RING_CONFIG = [
+    { position: [-260, 68, -60], bounds: [42, 10, 10], opacity: 0.48, speed: 0.06 },
+    { position: [-230, 72, -170], bounds: [46, 11, 11], opacity: 0.5, speed: 0.07 },
+    { position: [-150, 66, -250], bounds: [44, 10, 10], opacity: 0.47, speed: 0.08 },
+    { position: [-20, 74, -280], bounds: [52, 12, 12], opacity: 0.5, speed: 0.06 },
+    { position: [120, 70, -260], bounds: [46, 11, 11], opacity: 0.49, speed: 0.07 },
+    { position: [230, 66, -190], bounds: [44, 10, 10], opacity: 0.48, speed: 0.08 },
+    { position: [280, 72, -40], bounds: [50, 12, 12], opacity: 0.51, speed: 0.06 },
+    { position: [250, 68, 110], bounds: [44, 10, 10], opacity: 0.48, speed: 0.07 },
+    { position: [180, 74, 230], bounds: [48, 11, 11], opacity: 0.5, speed: 0.06 },
+    { position: [30, 66, 280], bounds: [52, 12, 12], opacity: 0.49, speed: 0.07 },
+    { position: [-120, 72, 260], bounds: [46, 11, 11], opacity: 0.48, speed: 0.08 },
+    { position: [-230, 68, 180], bounds: [44, 10, 10], opacity: 0.47, speed: 0.07 },
+    { position: [-280, 70, 40], bounds: [50, 12, 12], opacity: 0.5, speed: 0.06 },
+    { position: [-190, 64, -5], bounds: [40, 9, 9], opacity: 0.46, speed: 0.08 },
+    { position: [0, 78, -120], bounds: [42, 10, 10], opacity: 0.5, speed: 0.06 },
+    { position: [150, 64, 20], bounds: [40, 9, 9], opacity: 0.47, speed: 0.08 },
+]
+
+const CLOUD_OVER_HALL_CONFIG = CLOUD_RING_CONFIG.map((cloud, index) => {
+    const heightShift = 8 + (index % 4) * 2
+    const inwardScale = 0.3
+
+    return {
+        position: [
+            cloud.position[0] * inwardScale,
+            cloud.position[1] + heightShift,
+            cloud.position[2] * inwardScale,
+        ],
+        bounds: [
+            cloud.bounds[0] * 1.08,
+            cloud.bounds[1] * 1.15,
+            cloud.bounds[2] * 1.08,
+        ],
+        opacity: Math.min(0.72, cloud.opacity + 0.14),
+        speed: cloud.speed * 0.85,
+    }
+})
+
+const CLOUD_CENTRAL_CONFIG = CLOUD_RING_CONFIG.map((cloud, index) => ({
+    position: [
+        (index % 4 - 1.5) * 34,
+        72 + (index % 3) * 3,
+        (Math.floor(index / 4) - 1.5) * 30,
+    ],
+    bounds: [
+        cloud.bounds[0] * 0.95,
+        cloud.bounds[1] * 1.05,
+        cloud.bounds[2] * 0.95,
+    ],
+    opacity: 0.58 + (index % 4) * 0.02,
+    speed: cloud.speed * 0.7,
+}))
+
+function SkyGradientBackground() {
+    return (
+        <mesh scale={800} renderOrder={-1000} frustumCulled={false}>
+            <sphereGeometry args={[1, 32, 32]} />
+            <meshBasicMaterial side={BackSide} toneMapped={false} depthWrite={false} fog={false}>
+                <GradientTexture
+                    stops={[0, 0.55, 1]}
+                    colors={["#d3e0e5", "#BFE6FF", "#FFFFFF"]}
+                    size={1024}
+                />
+            </meshBasicMaterial>
+        </mesh>
+    )
+}
+
+const SkyVolumetricClouds = memo(function SkyVolumetricClouds() {
+    const cloudSeedConfig = useMemo(
+        () => [...CLOUD_RING_CONFIG, ...CLOUD_OVER_HALL_CONFIG, ...CLOUD_CENTRAL_CONFIG],
+        []
+    )
+
+    const randomizedClouds = useMemo(() => {
+        const rng = createSeededRandom(42)
+        const clouds = []
+        const layerCount = CLOUD_LAYER_COUNT
+
+        for (let layerIndex = 0; layerIndex < layerCount; layerIndex += 1) {
+            for (const cloud of cloudSeedConfig) {
+                clouds.push({
+                    ...cloud,
+                    bounds: [
+                        cloud.bounds[0] * CLOUD_SIZE_MULTIPLIER,
+                        cloud.bounds[1] * CLOUD_SIZE_MULTIPLIER,
+                        cloud.bounds[2] * CLOUD_SIZE_MULTIPLIER,
+                    ],
+                    position: [
+                        rng() * 600 - 300,
+                        cloud.position[1] * CLOUD_HEIGHT_MULTIPLIER + (rng() * 2 - 1) * CLOUD_HEIGHT_VARIATION,
+                        rng() * 600 - 300,
+                    ],
+                })
+            }
+        }
+
+        return clouds
+    }, [cloudSeedConfig])
+
+    const cloudRenderLimit = useMemo(
+        () => randomizedClouds.length * CLOUD_SEGMENTS,
+        [randomizedClouds]
+    )
+
+    return (
+        <group name="product-snapshot-clouds-root">
+            <Clouds limit={cloudRenderLimit} frustumCulled={false}>
+                {randomizedClouds.map((cloud, index) => (
+                    <Cloud
+                        key={index}
+                        position={cloud.position}
+                        bounds={cloud.bounds}
+                        segments={CLOUD_SEGMENTS}
+                        volume={CLOUD_VOLUME}
+                        opacity={cloud.opacity}
+                        color="#f6fbff"
+                        fade={120}
+                        speed={cloud.speed}
+                    />
+                ))}
+            </Clouds>
+        </group>
+    )
+})
 function SnapshotCaptureBridge({ breite, länge, höhe }) {
     const captureSnapshots = useProductSnapshots({
         rootObjectName: 'product-snapshot-focus-root',
@@ -447,6 +591,8 @@ export default function App({
         className='canvasOverlay'
         // style={{backgroundImage: "url(/himmel.jpg)", backgroundSize: "cover", backgroundPosition: "center"}}
         >
+            <SkyGradientBackground />
+            {straßenAnzeigen && <SkyVolumetricClouds />}
             <directionalLight position={[5,5,5]} intensity={1} />
             <ambientLight intensity={0.9} />
             <SnapshotCaptureBridge breite={breite} länge={länge} höhe={höhe} />

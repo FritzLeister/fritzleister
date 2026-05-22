@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
-import { OPENING_GRID_STEP, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
+import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
 
 // Transparente Öffnung für Dach (mit Winkelrotation)
 export default function DachLeeröffnung({
@@ -25,6 +26,11 @@ export default function DachLeeröffnung({
     balkenAbstand = 40,
     vorne = true
 }) {
+    const toFinite = (value, fallback = 0) => {
+        const parsed = Number(value)
+        return Number.isFinite(parsed) ? parsed : fallback
+    }
+
     const obj = objs.find(o => o.id === objId)
     const openingArgs = obj ? [obj.value[0], obj.value[1]] : [5, 5]
 
@@ -158,34 +164,83 @@ export default function DachLeeröffnung({
         gridPosiRef.current = gridPosi
     }, [gridPosi])
 
-    const persistPosition = useCallback((nextPos) => {
-        if (!setObjs) return
+    const getRoofCenterYAtZ = useCallback((zValue) => {
+        const safeZ = toFinite(zValue, z)
 
-        setObjs(prevObjs => prevObjs.map(item =>
-            item.id === objId
-                ? {
-                    ...item,
-                    startPos: {
-                        ...(item.startPos ?? {}),
-                        x: nextPos.x,
-                        z: nextPos.z
-                    }
-                }
-                : item
-        ))
+        if (dachArt === 'pultdach') {
+            const zStart = zHinten - 1
+            const zEnd = zVorne + 1
+            const zLänge = Math.abs(zEnd - zStart)
+            if (!Number.isFinite(zLänge) || zLänge <= 0) return traufhöhe - 4
 
-        setSelectedObject(prev => {
-            if (!prev || prev.id !== objId) return prev
-            return {
-                ...prev,
-                startPos: {
-                    ...(prev.startPos ?? {}),
-                    x: nextPos.x,
-                    z: nextPos.z
-                }
+            const yStart = traufhöhe - 4
+            const yEnd = traufhöhe - 4 + pultdachHöheDifferenz
+            const zNormalized = (safeZ - zStart) / zLänge
+            return yStart + ((yEnd - yStart) * zNormalized)
+        }
+
+        if (dachArt === 'satteldach') {
+            if (vorne) {
+                const zStart = zVorne + 1
+                const zEnd = z
+                const zLänge = Math.abs(zStart - zEnd)
+                if (!Number.isFinite(zLänge) || zLänge <= 0) return traufhöhe - 4
+
+                const yStart = traufhöhe - 4
+                const yEnd = traufhöhe + zusatzHöheMitte - 4
+                const zNormalized = (safeZ - zStart) / (-zLänge)
+                return yStart + ((yEnd - yStart) * zNormalized)
             }
+
+            const zStart = z
+            const zEnd = zHinten - 1
+            const zLänge = Math.abs(zEnd - zStart)
+            if (!Number.isFinite(zLänge) || zLänge <= 0) return traufhöhe - 4
+
+            const yStart = traufhöhe + zusatzHöheMitte - 4
+            const yEnd = traufhöhe - 4
+            const zNormalized = (zStart - safeZ) / zLänge
+            return yStart + ((yEnd - yStart) * zNormalized)
+        }
+
+        return traufhöhe - 4
+    }, [dachArt, pultdachHöheDifferenz, traufhöhe, vorne, z, zHinten, zVorne, zusatzHöheMitte])
+
+    const persistPosition = useCallback((nextPos) => {
+        const safeX = toFinite(nextPos?.x, toFinite(gridPosiRef.current?.x, x))
+        const safeZ = toFinite(nextPos?.z, toFinite(gridPosiRef.current?.z, z))
+        const halfWidth = toFinite(skaliertBreite / 2)
+        const halfHeight = toFinite(skaliertHöhe / 2)
+        const leftEdge = toFinite(xLinks + halfWidth)
+        const rightEdge = toFinite(xRechts - halfWidth)
+        const abstandLinksRaw = safeX - leftEdge
+        const abstandRechtsRaw = rightEdge - safeX
+        const centerY = toFinite(getRoofCenterYAtZ(safeZ), traufhöhe - 4)
+        const abstandUntenRaw = centerY - halfHeight - toFinite(y)
+        const fallbackLinks = toFinite(obj?.abstandLinks, 0)
+        const fallbackRechts = toFinite(obj?.abstandRechts, 0)
+        const fallbackUnten = toFinite(obj?.abstandUnten, 0)
+        const nextAbstandLinks = quantizeOpeningDistance(abstandLinksRaw)
+        const nextAbstandRechts = quantizeOpeningDistance(abstandRechtsRaw)
+        const nextAbstandUnten = quantizeOpeningDistance(abstandUntenRaw)
+        const distances = {
+            abstandLinks: Number.isFinite(nextAbstandLinks) ? nextAbstandLinks : fallbackLinks,
+            abstandRechts: Number.isFinite(nextAbstandRechts) ? nextAbstandRechts : fallbackRechts,
+            abstandUnten: Number.isFinite(nextAbstandUnten) ? nextAbstandUnten : fallbackUnten
+        }
+
+        dispatchOpeningPositionValues(objId, distances)
+        persistOpeningPosition({
+            objId,
+            setObjs,
+            setSelectedObject,
+            startPos: {
+                x: safeX,
+                z: safeZ
+            },
+            distances
         })
-    }, [objId, setObjs, setSelectedObject])
+    }, [getRoofCenterYAtZ, gridPosiRef, obj?.abstandLinks, obj?.abstandRechts, obj?.abstandUnten, objId, setObjs, setSelectedObject, skaliertBreite, skaliertHöhe, traufhöhe, x, xLinks, xRechts, y, z])
 
     const updatePosition = useCallback((nextPos) => {
         gridPosiRef.current = nextPos
@@ -216,6 +271,25 @@ export default function DachLeeröffnung({
             window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
         }
     }, [selectedObject, objId])
+
+    useEffect(() => {
+        const hasAbstandLinks = obj?.abstandLinks !== undefined && obj?.abstandLinks !== null
+        const hasAbstandRechts = obj?.abstandRechts !== undefined && obj?.abstandRechts !== null
+
+        if (hasAbstandLinks && hasAbstandRechts) return
+
+        persistPosition(gridPosiRef.current)
+    }, [obj?.id, obj?.abstandLinks, obj?.abstandRechts, persistPosition])
+
+    useEffect(() => {
+        const handleRefreshPosition = (event) => {
+            if (event?.detail?.id !== objId) return
+            persistPosition(gridPosiRef.current)
+        }
+
+        window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+        return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+    }, [objId, persistPosition])
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -271,32 +345,32 @@ export default function DachLeeröffnung({
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [objId, minX, maxX, minZ, maxZ, vorne, selectedObject, updatePosition])
 
-    const bind = useDrag(({ movement: [mx], first, last, memo }) => {
+    const bind = useDrag(({ delta: [mx, my], first, last }) => {
         if (!obj) return
 
-        const scale = 30 / size.width
-        let start = memo
-        if (first || !start) {
-            start = { x: gridPosi.x }
-        }
+        const scaleX = 30 / size.width
+        const scaleZ = 120 / size.height
+        const current = gridPosiRef.current
         
         // X-Achse (entlang des Dachs) - Richtung abhängig von vorne
-        let newX = vorne ? start.x + (mx * scale) : start.x - (mx * scale)
+        let newX = vorne ? current.x + (mx * scaleX) : current.x - (mx * scaleX)
         newX = snapOpeningCoordinate(newX, minX, minX, maxX)
+
+        // Z-Achse (entlang der Dachneigung)
+        let newZ = vorne ? current.z + (my * scaleZ) : current.z - (my * scaleZ)
+        newZ = snapOpeningCoordinate(newZ, minZ, minZ, maxZ)
         
-        // Z-Position bleibt konstant
-        const nextPos = { x: newX, z: gridPosi.z }
+        const nextPos = { x: newX, z: newZ }
         updatePosition(nextPos)
 
         if (first) {
             window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
             setOrbitKontrolle(false)
             camera.position.set(0, 80, vorne ? 140 : -140)
+            camera.lookAt(x, traufhöhe, z)
         }
 
         if (last) setOrbitKontrolle(true)
-
-        return start
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'

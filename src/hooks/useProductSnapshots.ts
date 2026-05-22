@@ -11,6 +11,7 @@ type SnapshotView = {
 
 type UseProductSnapshotsOptions = {
   rootObjectName?: string;
+  hiddenObjectNames?: string[];
   width?: number;
   height?: number;
   hallWidthMeters?: number;
@@ -94,6 +95,7 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
   const { gl, scene, camera, size } = useThree();
   const {
     rootObjectName = 'product-snapshot-root',
+    hiddenObjectNames = ['product-snapshot-clouds-root'],
     width = Math.max(1600, Math.round(size.width || 1600)),
     height = Math.max(900, Math.round(size.height || 900)),
     hallWidthMeters = REFERENCE_HALL_DIMENSIONS.width,
@@ -103,6 +105,10 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
 
   return useCallback(async (): Promise<ProductSnapshot[]> => {
     const snapshotRoot = scene.getObjectByName(rootObjectName) ?? scene;
+    const hiddenObjects = hiddenObjectNames
+      .map((objectName) => scene.getObjectByName(objectName))
+      .filter((object): object is THREE.Object3D => object !== undefined);
+    const previousHiddenVisibilities = hiddenObjects.map((object) => object.visible);
     const bounds = new THREE.Box3().setFromObject(snapshotRoot);
 
     if (bounds.isEmpty()) {
@@ -129,6 +135,11 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
 
     try {
       gl.xr.enabled = false;
+
+      hiddenObjects.forEach((object) => {
+        object.visible = false;
+      });
+      await waitForFrame();
 
       for (const view of SNAPSHOT_VIEWS) {
         try {
@@ -166,6 +177,9 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
         }
       }
     } finally {
+      hiddenObjects.forEach((object, index) => {
+        object.visible = previousHiddenVisibilities[index] ?? true;
+      });
       gl.setRenderTarget(previousTarget);
       gl.xr.enabled = previousXrEnabled;
 
@@ -177,5 +191,5 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
     }
 
     return snapshots;
-  }, [camera, gl, hallHeightMeters, hallLengthMeters, hallWidthMeters, height, rootObjectName, scene, width]);
+  }, [camera, gl, hallHeightMeters, hallLengthMeters, hallWidthMeters, height, hiddenObjectNames, rootObjectName, scene, width]);
 }

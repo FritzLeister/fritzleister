@@ -111,7 +111,7 @@ export default function SavePage({
                     }}
                     >
                         <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
-                        <h1 style={{ fontSize: 40 }}>Wir Melden uns so schnell wie möglich.</h1>
+                        <h1 style={{ fontSize: 40 }}>Wir melden uns so schnell wie möglich.</h1>
 
                         <button className="buttonDark" onClick={() => setShowApp("landing")}>Zurück zur Startseite</button>
                     </div>

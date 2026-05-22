@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 
@@ -20,7 +20,8 @@ export default function TransparentesPaneelBearbeiten({
 	const [paneelHöhe, setPaneelHöhe] = useState(selectedObject?.value?.[1] ?? 3)
 	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
 	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
-	const zeigtWandPosition = selectedObject?.bereich !== 'dach'
+	const istDachPaneel = selectedObject?.lang === false || selectedObject?.bereich === 'dach'
+	const zeigtWandPosition = !istDachPaneel
 	const positionFields = [
 		{ key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
 		{ key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' },
@@ -28,9 +29,19 @@ export default function TransparentesPaneelBearbeiten({
 	]
 	const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
 
+	useEffect(() => {
+		if (!istDachPaneel || !selectedObject?.id) return
+
+		const rafId = window.requestAnimationFrame(() => {
+			handleRefreshPosition()
+		})
+
+		return () => window.cancelAnimationFrame(rafId)
+	}, [handleRefreshPosition, istDachPaneel, selectedObject?.id])
+
 	const handleUpdate = () => {
 		if (!selectedObject) return
-		if (zeigtWandPosition) {
+		if (zeigtWandPosition || istDachPaneel) {
 			handleRefreshPosition()
 		}
 		const sicherePaneelBreite = clampValue(paneelBreite, 0.2, maxPaneelBreite)
@@ -45,7 +56,7 @@ export default function TransparentesPaneelBearbeiten({
 					value: [sicherePaneelBreite, sicherePaneelHöhe],
 					abstandLinks: sichererAbstandLinks,
 					abstandRechts: sichererAbstandRechts,
-					abstandUnten: zeigtWandPosition ? (displayValues.abstandUnten ?? obj.abstandUnten) : obj.abstandUnten
+					abstandUnten: (zeigtWandPosition || istDachPaneel) ? (displayValues.abstandUnten ?? obj.abstandUnten) : obj.abstandUnten
 				}
 				: obj
 		))
@@ -90,7 +101,7 @@ export default function TransparentesPaneelBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				{zeigtWandPosition && <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />}
+				{(zeigtWandPosition || istDachPaneel) && <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />}
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

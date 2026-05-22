@@ -48,9 +48,11 @@ export function updateOpeningStartPos({
     setSelectedObject,
     startPos
 }) {
+    const isSameId = (left, right) => String(left) === String(right)
+
     if (setObjs) {
         setObjs(prevObjs => prevObjs.map(item =>
-            item.id === objId
+            isSameId(item.id, objId)
                 ? {
                     ...item,
                     startPos: {
@@ -64,7 +66,7 @@ export function updateOpeningStartPos({
 
     if (setSelectedObject) {
         setSelectedObject(prev => {
-            if (!prev || prev.id !== objId) return prev
+            if (!prev || !isSameId(prev.id, objId)) return prev
 
             return {
                 ...prev,
@@ -84,6 +86,8 @@ export function persistOpeningPosition({
     startPos,
     distances = {}
 }) {
+    const isSameId = (left, right) => String(left) === String(right)
+
     updateOpeningStartPos({
         objId,
         setObjs,
@@ -95,7 +99,7 @@ export function persistOpeningPosition({
 
     if (setObjs) {
         setObjs(prevObjs => prevObjs.map(item =>
-            item.id === objId
+            isSameId(item.id, objId)
                 ? {
                     ...item,
                     ...distances
@@ -106,7 +110,7 @@ export function persistOpeningPosition({
 
     if (setSelectedObject) {
         setSelectedObject(prev => {
-            if (!prev || prev.id !== objId) return prev
+            if (!prev || !isSameId(prev.id, objId)) return prev
 
             return {
                 ...prev,

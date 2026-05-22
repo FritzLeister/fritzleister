@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
+import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 
 export default function LichtKuppelBearbeiten({
 	selectedObject,
@@ -17,11 +18,32 @@ export default function LichtKuppelBearbeiten({
 	const [breiteY, setBreiteY] = useState(selectedObject?.value?.[1] ?? 1)
 	const [horizontaleAusrichtung, setHorizontaleAusrichtung] = useState(selectedObject?.horizontaleAusrichtung ?? 'mittig')
 	const [farbe, setFarbe] = useState(selectedObject?.farbe ?? 'Weiß')
+	const [abstandLinks] = useState(selectedObject?.abstandLinks ?? 0)
+	const [abstandRechts] = useState(selectedObject?.abstandRechts ?? 0)
+	const positionFields = [
+		{ key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
+		{ key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' },
+		{ key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
+	]
+	const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
+
+	useEffect(() => {
+		if (!selectedObject?.id) return
+
+		const rafId = window.requestAnimationFrame(() => {
+			handleRefreshPosition()
+		})
+
+		return () => window.cancelAnimationFrame(rafId)
+	}, [handleRefreshPosition, selectedObject?.id])
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		handleRefreshPosition()
 		const sichereBreiteX = clampValue(breiteX, 0.2, maxBreiteX)
 		const sichereBreiteY = clampValue(breiteY, 0.2, maxBreiteY)
+		const sichererAbstandLinks = clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxBreiteX)
+		const sichererAbstandRechts = clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxBreiteX)
 
 		setObjs(objs => objs.map(obj =>
 			obj.id === selectedObject.id
@@ -29,7 +51,10 @@ export default function LichtKuppelBearbeiten({
 					...obj,
 					value: [sichereBreiteX, sichereBreiteY],
 					horizontaleAusrichtung,
-					farbe
+					farbe,
+					abstandLinks: sichererAbstandLinks,
+					abstandRechts: sichererAbstandRechts,
+					abstandUnten: displayValues.abstandUnten ?? obj.abstandUnten
 				}
 				: obj
 		))
@@ -74,6 +99,8 @@ export default function LichtKuppelBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position:</p>
 
 				<div style={{

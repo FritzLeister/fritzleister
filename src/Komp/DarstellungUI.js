@@ -244,7 +244,7 @@ export default function DarstellungUI({
 
                 {showButton('Straßen') && (
                     <DarstellungsButton 
-                        label={'Straßen'}
+                        label={'Details'}
                         state={straßenAnzeigen}
                         setState={setStraßenAnzeigen}
                     />

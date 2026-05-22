@@ -605,7 +605,7 @@ export default function Add({
 
         {editMenü === 'Konstruktion' && <UiButtonEdit 
             name={"Konstruktion"} 
-            height={5} 
+          height={4} 
             breite={breite}
             setBreite={setBreite}
             länge={länge}
@@ -692,7 +692,7 @@ export default function Add({
         
         {editMenü === 'Angebot' && <UiButtonEdit 
             name={"Angebot"} 
-            height={6} 
+          height={5} 
             setShowApp3={setShowApp3}
             setShowAppKontakt={setShowAppKontakt}
             breite={breite}

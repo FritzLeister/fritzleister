@@ -3,7 +3,8 @@ import Gerüst from "./Komp/Gerüst"
 import Wand from "./Komp/Wand"
 import Dach from "./Komp/Dach"
 import { OrbitControls } from "@react-three/drei"
-import { memo, useCallback, useMemo, useRef } from "react"
+import * as THREE from 'three'
+import { memo, useCallback, useEffect, useMemo, useRef } from "react"
 import LeerÖffnung from "./Komp/ÖffnungenKomp/LeerÖffnung"
 import WandFenster from "./Komp/ÖffnungenKomp/WandFenster"
 import DachLeeröffnung from "./Komp/ÖffnungenKomp/DachLeeröffnung"
@@ -139,6 +140,34 @@ export default memo(function Halle({
     
     // Sockelhöhe für Gerüst: 0.5 wenn nur verkleidete Wand, sonst sockelhöhe
     const gerüstSockelHöhe = wandGeometrieVorgaben === 'verkleidete-wand' ? 0.8 : sockelhöhe
+
+    const bodenBreiteX = 920
+    const bodenTiefeZ = 915
+    const bodenHöhe = 0.2
+    const bodenRandBreite = 14
+    const bodenRandHöhe = 0.3
+
+    const bodenGeometrie = useMemo(() => new THREE.BoxGeometry(bodenBreiteX, bodenHöhe, bodenTiefeZ), [])
+    const bodenMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 'lightgreen' }), [])
+    const bodenRandMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: '#4a4a4a' }), [])
+    const bodenRandHorizontalGeometrie = useMemo(
+        () => new THREE.BoxGeometry(bodenBreiteX + bodenRandBreite * 2, bodenRandHöhe, bodenRandBreite),
+        []
+    )
+    const bodenRandVertikalGeometrie = useMemo(
+        () => new THREE.BoxGeometry(bodenRandBreite, bodenRandHöhe, bodenTiefeZ),
+        []
+    )
+
+    useEffect(() => {
+        return () => {
+            bodenGeometrie.dispose()
+            bodenMaterial.dispose()
+            bodenRandMaterial.dispose()
+            bodenRandHorizontalGeometrie.dispose()
+            bodenRandVertikalGeometrie.dispose()
+        }
+    }, [bodenGeometrie, bodenMaterial, bodenRandMaterial, bodenRandHorizontalGeometrie, bodenRandVertikalGeometrie])
 
     return(
         <>
@@ -478,13 +507,31 @@ export default memo(function Halle({
         {/* )} */}
 
         {/* Boden:*/}
-        <mesh position={[0, -0.5, 0]}>
-
-            <boxGeometry args={[896.5,0.1,890]} />
-            {/* <meshBasicMaterial map={texture} /> */}
-            <meshBasicMaterial color={'lightgreen'} />
-            
-        </mesh>
+        <mesh
+            position={[0, -0.5, 0]}
+            geometry={bodenGeometrie}
+            material={bodenMaterial}
+        />
+        <mesh
+            position={[0, -0.5, (bodenTiefeZ / 2) + (bodenRandBreite / 2)]}
+            geometry={bodenRandHorizontalGeometrie}
+            material={bodenRandMaterial}
+        />
+        <mesh
+            position={[0, -0.5, -((bodenTiefeZ / 2) + (bodenRandBreite / 2))]}
+            geometry={bodenRandHorizontalGeometrie}
+            material={bodenRandMaterial}
+        />
+        <mesh
+            position={[(bodenBreiteX / 2) + (bodenRandBreite / 2), -0.5, 0]}
+            geometry={bodenRandVertikalGeometrie}
+            material={bodenRandMaterial}
+        />
+        <mesh
+            position={[-((bodenBreiteX / 2) + (bodenRandBreite / 2)), -0.5, 0]}
+            geometry={bodenRandVertikalGeometrie}
+            material={bodenRandMaterial}
+        />
 
         {/* Abmessungen auf dem Boden */}
         {abmessungenAnzeigen && (
@@ -578,7 +625,7 @@ export default memo(function Halle({
 
         </group>
 
-    <OrbitControls ref={orbitControlsRef} maxDistance={350} />
+    <OrbitControls ref={orbitControlsRef} maxDistance={350} maxPolarAngle={Math.PI / 2 - 0.05} />
         </>
     )
 })

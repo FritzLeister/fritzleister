@@ -24,6 +24,17 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
         { key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
     ]
     const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
+    const isDachLeeröffnung = selectedObject?.type === 'leeröffnung' && selectedObject?.lang === false
+
+    useEffect(() => {
+        if (!isDachLeeröffnung || !selectedObject?.id) return
+
+        const rafId = window.requestAnimationFrame(() => {
+            handleRefreshPosition()
+        })
+
+        return () => window.cancelAnimationFrame(rafId)
+    }, [handleRefreshPosition, isDachLeeröffnung, selectedObject?.id])
 
     useEffect(() => {
         setÖffnungsBreite((prev) => clampValue(prev, 1, maxÖffnungsBreite))
@@ -72,7 +83,19 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
             padding: "15px",
             border: "1px solid rgba(255, 255, 255, 0.2)",
             zIndex: 999,
-        }}>
+            maxHeight: 'calc(100vh - 470px)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            pointerEvents: 'auto',
+            scrollbarWidth: 'thin',
+            boxSizing: 'border-box'
+        }}
+        onWheelCapture={(event) => event.stopPropagation()}
+        onMouseDownCapture={(event) => event.stopPropagation()}
+        onTouchMoveCapture={(event) => event.stopPropagation()}
+        >
             <div style={{
                 margin: "8px",
                 paddingBottom: "4px",

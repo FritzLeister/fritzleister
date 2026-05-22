@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react'
 export default function Bodenplatte({ bodenLänge, bodenBreite, koordinate, color = 'white' }) {
 
     const boxGeometry = useMemo(() => {
-        return new THREE.BoxGeometry(bodenLänge + 7, 0.4, bodenBreite + 7)
+        return new THREE.BoxGeometry(bodenLänge + 3.5, 0.4, bodenBreite + 3.5)
     }, [bodenLänge, bodenBreite])
 
     const edgesGeometry = useMemo(() => {

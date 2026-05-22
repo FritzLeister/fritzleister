@@ -875,7 +875,7 @@ export default function UiButtonEdit({
 
                     <div style={{ margin: '5px'}}>
 
-                        <div style={{ 
+                        <div style={{
                             display: 'flex', 
                             gap: '10px', 
                             alignItems: 'center', 
@@ -989,7 +989,9 @@ export default function UiButtonEdit({
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        backgroundColor: 'lightyellow',
+                                        backgroundColor: 
+                                        /*'lightyellow'*/
+                                        'rgba(252, 238, 79, 0.8)',
                                         cursor: 'pointer'
                                     }}
                                     onClick={() => {

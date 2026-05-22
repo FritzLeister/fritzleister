@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
-import { OPENING_GRID_STEP, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
+import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
 
 function getRahmenFarbe(farbe) {
 	if (farbe === 'Schwarz') return '#1f2328'
@@ -28,6 +29,11 @@ export default function LichtKuppel({
 	zusatzHöheMitte = 5,
 	vorne = true
 }) {
+	const toFinite = (value, fallback = 0) => {
+		const parsed = Number(value)
+		return Number.isFinite(parsed) ? parsed : fallback
+	}
+
 	const obj = objs.find(o => o.id === objId)
 	const openingArgs = obj ? [obj.value[0], obj.value[1]] : [1, 1]
 
@@ -77,32 +83,83 @@ export default function LichtKuppel({
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
 
-	const persistPosition = useCallback((nextPos) => {
-		if (!setObjs) return
-		setObjs(prevObjs => prevObjs.map(item =>
-			item.id === objId
-				? {
-					...item,
-					startPos: {
-						...(item.startPos ?? {}),
-						x: nextPos.x,
-						z: nextPos.z
-					}
-				}
-				: item
-		))
-		setSelectedObject(prev => {
-			if (!prev || prev.id !== objId) return prev
-			return {
-				...prev,
-				startPos: {
-					...(prev.startPos ?? {}),
-					x: nextPos.x,
-					z: nextPos.z
-				}
+	const getRoofCenterYAtZ = useCallback((zValue) => {
+		const safeZ = toFinite(zValue, z)
+
+		if (dachArt === 'pultdach') {
+			const zStart = zHinten - 1
+			const zEnd = zVorne + 1
+			const zLänge = Math.abs(zEnd - zStart)
+			if (!Number.isFinite(zLänge) || zLänge <= 0) return traufhöhe - 4
+
+			const yStart = traufhöhe - 4
+			const yEnd = traufhöhe - 4 + pultdachHöheDifferenz
+			const zNormalized = (safeZ - zStart) / zLänge
+			return yStart + ((yEnd - yStart) * zNormalized)
+		}
+
+		if (dachArt === 'satteldach') {
+			if (vorne) {
+				const zStart = zVorne + 1
+				const zEnd = z
+				const zLänge = Math.abs(zStart - zEnd)
+				if (!Number.isFinite(zLänge) || zLänge <= 0) return traufhöhe - 4
+
+				const yStart = traufhöhe - 4
+				const yEnd = traufhöhe + zusatzHöheMitte - 4
+				const zNormalized = (safeZ - zStart) / (-zLänge)
+				return yStart + ((yEnd - yStart) * zNormalized)
 			}
+
+			const zStart = z
+			const zEnd = zHinten - 1
+			const zLänge = Math.abs(zEnd - zStart)
+			if (!Number.isFinite(zLänge) || zLänge <= 0) return traufhöhe - 4
+
+			const yStart = traufhöhe + zusatzHöheMitte - 4
+			const yEnd = traufhöhe - 4
+			const zNormalized = (zStart - safeZ) / zLänge
+			return yStart + ((yEnd - yStart) * zNormalized)
+		}
+
+		return traufhöhe - 4
+	}, [dachArt, pultdachHöheDifferenz, traufhöhe, vorne, z, zHinten, zVorne, zusatzHöheMitte])
+
+	const persistPosition = useCallback((nextPos) => {
+		const safeX = toFinite(nextPos?.x, toFinite(gridPosiRef.current?.x, x))
+		const safeZ = toFinite(nextPos?.z, toFinite(gridPosiRef.current?.z, z))
+		const halfWidth = toFinite(openingArgs[0] / 2)
+		const halfHeight = toFinite(openingArgs[1] / 2)
+		const leftEdge = toFinite(xLinks + halfWidth)
+		const rightEdge = toFinite(xRechts - halfWidth)
+		const abstandLinksRaw = safeX - leftEdge
+		const abstandRechtsRaw = rightEdge - safeX
+		const centerY = toFinite(getRoofCenterYAtZ(safeZ), traufhöhe - 4)
+		const abstandUntenRaw = centerY - halfHeight - toFinite(y)
+		const fallbackLinks = toFinite(obj?.abstandLinks, 0)
+		const fallbackRechts = toFinite(obj?.abstandRechts, 0)
+		const fallbackUnten = toFinite(obj?.abstandUnten, 0)
+		const nextAbstandLinks = quantizeOpeningDistance(abstandLinksRaw)
+		const nextAbstandRechts = quantizeOpeningDistance(abstandRechtsRaw)
+		const nextAbstandUnten = quantizeOpeningDistance(abstandUntenRaw)
+		const distances = {
+			abstandLinks: Number.isFinite(nextAbstandLinks) ? nextAbstandLinks : fallbackLinks,
+			abstandRechts: Number.isFinite(nextAbstandRechts) ? nextAbstandRechts : fallbackRechts,
+			abstandUnten: Number.isFinite(nextAbstandUnten) ? nextAbstandUnten : fallbackUnten
+		}
+
+		dispatchOpeningPositionValues(objId, distances)
+		persistOpeningPosition({
+			objId,
+			setObjs,
+			setSelectedObject,
+			startPos: {
+				x: safeX,
+				z: safeZ
+			},
+			distances
 		})
-	}, [objId, setObjs, setSelectedObject])
+	}, [getRoofCenterYAtZ, obj?.abstandLinks, obj?.abstandRechts, obj?.abstandUnten, objId, openingArgs, setObjs, setSelectedObject, traufhöhe, x, xLinks, xRechts, y, z])
 
 	let rotation = 0
 	let finalX = gridPosi.x
@@ -172,10 +229,37 @@ export default function LichtKuppel({
 		const found = objs.find(o => o.id === objId)
 		if (found) {
 			window.activeArrowControl = { kind: 'dach-lichtkuppel', id: objId }
-			setSelectedObject(found)
+			const current = gridPosiRef.current
+			setSelectedObject({
+				...found,
+				startPos: {
+					...(found.startPos ?? {}),
+					x: current.x,
+					z: current.z
+				}
+			})
 			setEditMenü('Lichtkuppel-Bearbeiten')
 		}
 	}
+
+	useEffect(() => {
+		const hasAbstandLinks = obj?.abstandLinks !== undefined && obj?.abstandLinks !== null
+		const hasAbstandRechts = obj?.abstandRechts !== undefined && obj?.abstandRechts !== null
+
+		if (hasAbstandLinks && hasAbstandRechts) return
+
+		persistPosition(gridPosiRef.current)
+	}, [obj?.id, obj?.abstandLinks, obj?.abstandRechts, persistPosition])
+
+	useEffect(() => {
+		const handleRefreshPosition = (event) => {
+			if (event?.detail?.id !== objId) return
+			persistPosition(gridPosiRef.current)
+		}
+
+		window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+		return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
+	}, [objId, persistPosition])
 
 	useEffect(() => {
 		const handleKeyDown = (event) => {
@@ -238,30 +322,28 @@ export default function LichtKuppel({
 		return () => window.removeEventListener('keydown', handleKeyDown)
 		}, [objId, minX, maxX, minZ, maxZ, vorne, persistPosition])
 
-	const bind = useDrag(({ movement: [moveX, moveY], first, last, memo }) => {
+	const bind = useDrag(({ delta: [moveX, moveY], first, last }) => {
 		const scale = 400 / size.width
-
-		if (first) {
-			memo = { startX: gridPosi.x, startZ: gridPosi.z }
-		}
+		const zScale = 120 / size.height
+		const current = gridPosiRef.current
 
 		let newX = vorne
-			? memo.startX + (moveX * scale)
-			: memo.startX - (moveX * scale)
+			? current.x + (moveX * scale)
+			: current.x - (moveX * scale)
 		newX = snapOpeningCoordinate(newX, minX, minX, maxX)
 
-		let newZ = memo.startZ
-		const zScale = 10 / size.width
+		let newZ = current.z
 
 		if (vorne) {
-			newZ = memo.startZ + (moveY * zScale)
+			newZ = current.z + (moveY * zScale)
 		} else {
-			newZ = memo.startZ - (moveY * zScale)
+			newZ = current.z - (moveY * zScale)
 		}
 
 		newZ = snapOpeningCoordinate(newZ, minZ, minZ, maxZ)
 
 		const nextPos = { x: newX, z: newZ }
+		gridPosiRef.current = nextPos
 		setGridPosi(nextPos)
 
 		if (first) {
@@ -269,14 +351,13 @@ export default function LichtKuppel({
 			setIsActive(true)
 			setOrbitKontrolle(false)
 			camera.position.set(0, 125, vorne ? 40 : -40)
+			camera.lookAt(x, traufhöhe, z)
 		}
 
 		if (last) {
 			persistPosition(nextPos)
 			setOrbitKontrolle(true)
 		}
-
-		return memo
 	})
 
 	const borderColor = isHovered ? '#5aa7ff' : '#000000'

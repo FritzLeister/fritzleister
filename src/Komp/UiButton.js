@@ -4,7 +4,7 @@ export default function UiButton({ name, icon, onClick, isActive }) {
 
     const getBackgroundColor = () => {
         if (name === 'Angebot') {
-            return isActive ? 'rgba(173, 216, 230, 0.7)' : 'lightblue';
+            return isActive ? 'rgba(247, 241, 182, 0.8)' : 'rgba(252, 238, 79, 0.8)';
         }
         return isActive ? 'rgba(200, 200, 200, 0.3)' : undefined;
     };

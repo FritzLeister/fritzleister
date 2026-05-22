@@ -9,6 +9,11 @@ function formatSceneDistance(value) {
     return `${(Number(value || 0) / METER_EINHEIT).toFixed(2)} m`
 }
 
+function isSameId(left, right) {
+    if (left === undefined || left === null || right === undefined || right === null) return false
+    return String(left) === String(right)
+}
+
 function buildDisplayValues(selectedObject, fields) {
     return fields.reduce((accumulator, field) => {
         accumulator[field.key] = Number(selectedObject?.[field.key] ?? 0)
@@ -27,13 +32,14 @@ export function useOpeningPositionDisplay(selectedObject, fields) {
 
     useEffect(() => {
         const handlePositionValues = (event) => {
-            if (event?.detail?.id !== selectedObject?.id) return
+            if (!isSameId(event?.detail?.id, selectedObject?.id)) return
 
             setDisplayValues((prevValues) => {
                 const nextValues = { ...prevValues }
 
                 for (const field of fields) {
-                    nextValues[field.key] = Number(event.detail[field.key] ?? 0)
+                    const incoming = Number(event.detail[field.key])
+                    nextValues[field.key] = Number.isFinite(incoming) ? incoming : Number(prevValues[field.key] ?? 0)
                 }
 
                 return nextValues
