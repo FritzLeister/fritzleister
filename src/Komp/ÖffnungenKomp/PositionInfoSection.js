@@ -28,7 +28,7 @@ export function useOpeningPositionDisplay(selectedObject, fields) {
 
     useEffect(() => {
         setDisplayValues(buildDisplayValues(selectedObject, fields))
-    }, [fieldKeysSignature, selectedObject?.id, selectedObjectFieldSnapshot])
+    }, [fieldKeysSignature, fields, selectedObject, selectedObject?.id, selectedObjectFieldSnapshot])
 
     useEffect(() => {
         const handlePositionValues = (event) => {
@@ -48,7 +48,7 @@ export function useOpeningPositionDisplay(selectedObject, fields) {
 
         window.addEventListener(OPENING_POSITION_VALUES_EVENT, handlePositionValues)
         return () => window.removeEventListener(OPENING_POSITION_VALUES_EVENT, handlePositionValues)
-    }, [fieldKeysSignature, selectedObject?.id])
+    }, [fieldKeysSignature, fields, selectedObject?.id])
 
     const handleRefreshPosition = () => {
         if (!selectedObject?.id) return

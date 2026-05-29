@@ -35,7 +35,7 @@ export default function LichtKuppel({
 	}
 
 	const obj = objs.find(o => o.id === objId)
-	const openingArgs = obj ? [obj.value[0], obj.value[1]] : [1, 1]
+	const openingArgs = useMemo(() => (obj ? [obj.value[0], obj.value[1]] : [1, 1]), [obj])
 
 	const x = position[0]
 	const y = position[1]

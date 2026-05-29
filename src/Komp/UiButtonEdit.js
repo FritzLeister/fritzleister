@@ -475,7 +475,7 @@ export default function UiButtonEdit({
                                 <MuiSelect
                                 option1={'Einfarbig'}
                                 value1={'einfarbig'}
-                                option2={'Musterfarbe'}
+                                option2={'Musterfsrbe'}
                                 value2={'musterfarbe'}
                                 option3={'Musterfarbe bei'}
                                 value3={'musterfarbe-bei'}

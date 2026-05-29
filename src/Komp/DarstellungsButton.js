@@ -2,6 +2,8 @@
 
 export default function DarstellungsButton({ label, state, setState, onClick }) {
 
+    const tooltip = `${label}: ${state ? 'sichtbar' : 'ausgeblendet'} (klicken zum Umschalten)`
+
     return(
         <>
             <div 
@@ -23,6 +25,7 @@ export default function DarstellungsButton({ label, state, setState, onClick }) 
                     transition: 'all 0.3s ease',
 
                 }}
+                title={tooltip}
                 onClick={() => {
                     if (setState) {
                         setState(prev => !prev)

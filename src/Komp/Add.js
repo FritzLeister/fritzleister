@@ -20,6 +20,7 @@ import RollTorBearbeiten from './ÖffnungenKomp/RollTorBearbeiten'
 import TransparentesPaneelBearbeiten from './ÖffnungenKomp/TransparentesPaneelBearbeiten'
 import LaderampeBearbeiten from './ÖffnungenKomp/LaderampeBearbeiten'
 import LichtKuppelBearbeiten from './ÖffnungenKomp/LichtKuppelBearbeiten'
+import PhotovoltaikBearbeiten from './ÖffnungenKomp/PhotovoltaikBearbeiten'
 
 export default function Add({ 
     addObj, 
@@ -512,6 +513,7 @@ export default function Add({
         {editMenü === 'TransparentesPaneel-Bearbeiten' && selectedObject?.type === 'transparentespaneel' && <TransparentesPaneelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
         {editMenü === 'Laderampe-Bearbeiten' && selectedObject?.type === 'laderampe' && <LaderampeBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
         {editMenü === 'Lichtkuppel-Bearbeiten' && selectedObject?.type === 'kleinlichtskuppel' && <LichtKuppelBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeBreite={breite} gebäudeLänge={länge} />}
+        {editMenü === 'Photovoltaik-Bearbeiten' && selectedObject && <PhotovoltaikBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
 
         {/* Zubehör aktuell nicht nötig deswegen auskommentiert */}
         {/*

@@ -1,5 +1,7 @@
 import DarstellungsButton from "./DarstellungsButton";
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
+
+const TUTORIAL_UI_HIGHLIGHT_EVENT = 'tutorial-ui-highlight'
 
 export default function DarstellungUI({ 
     editMenü, 
@@ -45,6 +47,35 @@ export default function DarstellungUI({
     kreuzverbändeAnzeigen,
     setKreuzverbändeAnzeigen
 }) {
+    const [isHighlighted, setIsHighlighted] = useState(false)
+    const highlightTimeoutRef = useRef(null)
+
+    useEffect(() => {
+        const handleTutorialUiHighlight = (event) => {
+            if (event?.detail?.area !== 'darstellung') return
+
+            setIsHighlighted(true)
+
+            if (highlightTimeoutRef.current) {
+                clearTimeout(highlightTimeoutRef.current)
+            }
+
+            highlightTimeoutRef.current = setTimeout(() => {
+                setIsHighlighted(false)
+                highlightTimeoutRef.current = null
+            }, 850)
+        }
+
+        window.addEventListener(TUTORIAL_UI_HIGHLIGHT_EVENT, handleTutorialUiHighlight)
+
+        return () => {
+            window.removeEventListener(TUTORIAL_UI_HIGHLIGHT_EVENT, handleTutorialUiHighlight)
+            if (highlightTimeoutRef.current) {
+                clearTimeout(highlightTimeoutRef.current)
+                highlightTimeoutRef.current = null
+            }
+        }
+    }, [])
 
     // Bestimme welche Buttons angezeigt werden basierend auf editMenü - mit useMemo
     const showButton = useMemo(() => {
@@ -58,14 +89,13 @@ export default function DarstellungUI({
             'Öffnungen-Wand-Fenster': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Zubehör': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Kantteile', 'Zubehör', 'Bodenplatte', 'Volumen', 'Straßen', 'Strukturelle Komponenten', 'Dekorationen'],
             'LeerÖffnung-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
-            'Fenster-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Tür-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'SektionalTor-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Schiebetür-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
-            'Rolltor-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'TransparentesPaneel-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Laderampe-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Lichtkuppel-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
+            'Photovoltaik-Bearbeiten': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Sekundärstruktur', 'Bodenplatte'],
             'Konstruktion': ['Abmessungen', 'Öffnungen', 'Rahmen', 'Kreuzverbände', 'Pfetten', 'Wandriegel', 'Bodenplatte'],
             'Angebot': ['Abmessungen', 'Platten', 'Massivwände', 'Öffnungen', 'Rahmen', 'Pfetten', 'Wandriegel', 'Kantteile', 'Zubehör', 'Bodenplatte', 'Volumen', 'Straßen', 'Strukturelle Komponenten', 'Dekorationen'],
         };
@@ -108,11 +138,11 @@ export default function DarstellungUI({
             top: 120, 
             right: 20,
             position: "fixed",
-            background: "rgba(255, 255, 255, 0.15)", // halbtransparent
+            background: isHighlighted ? "rgba(255, 208, 90, 0.72)" : "rgba(255, 255, 255, 0.15)", // halbtransparent
             backdropFilter: "blur(10px)",             // Blur-Effekt
             WebkitBackdropFilter: "blur(10px)",       // Safari-Support
             padding: 18,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
+            boxShadow: isHighlighted ? "0 10px 28px rgba(235, 148, 0, 0.5)" : "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
             color: "#000000ff",                            // besserer Kontrast
             width: 310,
             maxHeight: '80vh',
@@ -124,6 +154,7 @@ export default function DarstellungUI({
             flexDirection: 'column',
             alignItems: 'center',
             gap: '5px',
+            transition: 'background-color 0.35s ease, box-shadow 0.35s ease'
         }}>
 
             {/* Darstellung */}

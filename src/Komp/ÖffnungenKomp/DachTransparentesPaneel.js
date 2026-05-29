@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
@@ -30,7 +30,7 @@ export default function DachTransparentesPaneel({
     }
 
     const obj = objs.find(o => o.id === objId)
-    const openingArgs = obj ? [obj.value[0], obj.value[1]] : [3, 3]
+    const openingArgs = useMemo(() => (obj ? [obj.value[0], obj.value[1]] : [3, 3]), [obj])
 
     const x = position[0]
     const y = position[1]

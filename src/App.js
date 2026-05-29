@@ -4,11 +4,12 @@ import { BackSide } from 'three'
 import "./styles.css"
 import Halle from './Halle'
 import SliderMui from "./Komp/SliderMui"
-import { useMemo, useState, memo } from 'react'
+import { useMemo, useState, memo, useRef } from 'react'
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
 import DarstellungUI from './Komp/DarstellungUI'
+import FirstRunTutorial from './Komp/FirstRunTutorial'
 import { registerProductSnapshotCapture } from './utils/productSnapshotRegistry'
 import { useProductSnapshots } from './hooks/useProductSnapshots'
 
@@ -24,6 +25,7 @@ function createSeededRandom(seed) {
 }
 
 const DEFAULT_CAMERA_POSITION = [0, 30, 50]
+const TUTORIAL_UI_HIGHLIGHT_EVENT = 'tutorial-ui-highlight'
 const CLOUD_LAYER_COUNT = 0.25
 const CLOUD_SEGMENTS = 6
 const CLOUD_HEIGHT_MULTIPLIER = 2
@@ -283,6 +285,8 @@ export default function App({
     const [anschleppungenAnzeigen, setAnschleppungenAnzeigen] = useState(true);
     const [sekundärstrukturAnzeigen, setSekundärstrukturAnzeigen] = useState(true); // idk 
     const [kreuzverbändeAnzeigen, setKreuzverbändeAnzeigen] = useState(true); // idk
+    const [topActionsHighlight, setTopActionsHighlight] = useState(false)
+    const topActionsHighlightTimeoutRef = useRef(null)
 
     // State für die geklickte Button-Position
     const [clickedButtonPos, setClickedButtonPos] = useState(null);
@@ -452,17 +456,44 @@ export default function App({
     const effektiveMassivwändeAnzeigen = konstruktionFokusAktiv ? false : massivwändeAnzeigen
     const effektiveKantteileAnzeigen = konstruktionFokusAktiv ? false : kantteileAnzeigen
 
+    useEffect(() => {
+        const handleTutorialUiHighlight = (event) => {
+            if (event?.detail?.area !== 'top-actions') return
+
+            setTopActionsHighlight(true)
+
+            if (topActionsHighlightTimeoutRef.current) {
+                clearTimeout(topActionsHighlightTimeoutRef.current)
+            }
+
+            topActionsHighlightTimeoutRef.current = setTimeout(() => {
+                setTopActionsHighlight(false)
+                topActionsHighlightTimeoutRef.current = null
+            }, 850)
+        }
+
+        window.addEventListener(TUTORIAL_UI_HIGHLIGHT_EVENT, handleTutorialUiHighlight)
+
+        return () => {
+            window.removeEventListener(TUTORIAL_UI_HIGHLIGHT_EVENT, handleTutorialUiHighlight)
+            if (topActionsHighlightTimeoutRef.current) {
+                clearTimeout(topActionsHighlightTimeoutRef.current)
+                topActionsHighlightTimeoutRef.current = null
+            }
+        }
+    }, [])
+
     return(
         <>
         <div style={{
             top: 20, 
             right: 20,
             position: "fixed",
-            background: "rgba(255, 255, 255, 0.15)", // halbtransparent
+            background: topActionsHighlight ? "rgba(255, 208, 90, 0.72)" : "rgba(255, 255, 255, 0.15)", // halbtransparent
             backdropFilter: "blur(10px)",             // Blur-Effekt
             WebkitBackdropFilter: "blur(10px)",       // Safari-Support
             padding: 18,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
+            boxShadow: topActionsHighlight ? "0 10px 28px rgba(235, 148, 0, 0.5)" : "0 4px 12px rgba(0,0,0,0.15)", // etwas stärkerer Schatten
             color: "#000000ff",                            // besserer Kontrast
             width: 480,
             height: 90,
@@ -470,7 +501,8 @@ export default function App({
             zIndex: 999,
             borderRadius: 12,
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            transition: 'background-color 0.35s ease, box-shadow 0.35s ease'
         }}>
             <div 
             style={{
@@ -492,6 +524,7 @@ export default function App({
                 setObjs([])
                 setShowApp()
             }}
+            title="Zur Startseite wechseln. Die aktuelle Konfiguration wird verlassen."
             onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
                 e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
@@ -523,6 +556,7 @@ export default function App({
                 setShowApp2()
                 setObjs([])
             }}
+            title="Konfiguration zurücksetzen und neu starten."
             onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
                 e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
@@ -558,6 +592,7 @@ export default function App({
                     setShowApp3();
                 }, 100);
             }}
+            title="Aktuelle Halle speichern und zur Übersicht wechseln."
             onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
                 e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
@@ -871,6 +906,8 @@ export default function App({
             kreuzverbändeAnzeigen={kreuzverbändeAnzeigen}
             setKreuzverbändeAnzeigen={setKreuzverbändeAnzeigen}
         />
+
+        <FirstRunTutorial setEditMenü={setEditMenü} editMenü={editMenü} />
         
 
         </>

@@ -140,6 +140,12 @@ export default function ÖffnungUi({
     const [kleinLichtkuppelDistanzY] = useState(0)
     const [kleinLichtkuppelFarbe, setKleinLichtkuppelFarbe] = useState('Weiß')
 
+    // Photovoltaik-UI State
+    const [photovoltaikBreite, setPhotovoltaikBreite] = useState(3)
+    const [photovoltaikHöhe, setPhotovoltaikHöhe] = useState(3)
+    const [photovoltaikPosSegment] = useState('mittig')
+    const [photovoltaikRahmenFarbe, setPhotovoltaikRahmenFarbe] = useState('Weiß')
+
     const [wandBilder] = useState([
         '/Öffnungen/Fenster.png',
         '/Öffnungen/Leeröffnung.png',
@@ -147,20 +153,22 @@ export default function ÖffnungUi({
         '/Öffnungen/SektionalTor.png',
         '/Öffnungen/SchiebeTor.png',
         '/Öffnungen/RollTor.png',
-        '/Öffnungen/TransparentesPaneel.png',
-        '/Öffnungen/Laderampe.png'
+        '/Öffnungen/TransparentesPaneel.png',        '/Öffnungen/Laderampe.png',
+
     ])
 
     const [dachBilder] = useState([
         '/Öffnungen/Leeröffnung.png',
         '/Öffnungen/TransparentesPaneel.png',
-        '/Öffnungen/KleinLichtkuppel.png'
+        '/Öffnungen/KleinLichtkuppel.png',
+        '/Öffnungen/TransparentesPaneel.png'
     ])
 
     const [dachTitel] = useState([
         'Hinzufügen Leeröffnung',
         'Hinzufügen Transparentes Paneel',
-        'Hinzufügen Klein Lichtkuppel'
+        'Hinzufügen Klein Lichtkuppel',
+        'Hinzufügen Photovoltaik'
     ])
 
     const [bildTitel] = useState([
@@ -261,7 +269,7 @@ export default function ÖffnungUi({
                                 marginRight: "6px",
                                 marginLeft: '6px'
                             }}>
-                                {[...Array(wand ? 8 : 3)].map((_, index) => (
+                                {[...Array(wand ? 8 : 4)].map((_, index) => (
                                     <div 
                                         key={index}
                                         style={{
@@ -287,6 +295,7 @@ export default function ÖffnungUi({
                                             else if (!wand && index === 0) setSelectedType('leeröffnung')
                                             else if (!wand && index === 1) setSelectedType('transparentespaneel')
                                             else if (!wand && index === 2) setSelectedType('kleinlichtskuppel')
+                                            else if (!wand && index === 3) setSelectedType('photovoltaik')
                                         }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.3)'
@@ -297,7 +306,38 @@ export default function ÖffnungUi({
                                             e.currentTarget.style.transform = 'scale(1)'
                                         }}
                                     >
-                                        {wandBilder[index] ? (
+                                        {!wand && index === 3 ? (
+                                            // Photovoltaik Button
+                                            <div style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexDirection: 'column',
+                                                gap: '8px',
+                                                padding: '10px',
+                                                boxSizing: 'border-box'
+                                            }}>
+                                                <div style={{
+                                                    width: '40px',
+                                                    height: '40px',
+                                                    backgroundColor: '#000000',
+                                                    borderRadius: '4px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    <span style={{
+                                                        fontSize: '20px',
+                                                        color: 'white'
+                                                    }}>⚡</span>
+                                                </div>
+                                                <span className='text' style={{ fontSize: 11, fontWeight: 500, textAlign: 'center' }}>
+                                                    Photovoltaik
+                                                </span>
+                                            </div>
+                                        ) : (wand ? wandBilder[index] : dachBilder[index]) ? (
                                             <img 
                                                 src={wand ? wandBilder[index] : dachBilder[index]} 
                                                 alt={`Bild ${index + 1}`}
@@ -2952,6 +2992,159 @@ export default function ÖffnungUi({
                                                 horizontaleAusrichtung: kleinLichtkuppelHorizontaleAusrichtung,
                                                 distanzY: kleinLichtkuppelDistanzY,
                                                 farbe: kleinLichtkuppelFarbe
+                                            }
+                                        )
+                                        setNewId(newId + 1)
+                                        setSelectedType('')
+                                        setEditMenü('Felder')
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid rgba(0,0,0,0.2)',
+                                        backgroundColor: 'rgba(100, 180, 100, 0.5)',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(80, 160, 80, 0.7)'}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(100, 180, 100, 0.5)'}
+                                >
+                                    Hinzufügen
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                ) : null}
+
+                {/* Photovoltaik Form */}
+                {selectedType === 'photovoltaik' ? (
+                    // Photovoltaik
+                    <>
+                        <div style={{
+                            margin: "8px",
+                            paddingBottom: "4px",
+                            borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
+                        }}>
+                            <p className='text' style={{ fontSize: 17 }}>
+                                Photovoltaik
+                            </p>
+                        </div>
+
+                        <div style={{ margin: '10px', marginTop: '8px' }}>
+                            <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "10px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "10px"
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Breite</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxTransparentesPaneelBreite}</span>
+                                </div>
+                                <MuiNumberfield 
+                                    label={'m'} 
+                                    min={0.2} 
+                                    max={maxTransparentesPaneelBreite} 
+                                    step={0.01}
+                                    state={photovoltaikBreite} 
+                                    setState={setPhotovoltaikBreite} 
+                                />
+                            </div>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "14px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "10px"
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className='text' style={{ fontWeight: 200}}>Höhe</span>
+                                    <span className='text' style={{ fontSize: 12}}>0.2-{maxTransparentesPaneelHöhe}</span>
+                                </div>
+                                <MuiNumberfield 
+                                    label={'m'} 
+                                    min={0.2} 
+                                    max={maxTransparentesPaneelHöhe} 
+                                    step={0.01}
+                                    state={photovoltaikHöhe} 
+                                    setState={setPhotovoltaikHöhe} 
+                                />
+                            </div>
+
+                            <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Farben:</p>
+
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                alignItems: 'center', 
+                                marginBottom: "14px", 
+                                justifyContent: 'space-between', 
+                                marginRight: "10px",
+                            }}>
+                                <span className='text' style={{ fontWeight: 200 }}>Rahmenfarbe</span>
+                                <MuiSelect
+                                    option1={'Schwarz'}
+                                    value1={'Schwarz'}
+                                    option2={'Grau'}
+                                    value2={'Grau'}
+                                    option3={'Weiß'}
+                                    value3={'Weiß'}
+                                    label={'Rahmenfarbe'}
+                                    state={photovoltaikRahmenFarbe}
+                                    setState={setPhotovoltaikRahmenFarbe}
+                                />
+                            </div>
+
+                            {/* Buttons */}
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '10px', 
+                                justifyContent: 'space-between',
+                                marginTop: '12px'
+                            }}>
+                                <button 
+                                    onClick={() => setSelectedType('')}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid rgba(0,0,0,0.2)',
+                                        backgroundColor: 'rgba(200, 200, 200, 0.3)',
+                                        color: 'black',
+                                        cursor: 'pointer',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(150, 150, 150, 0.4)'}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(200, 200, 200, 0.3)'}
+                                >
+                                    Zurück
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        addObj(
+                                            [photovoltaikBreite, photovoltaikHöhe],
+                                            'photovoltaik',
+                                            newId,
+                                            rechts,
+                                            clickedButtonPos,
+                                            lang,
+                                            {
+                                                posSegment: photovoltaikPosSegment,
+                                                vorne: clickedButtonPos?.vorne ?? true,
+                                                bereich: wand ? 'wand' : 'dach',
+                                                rahmenFarbe: photovoltaikRahmenFarbe
                                             }
                                         )
                                         setNewId(newId + 1)

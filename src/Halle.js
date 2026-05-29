@@ -17,6 +17,7 @@ import SchiebeTür from "./Komp/ÖffnungenKomp/SchiebeTür"
 import RollTor from "./Komp/ÖffnungenKomp/RollTor"
 import TransparentesPaneel from "./Komp/ÖffnungenKomp/TransparentesPaneel"
 import DachTransparentesPaneel from "./Komp/ÖffnungenKomp/DachTransparentesPaneel"
+import DachPhotovoltaik from "./Komp/ÖffnungenKomp/DachPhotovoltaik"
 import Laderampe from "./Komp/ÖffnungenKomp/Laderampe"
 import LichtKuppel from "./Komp/ÖffnungenKomp/LichtKuppel"
 
@@ -85,7 +86,8 @@ export default memo(function Halle({
         transparentePaneeleWand,
         transparentePaneeleDach,
         dachLeeröffnungen,
-        lichtkuppeln
+        lichtkuppeln,
+        photovoltaikPaneeleDach
     } = useMemo(() => {
         const next = {
             türObjs: [],
@@ -98,7 +100,8 @@ export default memo(function Halle({
             transparentePaneeleWand: [],
             transparentePaneeleDach: [],
             dachLeeröffnungen: [],
-            lichtkuppeln: []
+            lichtkuppeln: [],
+            photovoltaikPaneeleDach: []
         }
 
         for (const obj of objs ?? []) {
@@ -127,6 +130,12 @@ export default memo(function Halle({
 
                 if (obj.bereich === 'wand' || (obj.bereich === undefined && (obj.lang === true || obj.lang === undefined))) {
                     next.transparentePaneeleWand.push(obj)
+                }
+            }
+
+            if (obj.type === "photovoltaik") {
+                if (obj.bereich === 'dach' || (obj.bereich === undefined && obj.lang === false)) {
+                    next.photovoltaikPaneeleDach.push(obj)
                 }
             }
         }
@@ -484,6 +493,28 @@ export default memo(function Halle({
 
         {lichtkuppeln.map(obj => (
             <LichtKuppel
+                key={obj.id}
+                gebäudeHöhe={gebäudeHöhe}
+                position={koordinate}
+                bodenBreite={bodenBreite}
+                bodenLänge={bodenLänge}
+                setSelectedObject={setSelectedObject}
+                setOrbitKontrolle={setOrbitKontrolle}
+                setObjs={setObjs}
+                objId={obj.id}
+                objs={objs}
+                setEditMenü={setEditMenü}
+                oberflächenAnzeigen={oberflächenAnzeigen}
+                kantenAnzeigen={kantenAnzeigen}
+                dachArt={effektiveDachArt}
+                pultdachHöheDifferenz={pultdachHöheDifferenz}
+                zusatzHöheMitte={effektiveDiffTraufFirst}
+                vorne={obj.vorne ?? true}
+            />
+        ))}
+
+        {photovoltaikPaneeleDach.map(obj => (
+            <DachPhotovoltaik
                 key={obj.id}
                 gebäudeHöhe={gebäudeHöhe}
                 position={koordinate}

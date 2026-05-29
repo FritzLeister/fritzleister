@@ -2,10 +2,12 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-import App from "./App";
 import AbfragePage from "./AbfragePage";
+import DesktopApplication from "./DesktopApplication";
+import DeviceGate from "./DeviceGate";
 import LandingPage from "./LandingPage";
 import LoadingPage from "./LoadingPage";
+import MobileBlockScreen from "./MobileBlockScreen";
 import SavePage from "./SavePage";
 import SavedHallen from "./SavedHallen";
 
@@ -116,7 +118,8 @@ function AppPageFunc({
 
   return (
     <>
-      {loading ? <LoadingPage /> : <App 
+      {loading ? <LoadingPage /> : <DeviceGate fallback={<MobileBlockScreen />}>
+      <DesktopApplication 
         setShowApp={() => setShowApp("landing")} 
         setShowApp2={() => setShowApp("custom")} 
         setShowApp3={() => setShowApp("preis")}
@@ -137,7 +140,8 @@ function AppPageFunc({
         setObjs={setObjs}
         editMenü={editMenü}
         setEditMenü={setEditMenü}
-      />}
+      />
+      </DeviceGate>}
     </>
   )
 }

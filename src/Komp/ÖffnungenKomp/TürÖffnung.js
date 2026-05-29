@@ -115,7 +115,7 @@ export default function TürÖffnung({
             startPos: nextPos,
             distances
         })
-    }, [halbeTürBreite, lang, objId, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
+    }, [halbeTürBreite, lang, objId, quantizeDistance, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
 
     useEffect(() => {
         const handleRefreshPosition = (event) => {
