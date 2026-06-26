@@ -1,12 +1,5 @@
-import { Suspense, lazy } from 'react'
-import LoadingPage from './LoadingPage'
-
-const App = lazy(() => import('./App'))
+import App from './App'
 
 export default function DesktopApplication(props) {
-    return (
-        <Suspense fallback={<LoadingPage />}>
-            <App {...props} />
-        </Suspense>
-    )
+    return <App {...props} />
 }

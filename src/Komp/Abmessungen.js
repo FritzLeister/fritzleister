@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import MaßLinie from "./Maßlinie"
 import AbmessungenHöhe from "./AbmessungenHöhe"
 
-export default function Abmessungen({ bodenLänge, bodenBreite, gebäudeHöhe, koordinate, abstand = 1, editMenü, dachArt, pultdachHöheDifferenz = 0 }) {
+export default function Abmessungen({ bodenLänge, bodenBreite, gebäudeHöhe, koordinate, abstand = 1, editMenü, dachArt, pultdachHöheDifferenz = 0, zusatzHöheMitte = 0 }) {
     const längeInMeter = useMemo(() => Math.round(bodenLänge/2.5), [bodenLänge])
     const breiteInMeter = useMemo(() => Math.round(bodenBreite/2.5), [bodenBreite])
     
@@ -235,6 +235,7 @@ export default function Abmessungen({ bodenLänge, bodenBreite, gebäudeHöhe, k
             editMenü={editMenü}
             dachArt={dachArt}
             pultdachHöheDifferenz={pultdachHöheDifferenz}
+            zusatzHöheMitte={zusatzHöheMitte}
         />
         </>
     )

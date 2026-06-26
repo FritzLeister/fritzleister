@@ -33,10 +33,10 @@ export default function MobileBlockScreen() {
                     Desktop empfohlen
                 </p>
                 <p className="text" style={{ fontSize: 16, fontWeight: 400, marginBottom: 10 }}>
-                    Der Hallenkonfigurator ist fuer groessere Bildschirme optimiert.
+                    Der Hallenkonfigurator ist für größere Bildschirme optimiert.
                 </p>
                 <p className="text" style={{ fontSize: 15, fontWeight: 400, opacity: 0.8 }}>
-                    Bitte oeffne ihn auf einem Laptop oder Desktop mit mindestens 768px Breite.
+                    Bitte öffne ihn auf einem Laptop oder Desktop mit mindestens 768px Breite.
                 </p>
             </div>
         </div>

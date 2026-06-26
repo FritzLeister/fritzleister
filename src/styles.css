@@ -141,3 +141,56 @@ h4 {
  box-shadow: none;
  transform: translateY(0);
 }
+
+.landingPage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  padding: 24px 18px;
+  text-align: center;
+}
+
+.landingLogo {
+  width: clamp(120px, 22vw, 200px);
+  margin-bottom: 18px;
+}
+
+.landingTitle {
+  font-size: clamp(34px, 8vw, 70px);
+  margin-bottom: clamp(24px, 6vw, 40px);
+}
+
+.landingActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landingButton {
+  min-width: 180px;
+}
+
+@media (max-width: 767px) {
+  .landingPage {
+    justify-content: center;
+    padding-top: 24px;
+  }
+
+  .landingActions {
+    width: min(420px, 100%);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .landingButton {
+    width: 100%;
+    min-width: 0;
+    padding: 18px 20px;
+    font-size: 18px;
+    margin: 0;
+  }
+}

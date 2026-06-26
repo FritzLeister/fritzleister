@@ -6,10 +6,11 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
 import AppsIcon from '@mui/icons-material/Apps';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import UiButton from './UiButton';
 import UiButtonEdit from './UiButtonEdit';
+import OpeningMovementHint from './OpeningMovementHint';
 import ÖffnungenUi from './ÖffnungenKomp/ÖffnungUi'
 import LeerÖffnungBearbeiten from './ÖffnungenKomp/LeerÖffnungBearbeiten'
 import WandFensterBearbeiten from './ÖffnungenKomp/WandFensterBearbeiten'
@@ -128,6 +129,31 @@ export default function Add({
 }) {
     
   const [newId, setNewId] = useState(1);
+  const hasSeenFirstOpeningHint = useRef(false);
+  const [showOpeningHint, setShowOpeningHint] = useState(false);
+
+  // Zeige Hint beim ersten Mal, wenn ein Öffnungs-Edit-Menü geöffnet wird
+  useEffect(() => {
+    const openingEditMenus = new Set([
+      'LeerÖffnung-Bearbeiten',
+      'Fenster-Bearbeiten',
+      'Tür-Bearbeiten',
+      'SektionalTor-Bearbeiten',
+      'Schiebetür-Bearbeiten',
+      'Rolltor-Bearbeiten',
+      'TransparentesPaneel-Bearbeiten',
+      'Laderampe-Bearbeiten',
+      'Lichtkuppel-Bearbeiten',
+      'Photovoltaik-Bearbeiten'
+    ])
+
+    if (!hasSeenFirstOpeningHint.current && openingEditMenus.has(editMenü)) {
+      hasSeenFirstOpeningHint.current = true;
+      setShowOpeningHint(true);
+    } else if (!openingEditMenus.has(editMenü)) {
+      setShowOpeningHint(false);
+    }
+  }, [editMenü]);
 
   /*
   return (
@@ -780,6 +806,8 @@ export default function Add({
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
+
+        <OpeningMovementHint editMenü={editMenü} isFirstOpening={showOpeningHint} />
     </>
   )
 }

@@ -161,7 +161,7 @@ export default function ÖffnungUi({
         '/Öffnungen/Leeröffnung.png',
         '/Öffnungen/TransparentesPaneel.png',
         '/Öffnungen/KleinLichtkuppel.png',
-        '/Öffnungen/TransparentesPaneel.png'
+        '/Öffnungen/Photovoltaik.png'
     ])
 
     const [dachTitel] = useState([
@@ -306,38 +306,7 @@ export default function ÖffnungUi({
                                             e.currentTarget.style.transform = 'scale(1)'
                                         }}
                                     >
-                                        {!wand && index === 3 ? (
-                                            // Photovoltaik Button
-                                            <div style={{
-                                                width: '100%',
-                                                height: '100%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexDirection: 'column',
-                                                gap: '8px',
-                                                padding: '10px',
-                                                boxSizing: 'border-box'
-                                            }}>
-                                                <div style={{
-                                                    width: '40px',
-                                                    height: '40px',
-                                                    backgroundColor: '#000000',
-                                                    borderRadius: '4px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}>
-                                                    <span style={{
-                                                        fontSize: '20px',
-                                                        color: 'white'
-                                                    }}>⚡</span>
-                                                </div>
-                                                <span className='text' style={{ fontSize: 11, fontWeight: 500, textAlign: 'center' }}>
-                                                    Photovoltaik
-                                                </span>
-                                            </div>
-                                        ) : (wand ? wandBilder[index] : dachBilder[index]) ? (
+                                        {(wand ? wandBilder[index] : dachBilder[index]) ? (
                                             <img 
                                                 src={wand ? wandBilder[index] : dachBilder[index]} 
                                                 alt={`Bild ${index + 1}`}

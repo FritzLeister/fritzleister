@@ -544,9 +544,15 @@ export default memo(function Wand({
             let plattenYPosition
 
             if (dachArt === 'pultdach') {
-                const factor = plattenBreiten.length <= 1 ? 0 : streifenIndex / (plattenBreiten.length - 1)
-                const höheOben = (traufhöhe + 0.85) + (pultdachHöheDifferenz * factor)
-                plattenHöhe = höheOben + 0.22 - sockelHöhe
+                // Verwende die reale Z-Position des Segments, damit Wandoberkante und Dachlinie exakt zusammenpassen.
+                const zStart = zHinten - 1
+                const zEnd = zVorne + 1
+                const zLänge = Math.max(Math.abs(zEnd - zStart), 0.0001)
+                const factor = (streifenMitteZ - zStart) / zLänge
+                const clampedFactor = Math.min(1, Math.max(0, factor))
+                const höheOben = (traufhöhe + 0.85) + (pultdachHöheDifferenz * clampedFactor)
+                // Kleiner Überstand verhindert sichtbare Spalten zwischen kurzer Wand und Pultdach.
+                plattenHöhe = höheOben + 0.35 - sockelHöhe
                 plattenYPosition = sockelHöhe + (plattenHöhe / 2)
             } else {
                 const zMitte = z

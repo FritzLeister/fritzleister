@@ -7,24 +7,16 @@ export default function LandingPage({
 
     return(
         <>
-            <div
-                style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                }}
-            >
-                <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 20 }} />
+            <div className="landingPage">
+                <img src="/LogoPerthel.png" alt="Logo" className="landingLogo" />
                 
-                <h1>Hallenkonfigurator</h1>
+                <h1 className="landingTitle">Hallenkonfigurator</h1>
                 
-                <div>
-                    <button className="button" onClick={() => setShowApp("saved")}>
+                <div className="landingActions">
+                    <button className="button landingButton" onClick={() => setShowApp("saved")}>
                         Gespeichert
                     </button>
-                    <button className="button" onClick={() => setShowApp("app")}>
+                    <button className="button landingButton" onClick={() => setShowApp("app")}>
                         Los Geht´s!
                     </button>
                 </div>

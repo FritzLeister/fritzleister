@@ -146,8 +146,23 @@ export default function FirstRunTutorial({ setEditMenü, editMenü }) {
         'Lichtkuppel-Bearbeiten',
         'Photovoltaik-Bearbeiten'
     ])
+    const openingEditMenus = new Set([
+        'LeerÖffnung-Bearbeiten',
+        'Fenster-Bearbeiten',
+        'Tür-Bearbeiten',
+        'SektionalTor-Bearbeiten',
+        'Schiebetür-Bearbeiten',
+        'Rolltor-Bearbeiten',
+        'TransparentesPaneel-Bearbeiten',
+        'Laderampe-Bearbeiten',
+        'Lichtkuppel-Bearbeiten',
+        'Photovoltaik-Bearbeiten'
+    ])
     const openingTypeMenus = new Set(['Öffnungen-Auswahl', 'Öffnungen-Dach-Auswahl'])
-    const shouldUseBottomRight = leftUiMenus.has(editMenü) && !openingTypeMenus.has(editMenü)
+    const shouldUseBottomRight =
+        leftUiMenus.has(editMenü) &&
+        !openingTypeMenus.has(editMenü) &&
+        !openingEditMenus.has(editMenü)
     const tutorialPositionStyle = shouldUseBottomRight
         ? {
             right: 20,

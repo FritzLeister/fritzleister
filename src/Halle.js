@@ -567,7 +567,7 @@ export default memo(function Halle({
         {/* Abmessungen auf dem Boden */}
         {abmessungenAnzeigen && (
             <>
-            <Abmessungen koordinate={koordinate} bodenLänge={bodenLänge} bodenBreite={bodenBreite} gebäudeHöhe={gebäudeHöhe} editMenü={editMenü} dachArt={effektiveDachArt} pultdachHöheDifferenz={pultdachHöheDifferenz} />
+            <Abmessungen koordinate={koordinate} bodenLänge={bodenLänge} bodenBreite={bodenBreite} gebäudeHöhe={gebäudeHöhe} editMenü={editMenü} dachArt={effektiveDachArt} pultdachHöheDifferenz={pultdachHöheDifferenz} zusatzHöheMitte={effektiveDiffTraufFirst} />
             {editMenü === 'Felder' && (
                 <>
                     <AbgrenzungAbmessung 

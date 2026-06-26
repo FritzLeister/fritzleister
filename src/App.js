@@ -606,13 +606,17 @@ export default function App({
                 <h2 className='navbar'>Save</h2>
             </div>
             
-
-            <img 
-            // src="/StartpunktDigitalLogo.png" 
-            src='/LogoPerthel.png'
-            alt="Logo"
-            style={{ width: 200, zIndex: 1000 }} 
-            />
+            <div
+                onClick={() => window.open("https://www.stahlbau-perthel.de", "_blank")}
+                style={{ margin: 0, cursor: 'pointer' }}
+            >
+                <img 
+                // src="/StartpunktDigitalLogo.png" 
+                src='/LogoPerthel.png'
+                alt="Logo"
+                style={{ width: 200, zIndex: 1000 }}
+                />
+            </div>
         </div>
         
 
@@ -664,7 +668,7 @@ export default function App({
                 sekundärKonstruktionsFarbe={sekundärKonstruktionsFarbe}
 
                 dachArt={dachArt}
-                diffTraufFirst={diffTraufFirst}
+                diffTraufFirst={diffTraufFirst * 2.5}
                 pultdachHöheDifferenz={dachneigung * 2.5}
                 sockelhöhe={sockelhöhe * 2.6}
                 wandGeometrieVorgaben={wandGeometrieVorgaben}
