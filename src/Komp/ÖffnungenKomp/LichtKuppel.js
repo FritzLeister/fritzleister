@@ -47,7 +47,7 @@ export default function LichtKuppel({
 	const zHinten = z - 6.5 - (0.5 * (bodenBreite - 15))
 	const traufhöhe = y + 4.5 + gebäudeHöhe
 
-	const { size, camera } = useThree()
+	const { size } = useThree()
 	const groupRef = useRef()
 
 	let initialMinZ = zHinten + (openingArgs[1] / 2) - 1
@@ -350,8 +350,6 @@ export default function LichtKuppel({
 			window.activeArrowControl = { kind: 'dach-lichtkuppel', id: objId }
 			setIsActive(true)
 			setOrbitKontrolle(false)
-			camera.position.set(0, 125, vorne ? 40 : -40)
-			camera.lookAt(x, traufhöhe, z)
 		}
 
 		if (last) {

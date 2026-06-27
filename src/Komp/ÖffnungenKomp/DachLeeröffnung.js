@@ -46,7 +46,7 @@ export default function DachLeeröffnung({
 
     const traufhöhe = y + 4.5 + gebäudeHöhe
 
-    const { size, camera } = useThree()
+    const { size } = useThree()
     const groupRef = useRef()
 
     // Verwende startPos falls verfügbar, ansonsten Mitte des Dachs
@@ -366,8 +366,6 @@ export default function DachLeeröffnung({
         if (first) {
             window.activeArrowControl = { kind: 'dach-leeroeffnung', id: objId }
             setOrbitKontrolle(false)
-            camera.position.set(0, 80, vorne ? 140 : -140)
-            camera.lookAt(x, traufhöhe, z)
         }
 
         if (last) setOrbitKontrolle(true)

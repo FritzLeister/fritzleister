@@ -1,4 +1,6 @@
 import DoorFrontIcon from '@mui/icons-material/DoorFront';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 import StraightenIcon from '@mui/icons-material/Straighten';
 import HouseSidingIcon from '@mui/icons-material/HouseSiding';
@@ -25,7 +27,11 @@ import PhotovoltaikBearbeiten from './ÖffnungenKomp/PhotovoltaikBearbeiten'
 
 export default function Add({ 
     addObj, 
+  canRedo,
+  canUndo,
     editMenü, 
+  onRedo,
+  onUndo,
     setEditMenü,
   setShowApp3,
   setShowAppKontakt,
@@ -127,6 +133,21 @@ export default function Add({
     abmessungenAnzeigen,
     setAbmessungenAnzeigen,
 }) {
+  const historyButtonStyle = (isEnabled) => ({
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    border: '1px solid rgba(12, 8, 8, 0.16)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: isEnabled ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
+    color: isEnabled ? '#000000' : 'rgba(0, 0, 0, 0.35)',
+    cursor: isEnabled ? 'pointer' : 'not-allowed',
+    transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
+    pointerEvents: isEnabled ? 'auto' : 'none'
+  })
     
   const [newId, setNewId] = useState(1);
   const hasSeenFirstOpeningHint = useRef(false);
@@ -184,6 +205,55 @@ export default function Add({
 
   return(
     <>
+      <div style={{
+            position: 'fixed',
+            top: 20,
+        left: 280,
+            display: 'flex',
+            gap: 10,
+            zIndex: 1000,
+        }}>
+          <div
+            style={historyButtonStyle(canUndo)}
+            onClick={onUndo}
+            title="Rückgängig"
+            onMouseEnter={(e) => {
+              if (!canUndo) return
+              e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)'
+              e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={(e) => {
+              if (!canUndo) return
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+          >
+            <ArrowBackIcon fontSize='medium' />
+          </div>
+
+          <div
+            style={historyButtonStyle(canRedo)}
+            onClick={onRedo}
+            title="Wiederholen"
+            onMouseEnter={(e) => {
+              if (!canRedo) return
+              e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)'
+              e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={(e) => {
+              if (!canRedo) return
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+          >
+            <ArrowForwardIcon fontSize='medium' />
+          </div>
+      </div>
+
       <div style={{
             position: "fixed",
             top: 20,

@@ -4,7 +4,7 @@ import { BackSide } from 'three'
 import "./styles.css"
 import Halle from './Halle'
 import SliderMui from "./Komp/SliderMui"
-import { useMemo, useState, memo, useRef } from 'react'
+import { useMemo, useState, memo, useRef, useCallback } from 'react'
 import Add from './Komp/Add'
 import { useEffect } from 'react'
 import ButtonMui from './Komp/ButtonMui'
@@ -26,6 +26,7 @@ function createSeededRandom(seed) {
 
 const DEFAULT_CAMERA_POSITION = [0, 30, 50]
 const TUTORIAL_UI_HIGHLIGHT_EVENT = 'tutorial-ui-highlight'
+const HISTORY_LIMIT = 100
 const CLOUD_LAYER_COUNT = 0.25
 const CLOUD_SEGMENTS = 6
 const CLOUD_HEIGHT_MULTIPLIER = 2
@@ -85,6 +86,14 @@ const CLOUD_CENTRAL_CONFIG = CLOUD_RING_CONFIG.map((cloud, index) => ({
     opacity: 0.58 + (index % 4) * 0.02,
     speed: cloud.speed * 0.7,
 }))
+
+function cloneHistoryValue(value) {
+    return JSON.parse(
+        JSON.stringify(value, (_key, currentValue) =>
+            typeof currentValue === 'function' ? undefined : currentValue
+        )
+    )
+}
 
 function SkyGradientBackground() {
     return (
@@ -285,6 +294,14 @@ export default function App({
     const [anschleppungenAnzeigen, setAnschleppungenAnzeigen] = useState(true);
     const [sekundärstrukturAnzeigen, setSekundärstrukturAnzeigen] = useState(true); // idk 
     const [kreuzverbändeAnzeigen, setKreuzverbändeAnzeigen] = useState(true); // idk
+    const undoHistoryRef = useRef([])
+    const redoHistoryRef = useRef([])
+    const currentHistorySnapshotRef = useRef(null)
+    const currentHistoryActionKeyRef = useRef('')
+    const isApplyingHistoryRef = useRef(false)
+    const hasInitializedHistoryRef = useRef(false)
+    const [canUndo, setCanUndo] = useState(false)
+    const [canRedo, setCanRedo] = useState(false)
     const [topActionsHighlight, setTopActionsHighlight] = useState(false)
     const topActionsHighlightTimeoutRef = useRef(null)
 
@@ -450,6 +467,272 @@ export default function App({
         });
     }
 
+    function syncHistoryAvailability() {
+        setCanUndo(undoHistoryRef.current.length > 0)
+        setCanRedo(redoHistoryRef.current.length > 0)
+    }
+
+    const buildHistorySnapshot = useCallback(() => {
+        return cloneHistoryValue({
+            breite,
+            länge,
+            höhe,
+            dachArt,
+            traufhöhe,
+            dachneigung,
+            sockelhöhe,
+            dachAusrichtung,
+            diffTraufFirst,
+            wandGeometrieVorgaben,
+            isolierung,
+            paneeltyp,
+            paneelBreiteMm,
+            wandOrientierung,
+            farbSchema,
+            außenFarbe,
+            außenFarbeMuster,
+            musterVerortung,
+            dachIsolierung,
+            dachPaneeltyp,
+            dachPaneelBreiteMm,
+            dachAußenFarbe,
+            dachPvcName,
+            pvcName,
+            fensterFarbe,
+            türFarbe,
+            schiebeTorFarbe,
+            rollTorFarbe,
+            sektionalTorFarbe,
+            türFarbeInnen,
+            sektionalTorFarbeInnen,
+            gebäudeZweck,
+            bauBeginn,
+            anwerbungKunden,
+            größeGebäudeM2,
+            bodenplatteFarbe,
+            rahmenFarbe,
+            sekundärKonstruktionsFarbe,
+            sekundärHolzKonstruktionsFarbe,
+            zubehörFarbe,
+            kantenFarbe,
+            kranKapazität,
+            objs,
+        })
+    }, [
+        anwerbungKunden,
+        außenFarbe,
+        außenFarbeMuster,
+        bauBeginn,
+        bodenplatteFarbe,
+        breite,
+        dachArt,
+        dachAusrichtung,
+        dachAußenFarbe,
+        dachIsolierung,
+        dachPaneelBreiteMm,
+        dachPaneeltyp,
+        dachPvcName,
+        dachneigung,
+        diffTraufFirst,
+        fensterFarbe,
+        farbSchema,
+        gebäudeZweck,
+        größeGebäudeM2,
+        höhe,
+        isolierung,
+        kantenFarbe,
+        kranKapazität,
+        länge,
+        musterVerortung,
+        objs,
+        paneelBreiteMm,
+        paneeltyp,
+        pvcName,
+        rahmenFarbe,
+        rollTorFarbe,
+        schiebeTorFarbe,
+        sektionalTorFarbe,
+        sektionalTorFarbeInnen,
+        sekundärHolzKonstruktionsFarbe,
+        sekundärKonstruktionsFarbe,
+        sockelhöhe,
+        traufhöhe,
+        türFarbe,
+        türFarbeInnen,
+        wandGeometrieVorgaben,
+        wandOrientierung,
+        zubehörFarbe,
+    ])
+
+    const buildHistoryActionKey = useCallback(() => {
+        return JSON.stringify({
+            breite,
+            länge,
+            höhe,
+            dachArt,
+            traufhöhe,
+            dachneigung,
+            sockelhöhe,
+            dachAusrichtung,
+            diffTraufFirst,
+            wandGeometrieVorgaben,
+            isolierung,
+            paneeltyp,
+            paneelBreiteMm,
+            wandOrientierung,
+            farbSchema,
+            außenFarbe,
+            außenFarbeMuster,
+            musterVerortung,
+            dachIsolierung,
+            dachPaneeltyp,
+            dachPaneelBreiteMm,
+            dachAußenFarbe,
+            dachPvcName,
+            pvcName,
+            fensterFarbe,
+            türFarbe,
+            schiebeTorFarbe,
+            rollTorFarbe,
+            sektionalTorFarbe,
+            türFarbeInnen,
+            sektionalTorFarbeInnen,
+            gebäudeZweck,
+            bauBeginn,
+            anwerbungKunden,
+            größeGebäudeM2,
+            bodenplatteFarbe,
+            rahmenFarbe,
+            sekundärKonstruktionsFarbe,
+            sekundärHolzKonstruktionsFarbe,
+            zubehörFarbe,
+            kantenFarbe,
+            kranKapazität,
+            öffnungen: objs.map((obj) => ({
+                id: obj.id,
+                type: obj.type,
+            })),
+        })
+    }, [
+        anwerbungKunden,
+        außenFarbe,
+        außenFarbeMuster,
+        bauBeginn,
+        bodenplatteFarbe,
+        breite,
+        dachArt,
+        dachAusrichtung,
+        dachAußenFarbe,
+        dachIsolierung,
+        dachPaneelBreiteMm,
+        dachPaneeltyp,
+        dachPvcName,
+        dachneigung,
+        diffTraufFirst,
+        fensterFarbe,
+        farbSchema,
+        gebäudeZweck,
+        größeGebäudeM2,
+        höhe,
+        isolierung,
+        kantenFarbe,
+        kranKapazität,
+        länge,
+        musterVerortung,
+        objs,
+        paneelBreiteMm,
+        paneeltyp,
+        pvcName,
+        rahmenFarbe,
+        rollTorFarbe,
+        schiebeTorFarbe,
+        sektionalTorFarbe,
+        sektionalTorFarbeInnen,
+        sekundärHolzKonstruktionsFarbe,
+        sekundärKonstruktionsFarbe,
+        sockelhöhe,
+        traufhöhe,
+        türFarbe,
+        türFarbeInnen,
+        wandGeometrieVorgaben,
+        wandOrientierung,
+        zubehörFarbe,
+    ])
+
+    function applyHistorySnapshot(snapshot) {
+        isApplyingHistoryRef.current = true
+        setBreite(snapshot.breite)
+        setLänge(snapshot.länge)
+        setHöhe(snapshot.höhe)
+        setDachArt(snapshot.dachArt)
+        setTraufhöhe(snapshot.traufhöhe)
+        setDachneigung(snapshot.dachneigung)
+        setSockelhöhe(snapshot.sockelhöhe)
+        setDachAusrichtung(snapshot.dachAusrichtung)
+        setDiffTraufFirst(snapshot.diffTraufFirst)
+        setWandGeometrieVorgaben(snapshot.wandGeometrieVorgaben)
+        setIsolierung(snapshot.isolierung)
+        setPaneeltyp(snapshot.paneeltyp)
+        setPaneelBreiteMm(snapshot.paneelBreiteMm)
+        setWandOrientierung(snapshot.wandOrientierung)
+        setFarbSchema(snapshot.farbSchema)
+        setAußenFarbe(snapshot.außenFarbe)
+        setAußenFarbeMuster(snapshot.außenFarbeMuster)
+        setMusterVerortung(snapshot.musterVerortung)
+        setDachIsolierung(snapshot.dachIsolierung)
+        setDachPaneeltyp(snapshot.dachPaneeltyp)
+        setDachPaneelBreiteMm(snapshot.dachPaneelBreiteMm)
+        setDachAußenFarbe(snapshot.dachAußenFarbe)
+        setDachPvcName(snapshot.dachPvcName)
+        setPvcName(snapshot.pvcName)
+        setFensterFarbe(snapshot.fensterFarbe)
+        setTürFarbe(snapshot.türFarbe)
+        setSchiebeTorFarbe(snapshot.schiebeTorFarbe)
+        setRollTorFarbe(snapshot.rollTorFarbe)
+        setSektionalTorFarbe(snapshot.sektionalTorFarbe)
+        setTürFarbeInnen(snapshot.türFarbeInnen)
+        setSektionalTorFarbeInnen(snapshot.sektionalTorFarbeInnen)
+        setGebäudeZweck(snapshot.gebäudeZweck)
+        setBauBeginn(snapshot.bauBeginn)
+        setAnwerbungKunden(snapshot.anwerbungKunden)
+        setGrößeGebäudeM2(snapshot.größeGebäudeM2)
+        setBodenplatteFarbe(snapshot.bodenplatteFarbe)
+        setRahmenFarbe(snapshot.rahmenFarbe)
+        setSekundärKonstruktionsFarbe(snapshot.sekundärKonstruktionsFarbe)
+        setSekundärHolzKonstruktionsFarbe(snapshot.sekundärHolzKonstruktionsFarbe)
+        setZubehörFarbe(snapshot.zubehörFarbe)
+        setKantenFarbe(snapshot.kantenFarbe)
+        setKranKapazität(snapshot.kranKapazität)
+        setObjs(cloneHistoryValue(snapshot.objs))
+        setSelectedObject(null)
+        setTürAttribute(false)
+        setClickedButtonPos(null)
+    }
+
+    function handleUndo() {
+        if (undoHistoryRef.current.length === 0 || !currentHistorySnapshotRef.current) {
+            return
+        }
+
+        const previousSnapshot = undoHistoryRef.current[undoHistoryRef.current.length - 1]
+        undoHistoryRef.current = undoHistoryRef.current.slice(0, -1)
+        redoHistoryRef.current = [...redoHistoryRef.current, currentHistorySnapshotRef.current].slice(-HISTORY_LIMIT)
+        syncHistoryAvailability()
+        applyHistorySnapshot(previousSnapshot)
+    }
+
+    function handleRedo() {
+        if (redoHistoryRef.current.length === 0 || !currentHistorySnapshotRef.current) {
+            return
+        }
+
+        const nextSnapshot = redoHistoryRef.current[redoHistoryRef.current.length - 1]
+        redoHistoryRef.current = redoHistoryRef.current.slice(0, -1)
+        undoHistoryRef.current = [...undoHistoryRef.current, currentHistorySnapshotRef.current].slice(-HISTORY_LIMIT)
+        syncHistoryAvailability()
+        applyHistorySnapshot(nextSnapshot)
+    }
+
 
     const konstruktionFokusAktiv = editMenü === 'Konstruktion'
     const effektivePlattenAnzeigen = konstruktionFokusAktiv ? false : plattenAnzeigen
@@ -482,6 +765,43 @@ export default function App({
             }
         }
     }, [])
+
+    useEffect(() => {
+        const nextSnapshot = buildHistorySnapshot()
+        const nextActionKey = buildHistoryActionKey()
+
+        if (!hasInitializedHistoryRef.current) {
+            hasInitializedHistoryRef.current = true
+            currentHistorySnapshotRef.current = nextSnapshot
+            currentHistoryActionKeyRef.current = nextActionKey
+            syncHistoryAvailability()
+            return
+        }
+
+        if (isApplyingHistoryRef.current) {
+            isApplyingHistoryRef.current = false
+            currentHistorySnapshotRef.current = nextSnapshot
+            currentHistoryActionKeyRef.current = nextActionKey
+            syncHistoryAvailability()
+            return
+        }
+
+        if (currentHistoryActionKeyRef.current === nextActionKey) {
+            currentHistorySnapshotRef.current = nextSnapshot
+            return
+        }
+
+        const snapshotToStore = currentHistorySnapshotRef.current
+
+        if (snapshotToStore) {
+            undoHistoryRef.current = [...undoHistoryRef.current, snapshotToStore].slice(-HISTORY_LIMIT)
+        }
+
+        redoHistoryRef.current = []
+        currentHistorySnapshotRef.current = nextSnapshot
+        currentHistoryActionKeyRef.current = nextActionKey
+        syncHistoryAvailability()
+    }, [buildHistoryActionKey, buildHistorySnapshot])
 
     return(
         <>
@@ -770,7 +1090,11 @@ export default function App({
         
         <Add
         addObj={addObj} 
+        canUndo={canUndo}
+        canRedo={canRedo}
         editMenü={editMenü} 
+        onUndo={handleUndo}
+        onRedo={handleRedo}
         setEditMenü={setEditMenü}
         setShowApp3={setShowApp3}
         setShowAppKontakt={setShowAppKontakt}

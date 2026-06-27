@@ -42,7 +42,7 @@ export default function DachTransparentesPaneel({
     const zHinten = z - 6.5 - (0.5 * (bodenBreite - 15))
     const traufhöhe = y + 4.5 + gebäudeHöhe
 
-    const { size, camera } = useThree()
+    const { size } = useThree()
     const groupRef = useRef()
 
     // Berechne Z-Grenzen FRÜH für initialZ-Clamping
@@ -332,7 +332,13 @@ export default function DachTransparentesPaneel({
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [objId, minX, maxX, minZ, maxZ, vorne, updatePosition])
 
-    const bind = useDrag(({ delta: [mx, my], first, last }) => {
+    const bind = useDrag(({ delta: [mx, my], first, last, tap, event }) => {
+        if (last && tap) {
+            handleClick(event)
+            setOrbitKontrolle(true)
+            return
+        }
+
         const scale = 400 / size.width
         const zScale = 120 / size.height
         const current = gridPosiRef.current
@@ -349,14 +355,12 @@ export default function DachTransparentesPaneel({
         if (first) {
             window.activeArrowControl = { kind: 'dach-transparentespaneel', id: objId }
             setOrbitKontrolle(false)
-            camera.position.set(0, 125, vorne ? 40 : -40)
-            camera.lookAt(x, traufhöhe, z)
         }
 
         if (last) {
             setOrbitKontrolle(true)
         }
-    })
+    }, { filterTaps: true })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'
     const tiefe = 1.0
