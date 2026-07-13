@@ -65,7 +65,7 @@ export function useOpeningPositionDisplay(selectedObject, fields) {
     }
 }
 
-export default function PositionInfoSection({ fields, values, onRefresh }) {
+export default function PositionInfoSection({ fields, values, onRefresh, warningMessage }) {
     return (
         <>
             <div style={{
@@ -117,6 +117,22 @@ export default function PositionInfoSection({ fields, values, onRefresh }) {
                     <span className='text' style={{ fontWeight: 200 }}>{formatSceneDistance(values[field.key])}</span>
                 </div>
             ))}
+
+            {warningMessage ? (
+                <div style={{
+                    margin: '0 10px 14px 0',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(180, 60, 60, 0.45)',
+                    backgroundColor: 'rgba(255, 210, 210, 0.75)',
+                    color: '#7a1d1d',
+                    fontSize: '12px',
+                    lineHeight: 1.35,
+                    fontWeight: 600
+                }}>
+                    {warningMessage}
+                </div>
+            ) : null}
         </>
     )
 }

@@ -3,6 +3,7 @@ import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import MuiTextfeld from "../MuiTextfeld"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function SektionalTorBearbeiten({
 	selectedObject,
@@ -47,8 +48,37 @@ export default function SektionalTorBearbeiten({
 		return Math.min(Math.max(num, min), max)
 	}
 
+	const draftObject = selectedObject ? {
+		...selectedObject,
+		value: [
+			clampValue(sektionalTorBreite, 0.2, maxSektionalTorBreite),
+			clampValue(sektionalTorHöhe, 0.2, maxSektionalTorHöhe)
+		],
+		posSegment,
+		transparenteFüllung,
+		transparentePaneele: transparenteFüllung === 'ja' ? transparentePaneele : null,
+		fensterstreifenHöhe: transparenteFüllung === 'ja' ? fensterstreifenHöhe : null,
+		reflektor: sektionalTorReflektor,
+		schlupftür,
+		schlupftürBreite: schlupftür === 'ja' ? clampValue(schlupftürBreite, 0.2, maxSektionalTorBreite) : null,
+		schlupftürHöhe: schlupftür === 'ja' ? clampValue(schlupftürHöhe, 0.2, maxSektionalTorHöhe) : null,
+		schlupftürDistanzX: schlupftür === 'ja' ? clampValue(schlupftürDistanzX, 0, maxSektionalTorBreite) : null,
+		schlupftürOrientierung: schlupftür === 'ja' ? schlupftürOrientierung : null,
+		sektionalTorFarbe,
+		sektionalTorFüllFarbe,
+		sektionalTorFüllFarbeInnen,
+		sektionalTorReflektorFarbe,
+		abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+		abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+	} : null
+	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		if (collisionReport.hasCollision) {
+			window.alert(collisionReport.message)
+			return
+		}
 		handleRefreshPosition()
 		const geklemmteSektionalTorBreite = clampValue(sektionalTorBreite, 0.2, maxSektionalTorBreite)
 		const geklemmteSektionalTorHöhe = clampValue(sektionalTorHöhe, 0.2, maxSektionalTorHöhe)
@@ -126,7 +156,7 @@ export default function SektionalTorBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
 				{/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
 

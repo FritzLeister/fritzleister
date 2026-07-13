@@ -239,3 +239,119 @@ export function boxIntersectsAnyOpening(position, size, openingVolumes) {
         )
     })
 }
+
+const OPENING_LABELS = {
+    'leeröffnung': 'eine Leeröffnung',
+    'fenster': 'ein Fenster',
+    'tür-öffnung': 'eine Tür',
+    'schiebetür': 'eine Schiebetür',
+    'rolltor': 'ein Rolltor',
+    'transparentespaneel': 'ein transparentes Paneel',
+    'laderampe': 'eine Laderampe',
+    'kleinlichtskuppel': 'eine Lichtkuppel',
+    'photovoltaik': 'eine Photovoltaik'
+}
+
+function getOpeningArea(opening) {
+    return opening?.bereich === 'dach' ? 'dach' : 'wand'
+}
+
+function getOpeningLabel(opening) {
+    return OPENING_LABELS[opening?.type] ?? 'eine Öffnung'
+}
+
+function buildOpeningCollisionVolume(opening) {
+    if (!opening) return null
+
+    const area = getOpeningArea(opening)
+    const startPos = opening.startPos ?? {}
+    const width = Math.max(0.2, Number(opening?.value?.[0] ?? 0) * 2.5)
+    const height = Math.max(0.2, Number(opening?.value?.[1] ?? 0) * 2.5)
+    const centerX = Number(startPos.x ?? 0)
+    const centerZ = Number(startPos.z ?? 0)
+    const baseY = Number(startPos.y ?? 0)
+    const isLongWall = opening?.lang ?? true
+
+    if (area === 'dach' || opening?.type === 'kleinlichtskuppel' || opening?.type === 'photovoltaik') {
+        const footprint = Math.max(width, height)
+
+        return {
+            position: [centerX, baseY, centerZ],
+            size: [footprint, 1000, footprint],
+        }
+    }
+
+    const centerY = opening?.type === 'fenster' ? baseY + 4 : baseY
+
+    return {
+        position: [centerX, centerY, centerZ],
+        size: isLongWall ? [width, height, 1.4] : [1.4, height, width],
+    }
+}
+
+export function getOpeningCollisionReport({ selectedObject, draftObject, objs }) {
+    const candidate = draftObject ?? selectedObject
+
+    if (!candidate?.id || !Array.isArray(objs)) {
+        return { hasCollision: false, collidingObject: null, message: '' }
+    }
+
+    const candidateArea = getOpeningArea(candidate)
+    const candidateVolume = buildOpeningCollisionVolume(candidate)
+
+    if (!candidateVolume) {
+        return { hasCollision: false, collidingObject: null, message: '' }
+    }
+
+    const collidingObject = objs.find((other) => {
+        if (!other || String(other.id) === String(candidate.id)) return false
+        if (getOpeningArea(other) !== candidateArea) return false
+
+        const otherVolume = buildOpeningCollisionVolume(other)
+        if (!otherVolume) return false
+
+        return boxIntersectsAnyOpening(candidateVolume.position, candidateVolume.size, [otherVolume])
+    })
+
+    if (!collidingObject) {
+        return { hasCollision: false, collidingObject: null, message: '' }
+    }
+
+    return {
+        hasCollision: true,
+        collidingObject,
+        message: `${getOpeningLabel(candidate)} überlappt mit ${getOpeningLabel(collidingObject)}.`,
+    }
+}
+
+export function hasAnyOpeningCollision(objs) {
+    if (!Array.isArray(objs) || objs.length < 2) return false
+
+    const openingCandidates = objs.filter((obj) => {
+        if (!obj || typeof obj !== 'object') return false
+        const volume = buildOpeningCollisionVolume(obj)
+        return Boolean(volume)
+    })
+
+    if (openingCandidates.length < 2) return false
+
+    for (let i = 0; i < openingCandidates.length; i += 1) {
+        const first = openingCandidates[i]
+        const firstVolume = buildOpeningCollisionVolume(first)
+        if (!firstVolume) continue
+
+        for (let j = i + 1; j < openingCandidates.length; j += 1) {
+            const second = openingCandidates[j]
+            if (getOpeningArea(first) !== getOpeningArea(second)) continue
+
+            const secondVolume = buildOpeningCollisionVolume(second)
+            if (!secondVolume) continue
+
+            if (boxIntersectsAnyOpening(firstVolume.position, firstVolume.size, [secondVolume])) {
+                return true
+            }
+        }
+    }
+
+    return false
+}

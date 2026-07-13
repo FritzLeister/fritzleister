@@ -2,6 +2,7 @@ import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function SchiebeTürBearbeiten({
 	selectedObject,
@@ -35,8 +36,26 @@ export default function SchiebeTürBearbeiten({
 		return Math.min(Math.max(num, min), max)
 	}
 
+	const draftObject = selectedObject ? {
+		...selectedObject,
+		value: [
+			clampValue(schiebetürBreite, 0.5, maxSchiebetürBreite),
+			clampValue(schiebetürHöhe, 0.2, maxSchiebetürHöhe)
+		],
+		schiebetürSchienenFarbe,
+		schiebetürFüllFarbe,
+		schiebetürFüllFarbeInnen,
+		abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+		abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+	} : null
+	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		if (collisionReport.hasCollision) {
+			window.alert(collisionReport.message)
+			return
+		}
 		handleRefreshPosition()
 		const geklemmteSchiebetürBreite = clampValue(schiebetürBreite, 0.5, maxSchiebetürBreite)
 		const geklemmteSchiebetürHöhe = clampValue(schiebetürHöhe, 0.2, maxSchiebetürHöhe)
@@ -96,7 +115,7 @@ export default function SchiebeTürBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

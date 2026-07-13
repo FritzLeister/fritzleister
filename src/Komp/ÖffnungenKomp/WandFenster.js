@@ -6,6 +6,7 @@ import { useDrag } from '@use-gesture/react'
 
 import Reflektor from './Reflektor'
 import { OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Fenster für Wände – basiert auf LeerÖffnung Logik
 export default function WandFenster({
@@ -93,6 +94,29 @@ export default function WandFenster({
     useEffect(() => {
         gridPosiRef.current = gridPosi
     }, [gridPosi])
+
+    const buildDraftObject = useCallback((nextPos) => ({
+        ...obj,
+        startPos: {
+            ...(obj?.startPos ?? {}),
+            x: nextPos.x,
+            y: nextPos.y,
+            z: nextPos.z
+        },
+        abstandLinks: lang
+            ? nextPos.x - (xLinks + halbeFensterBreite)
+            : nextPos.z - (zHinten + halbeFensterBreite),
+        abstandRechts: lang
+            ? (xRechts - halbeFensterBreite) - nextPos.x
+            : (zVorne - halbeFensterBreite) - nextPos.z,
+        abstandUnten: (nextPos.y + 4) - position[1] - (skaliertHöhe / 2) - bodenAbstandOffset,
+    }), [bodenAbstandOffset, halbeFensterBreite, lang, obj, position, skaliertHöhe, xLinks, xRechts, zHinten, zVorne])
+
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: buildDraftObject(gridPosi),
+        objs
+    })
 
     const updateStartPos = useCallback((nextPos) => {
         const surfaceOffset = 0
@@ -488,6 +512,7 @@ export default function WandFenster({
             : reflektorFarbeNorm === 'grau'
                 ? 0x888888
                 : 0xffffff
+    const warningColor = collisionReport.hasCollision ? '#d11a2a' : fensterColor
     
     // Rotation für Fenster und Reflektor: 
     // lang true, rechts true: [0, 0, 0]
@@ -549,13 +574,13 @@ export default function WandFenster({
                     {/* Oben */}
                     <mesh position={[0, höhe / 2 - 0.075, 0]}>
                         <boxGeometry args={[breite, 0.15, tiefe+0.1]} />
-                        <meshStandardMaterial color={fensterColor} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Unten */}
                     <mesh position={[0, -höhe / 2 + 0.075, 0]}>
                         <boxGeometry args={[breite, 0.15, tiefe+0.1]} />
-                        <meshStandardMaterial color={fensterColor} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Horizontale Sprossen */}
@@ -567,13 +592,13 @@ export default function WandFenster({
                     {/* Links */}
                     <mesh position={[-breite / 2 + 0.075, 0, 0]}>
                         <boxGeometry args={[0.15, höhe, tiefe+0.1]} />
-                        <meshStandardMaterial color={fensterColor} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Rechts */}
                     <mesh position={[breite / 2 - 0.075, 0, 0]}>
                         <boxGeometry args={[0.15, höhe, tiefe+0.1]} />
-                        <meshStandardMaterial color={fensterColor} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
                 </>
             )}

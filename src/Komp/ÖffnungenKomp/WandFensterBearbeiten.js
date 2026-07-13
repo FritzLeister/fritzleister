@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function WandFensterBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
     const meterEinheit = 2.5
@@ -26,6 +27,22 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
     const aktuellerAbstandLinks = clampValue(Number(anzeigeAbstände.links ?? 0), 0, Number.POSITIVE_INFINITY)
     const aktuellerAbstandUnten = clampValue(Number(anzeigeAbstände.unten ?? 0), 0, Number.POSITIVE_INFINITY)
     const formatDistance = (value) => `${(Number(value || 0) / meterEinheit).toFixed(2)} m`
+    const draftObject = selectedObject ? {
+        ...selectedObject,
+        value: [
+            clampValue(fensterBreite, 0.2, maxFensterBreite),
+            clampValue(fensterHöhe, 0.2, maxFensterHöhe)
+        ],
+        posSegment,
+        reflektor,
+        sprossenX,
+        sprossenY,
+        fensterFarbe,
+        reflektorFarbe,
+        abstandLinks: aktuellerAbstandLinks,
+        abstandUnten: aktuellerAbstandUnten
+    } : null
+    const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
 
     useEffect(() => {
         setAnzeigeAbstände({
@@ -175,6 +192,17 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
                     </div>
                     <span className='text' style={{ fontWeight: 200 }}>{formatDistance(aktuellerAbstandUnten)}</span>
                 </div>
+
+                {collisionReport.hasCollision ? (
+                    <div style={{
+                        margin: '0 10px 14px 0',
+                        color: '#b12a2a',
+                        fontSize: '12px',
+                        fontWeight: 600
+                    }}>
+                        Fenster überlappen sich.
+                    </div>
+                ) : null}
 
                 {/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
 

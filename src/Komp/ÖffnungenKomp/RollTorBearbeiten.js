@@ -2,6 +2,7 @@ import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function RollTorBearbeiten({
 	selectedObject,
@@ -37,8 +38,31 @@ export default function RollTorBearbeiten({
 		return Math.min(Math.max(num, min), max)
 	}
 
+	const draftObject = selectedObject ? {
+		...selectedObject,
+		value: [
+			clampValue(rolltorBreite, 0.2, maxRolltorBreite),
+			clampValue(rolltorHöhe, 0.2, maxRolltorHöhe)
+		],
+		öffnet: rolltorÖffnet,
+		reflektor: rolltorReflektor,
+		rolltorReflektor,
+		motorPlatzierung: rolltorMotor,
+		rolltorFarbe,
+		rolltorFüllFarbe,
+		farbe: rolltorFarbe,
+		füllFarbe: rolltorFüllFarbe,
+		abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+		abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+	} : null
+	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		if (collisionReport.hasCollision) {
+			window.alert(collisionReport.message)
+			return
+		}
 		handleRefreshPosition()
 		const geklemmteRolltorBreite = clampValue(rolltorBreite, 0.2, maxRolltorBreite)
 		const geklemmteRolltorHöhe = clampValue(rolltorHöhe, 0.2, maxRolltorHöhe)
@@ -104,7 +128,7 @@ export default function RollTorBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

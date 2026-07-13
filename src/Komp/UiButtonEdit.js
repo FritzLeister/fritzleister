@@ -1,14 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import '../styles.css';
 import MuiNumberfield from './MuiNumberfield';
 import MuiSelect from './MuiSelect';
 import MuiTextfeld from './MuiTextfeld';
+import { hasAnyOpeningCollision } from './openingUtils';
 
 const HOLZ_FARBE = '#9f764e';
+const PANEL_ANIMATION_OPEN_MS = 260;
+const PANEL_ANIMATION_CLOSE_MS = 170;
+const PANEL_ANIMATION_EASING = 'cubic-bezier(0.2, 0.65, 0.3, 1)';
 
 export default function UiButtonEdit({ 
     height, 
     name,
+    isVisible = true,
+    enablePanelAnimation = false,
     setShowApp3,
     setShowAppKontakt,
     // Abmessungs-Props (aus App.js)
@@ -101,21 +107,58 @@ export default function UiButtonEdit({
     setKantenFarbe,
     kranKapazität,
     setKranKapazität,
+    objs = [],
     // Darstellungs-Props (aus App.js)
     abmessungenAnzeigen,
     setAbmessungenAnzeigen,
 }) {
+    const hasMountedRef = useRef(false);
+    const refreshTimeoutRef = useRef(null);
+    const previousDimensionsRef = useRef({ breite, länge, höhe, dachArt });
 
-    // Wenn sich länge, breite, höhe oder dachArt ändert, kurz abmessungenAnzeigen toggling
+    // Bei echten Änderungen im Abmessungen-Menü die Maßlinien kurz aus/an schalten,
+    // damit die Darstellung sauber neu aufgebaut wird.
     useEffect(() => {
-        if (abmessungenAnzeigen) {
-            setAbmessungenAnzeigen(false);
-            const timeout = setTimeout(() => {
-                setAbmessungenAnzeigen(true);
-            }, 10);
-            return () => clearTimeout(timeout);
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true;
+            previousDimensionsRef.current = { breite, länge, höhe, dachArt };
+            return;
         }
-    }, [abmessungenAnzeigen, breite, dachArt, höhe, länge, setAbmessungenAnzeigen]);
+
+        const prev = previousDimensionsRef.current;
+        const hasDimensionChange = (
+            prev.breite !== breite
+            || prev.länge !== länge
+            || prev.höhe !== höhe
+            || prev.dachArt !== dachArt
+        );
+
+        previousDimensionsRef.current = { breite, länge, höhe, dachArt };
+
+        if (name !== 'Abmessungen' || !hasDimensionChange || !abmessungenAnzeigen) {
+            return;
+        }
+
+        if (refreshTimeoutRef.current) {
+            clearTimeout(refreshTimeoutRef.current);
+        }
+
+        setAbmessungenAnzeigen(false);
+        refreshTimeoutRef.current = setTimeout(() => {
+            setAbmessungenAnzeigen(true);
+            refreshTimeoutRef.current = null;
+        }, 10);
+    }, [abmessungenAnzeigen, breite, dachArt, höhe, länge, name, setAbmessungenAnzeigen]);
+
+    useEffect(() => {
+        return () => {
+            if (refreshTimeoutRef.current) {
+                clearTimeout(refreshTimeoutRef.current);
+                refreshTimeoutRef.current = null;
+                setAbmessungenAnzeigen(true);
+            }
+        };
+    }, [setAbmessungenAnzeigen]);
 
     // Setze sockelhöhe auf 0, wenn "Verkleidete Wand" ohne Sockel gewählt wird
     useEffect(() => {
@@ -134,6 +177,24 @@ export default function UiButtonEdit({
         }
         setAußenFarbe('white');
     }, [paneeltyp, setAußenFarbe, setAußenFarbeMuster, setFarbSchema]);
+
+    const hasOpeningOverlap = useMemo(() => {
+        const openingTypes = new Set([
+            'leeröffnung',
+            'fenster',
+            'tür-öffnung',
+            'schiebetür',
+            'rolltor',
+            'sektionaltor',
+            'transparentespaneel',
+            'laderampe',
+            'kleinlichtskuppel',
+            'photovoltaik'
+        ]);
+
+        const openingObjs = (objs || []).filter((obj) => openingTypes.has(obj?.type));
+        return hasAnyOpeningCollision(openingObjs);
+    }, [objs]);
 
     function abmessungsUI() {
         return(
@@ -974,6 +1035,17 @@ export default function UiButtonEdit({
                             </>
                         )}
 
+                        {hasOpeningOverlap && (
+                            <p className='text' style={{
+                                fontSize: 12,
+                                marginBottom: '10px',
+                                marginRight: '15px',
+                                color: '#b42318'
+                            }}>
+                                Bitte überlappende Öffnungen korrigieren. Solange ist keine Anfrage möglich.
+                            </p>
+                        )}
+
                         {größeGebäudeM2 >= 750 && (
                             <>
                                 <div 
@@ -989,12 +1061,16 @@ export default function UiButtonEdit({
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        backgroundColor: 
-                                        /*'lightyellow'*/
-                                        'rgba(252, 238, 79, 0.8)',
-                                        cursor: 'pointer'
+                                        backgroundColor: hasOpeningOverlap
+                                            ? 'rgba(211, 211, 211, 0.75)'
+                                            : 'rgba(252, 238, 79, 0.8)',
+                                        cursor: hasOpeningOverlap ? 'not-allowed' : 'pointer',
+                                        opacity: hasOpeningOverlap ? 0.75 : 1
                                     }}
                                     onClick={() => {
+                                        if (hasOpeningOverlap) {
+                                            return;
+                                        }
                                         if (setShowAppKontakt) {
                                             setShowAppKontakt();
                                             return;
@@ -1005,7 +1081,9 @@ export default function UiButtonEdit({
                                     }}
                                 >
 
-                                    <h2 className='navbar' style={{ marginTop: 40 }}>Anfrage senden!</h2>
+                                    <h2 className='navbar' style={{ marginTop: 40 }}>
+                                        {hasOpeningOverlap ? 'Überlappung beheben' : 'Anfrage senden!'}
+                                    </h2>
 
                                 </div>
                             </>
@@ -1213,8 +1291,18 @@ export default function UiButtonEdit({
             overflowY: 'auto',
             border: "1px solid rgba(255, 255, 255, 0.2)", // dezenter Rand
             zIndex: 999,
+            opacity: enablePanelAnimation ? (isVisible ? 1 : 0) : 1,
+            transform: enablePanelAnimation
+                ? (isVisible ? 'translateY(0px) scale(1)' : 'translateY(12px) scale(0.97)')
+                : 'translateY(0px) scale(1)',
+            transition: enablePanelAnimation
+                ? `opacity ${isVisible ? PANEL_ANIMATION_OPEN_MS : PANEL_ANIMATION_CLOSE_MS}ms ${PANEL_ANIMATION_EASING}, transform ${isVisible ? PANEL_ANIMATION_OPEN_MS : PANEL_ANIMATION_CLOSE_MS}ms ${PANEL_ANIMATION_EASING}`
+                : undefined,
+            pointerEvents: enablePanelAnimation && !isVisible ? 'none' : 'auto',
             // visibility: türAttribute ? "inherit" : "hidden"
-            }}>
+            }}
+            id="ui-button-edit-panel"
+            >
                 <div style={{
                     margin: "8px",
                     paddingBottom: "4px",

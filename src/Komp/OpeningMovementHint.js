@@ -1,12 +1,37 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 
-export default function OpeningMovementHint({ editMenü, isFirstOpening = false }) {
+const OPENING_HINT_DISABLED_KEY = 'opening-movement-hint-disabled-session'
+
+export default function OpeningMovementHint({ editMenü, isFirstOpening = false, openingCreatedCycle = 0 }) {
     const [animationState, setAnimationState] = useState('drag') // 'drag' | 'keys'
     const [isVisible, setIsVisible] = useState(false)
     const [isDismissed, setIsDismissed] = useState(false)
+    const [isPermanentlyDisabled, setIsPermanentlyDisabled] = useState(false)
+    const [acknowledgedCycle, setAcknowledgedCycle] = useState(0)
+    const lastPreparedCycleRef = useRef(0)
 
-    // Bestimme ob eine Öffnung gerade bearbeitet wird
-    const isOpeningEdit = useMemo(() => {
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const storedValue = window.sessionStorage.getItem(OPENING_HINT_DISABLED_KEY)
+        if (storedValue === 'true') {
+            setIsPermanentlyDisabled(true)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!isFirstOpening) return
+        if (openingCreatedCycle <= 0) return
+        if (openingCreatedCycle === lastPreparedCycleRef.current) return
+
+        // Bei neuer Öffnung genau einen neuen Tutorial-Zyklus vorbereiten.
+        lastPreparedCycleRef.current = openingCreatedCycle
+        setIsDismissed(false)
+        setAnimationState('drag')
+    }, [isFirstOpening, openingCreatedCycle])
+
+    // Der Hint soll beim ersten Erstellen direkt sichtbar sein (Felder)
+    // und weiterhin in Bearbeiten-Menüs funktionieren.
+    const isOpeningTutorialContext = useMemo(() => {
         const openingEditMenus = new Set([
             'LeerÖffnung-Bearbeiten',
             'Fenster-Bearbeiten',
@@ -19,14 +44,16 @@ export default function OpeningMovementHint({ editMenü, isFirstOpening = false 
             'Lichtkuppel-Bearbeiten',
             'Photovoltaik-Bearbeiten'
         ])
-        return openingEditMenus.has(editMenü) && isFirstOpening
+        return isFirstOpening && (openingEditMenus.has(editMenü) || editMenü === 'Felder')
     }, [editMenü, isFirstOpening])
+
+    const hasPendingTutorialForCycle = openingCreatedCycle > 0 && openingCreatedCycle > acknowledgedCycle
+    const shouldShowHint = isOpeningTutorialContext && hasPendingTutorialForCycle && !isPermanentlyDisabled
 
     // Zyklus durch Animationen
     useEffect(() => {
-        if (!isOpeningEdit) {
+        if (!shouldShowHint) {
             setIsVisible(false)
-            setIsDismissed(false)
             return
         }
 
@@ -36,9 +63,25 @@ export default function OpeningMovementHint({ editMenü, isFirstOpening = false 
         }, 3000) // Wechsel alle 3 Sekunden
 
         return () => clearInterval(interval)
-    }, [isOpeningEdit])
+    }, [shouldShowHint])
 
     if (!isVisible || isDismissed) return null
+
+    const handleDisablePermanently = () => {
+        if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem(OPENING_HINT_DISABLED_KEY, 'true')
+        }
+        setIsPermanentlyDisabled(true)
+        setAcknowledgedCycle(openingCreatedCycle)
+        setIsVisible(false)
+        setIsDismissed(true)
+    }
+
+    const handleClose = () => {
+        setAcknowledgedCycle(openingCreatedCycle)
+        setIsDismissed(true)
+        setIsVisible(false)
+    }
 
     const isDragActive = animationState === 'drag'
     const isKeysActive = animationState === 'keys'
@@ -111,7 +154,7 @@ export default function OpeningMovementHint({ editMenü, isFirstOpening = false 
 
             <button
                 type="button"
-                onClick={() => setIsDismissed(true)}
+                onClick={handleClose}
                 aria-label="Hinweis schließen"
                 style={{
                     position: 'absolute',
@@ -130,6 +173,29 @@ export default function OpeningMovementHint({ editMenü, isFirstOpening = false 
                 }}
             >
                 x
+            </button>
+
+            <button
+                type="button"
+                onClick={handleDisablePermanently}
+                aria-label="Hinweis nicht mehr anzeigen"
+                style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 36,
+                    height: 22,
+                    border: '1px solid rgba(0, 0, 0, 0.14)',
+                    borderRadius: 6,
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    color: 'rgba(0, 0, 0, 0.7)',
+                    fontSize: 11,
+                    lineHeight: 1,
+                    cursor: 'pointer',
+                    padding: '0 6px',
+                    whiteSpace: 'nowrap'
+                }}
+            >
+                nicht mehr anzeigen
             </button>
 
             <p style={{ fontSize: 14, fontWeight: 600, margin: '0 28px 8px 0', color: 'rgba(0, 0, 0, 0.85)', letterSpacing: '-0.3px' }}>

@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Transparente Öffnung für Wände (long-side aktuell)
 export default function LeerÖffnung({
@@ -269,6 +270,21 @@ export default function LeerÖffnung({
 	const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts)
 	const finalZ = lang ? z : gridPosi.z
 	const finalY = gridPosi.y
+	const collisionReport = getOpeningCollisionReport({
+		selectedObject: obj,
+		draftObject: {
+			...obj,
+			startPos: {
+				...(obj?.startPos ?? {}),
+				x: finalX,
+				y: finalY,
+				z: finalZ
+			}
+		},
+		objs
+	})
+	const warningColor = collisionReport.hasCollision ? '#d11a2a' : '#87CEEB'
+	const warningBorderColor = collisionReport.hasCollision ? '#d11a2a' : borderColor
 
 	return (
 		<group
@@ -285,7 +301,7 @@ export default function LeerÖffnung({
 			<mesh position={[0, 0, 0]}>
 				<boxGeometry args={[skaliertBreite, skaliertHöhe, 1]} />
 				<meshStandardMaterial
-					color="#87CEEB"
+					color={warningColor}
 					transparent
 					opacity={0.25}
 					depthWrite={false}
@@ -301,7 +317,7 @@ export default function LeerÖffnung({
 			{kantenAnzeigen && (
 			<lineSegments position={[0, 0, 0]}>
 				<edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(skaliertBreite, skaliertHöhe, 1)]} />
-				<lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+				<lineBasicMaterial attach="material" color={warningBorderColor} linewidth={2} />
 			</lineSegments>
 			)}
 		</group>

@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Transparentes Paneel für Dach – Positionierung analog DachLeeröffnung
 export default function DachTransparentesPaneel({
@@ -366,6 +367,21 @@ export default function DachTransparentesPaneel({
     const tiefe = 1.0
     const breite = openingArgs[0]
     const höhe = openingArgs[1]
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: {
+            ...obj,
+            startPos: {
+                ...(obj?.startPos ?? {}),
+                x: finalX,
+                z: finalZ
+            }
+        },
+        objs
+    })
+    const warningGlassColor = collisionReport.hasCollision ? '#ff8080' : '#BFEFFF'
+    const warningFrameColor = collisionReport.hasCollision ? '#d11a2a' : '#9fd3e6'
+    const warningBorderColor = collisionReport.hasCollision ? '#d11a2a' : borderColor
 
     return (
         <group
@@ -383,7 +399,7 @@ export default function DachTransparentesPaneel({
                     <mesh position={[0, 0, tiefe / 2 + 0.02]}>
                         <boxGeometry args={[breite - 0.12, höhe - 0.12, 0.05]} />
                         <meshStandardMaterial
-                            color="#BFEFFF"
+                            color={warningGlassColor}
                             transparent
                             opacity={0.45}
                             depthWrite={false}
@@ -397,7 +413,7 @@ export default function DachTransparentesPaneel({
                     <mesh position={[0, 0, -tiefe / 2 - 0.02]}>
                         <boxGeometry args={[breite - 0.12, höhe - 0.12, 0.05]} />
                         <meshStandardMaterial
-                            color="#BFEFFF"
+                            color={warningGlassColor}
                             transparent
                             opacity={0.35}
                             depthWrite={false}
@@ -418,11 +434,11 @@ export default function DachTransparentesPaneel({
                             <group key={`dach-profil-${i}`}>
                                 <mesh position={[clampedX, 0, tiefe / 2 + 0.04]}>
                                     <boxGeometry args={[0.05, höhe - 0.08, 0.05]} />
-                                    <meshStandardMaterial color="#9fd3e6" />
+                                    <meshStandardMaterial color={warningFrameColor} />
                                 </mesh>
                                 <mesh position={[clampedX, 0, -tiefe / 2 - 0.04]}>
                                     <boxGeometry args={[0.05, höhe - 0.08, 0.05]} />
-                                    <meshStandardMaterial color="#9fd3e6" />
+                                    <meshStandardMaterial color={warningFrameColor} />
                                 </mesh>
                             </group>
                         )
@@ -431,19 +447,19 @@ export default function DachTransparentesPaneel({
                     {/* Außenrahmen */}
                     <mesh position={[0, höhe / 2 - 0.04, 0]}>
                         <boxGeometry args={[breite, 0.08, tiefe + 0.05]} />
-                        <meshStandardMaterial color="#9fd3e6" />
+                        <meshStandardMaterial color={warningFrameColor} />
                     </mesh>
                     <mesh position={[0, -höhe / 2 + 0.04, 0]}>
                         <boxGeometry args={[breite, 0.08, tiefe + 0.05]} />
-                        <meshStandardMaterial color="#9fd3e6" />
+                        <meshStandardMaterial color={warningFrameColor} />
                     </mesh>
                     <mesh position={[-breite / 2 + 0.04, 0, 0]}>
                         <boxGeometry args={[0.08, höhe, tiefe + 0.05]} />
-                        <meshStandardMaterial color="#9fd3e6" />
+                        <meshStandardMaterial color={warningFrameColor} />
                     </mesh>
                     <mesh position={[breite / 2 - 0.04, 0, 0]}>
                         <boxGeometry args={[0.08, höhe, tiefe + 0.05]} />
-                        <meshStandardMaterial color="#9fd3e6" />
+                        <meshStandardMaterial color={warningFrameColor} />
                     </mesh>
                 </>
             )}
@@ -451,7 +467,7 @@ export default function DachTransparentesPaneel({
             {kantenAnzeigen && (
                 <lineSegments>
                     <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(breite, höhe, tiefe)]} />
-                    <lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+                    <lineBasicMaterial attach="material" color={warningBorderColor} linewidth={2} />
                 </lineSegments>
             )}
         </group>

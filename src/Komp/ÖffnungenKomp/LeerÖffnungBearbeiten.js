@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge, dachArt = 'satteldach', dachneigung = 0 }) {
     const istLangeWand = selectedObject?.lang ?? true
@@ -24,6 +25,17 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
         { key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
     ]
     const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
+    const draftObject = selectedObject ? {
+        ...selectedObject,
+        value: [
+            clampValue(öffnungsBreite, 1, maxÖffnungsBreite),
+            clampValue(öffnungsHöhe, 1, maxÖffnungsHöhe)
+        ],
+        abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+        abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+        abstandUnten: displayValues.abstandUnten ?? selectedObject.abstandUnten,
+    } : null
+    const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
     const isDachLeeröffnung = selectedObject?.type === 'leeröffnung' && selectedObject?.lang === false
 
     useEffect(() => {
@@ -45,6 +57,10 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
 
     const handleUpdate = () => {
         if (selectedObject) {
+            if (collisionReport.hasCollision) {
+                window.alert(collisionReport.message)
+                return
+            }
             handleRefreshPosition()
             const sichereBreite = clampValue(öffnungsBreite, 1, maxÖffnungsBreite)
             const sichereHöhe = clampValue(öffnungsHöhe, 1, maxÖffnungsHöhe)
@@ -109,7 +125,7 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
             
 
             <div style={{ margin: '15px', marginTop: '12px', marginRight: '12px' }}>
-                            <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+                            <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
                 <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

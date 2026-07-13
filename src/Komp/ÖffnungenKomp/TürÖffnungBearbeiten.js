@@ -2,6 +2,7 @@ import { useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
     const istLangeWand = selectedObject?.lang ?? true
@@ -28,9 +29,31 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
         { key: 'abstandRechts', label: 'Abstand Rechts', hint: 'Per Button aktualisieren' }
     ]
     const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
+    const draftObject = selectedObject ? {
+        ...selectedObject,
+        value: [
+            clampValue(türBreite, 0.2, maxTürBreite),
+            clampValue(türHöhe, 0.2, maxTürHöhe)
+        ],
+        posSegment,
+        doppeltür,
+        öffnet,
+        orientierung,
+        türReflektor,
+        türFarbe,
+        türFüllFarbe,
+        türFüllFarbeInnen,
+        abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+        abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+    } : null
+    const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
 
     const handleUpdate = () => {
         if (selectedObject) {
+            if (collisionReport.hasCollision) {
+                window.alert(collisionReport.message)
+                return
+            }
             handleRefreshPosition()
             const sichereTürBreite = clampValue(türBreite, 0.2, maxTürBreite)
             const sichereTürHöhe = clampValue(türHöhe, 0.2, maxTürHöhe)
@@ -96,7 +119,7 @@ export default function TürÖffnungBearbeiten({ selectedObject, setEditMenü, o
             </div>
 
             <div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-                <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+                <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
                 {/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
 

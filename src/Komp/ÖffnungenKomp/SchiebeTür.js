@@ -5,6 +5,7 @@ import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Schiebetür für Wände – zwei horizontal verschiebbare Flügel
 export default function SchiebeTür({
@@ -265,6 +266,22 @@ export default function SchiebeTür({
     const einzelX = 0
     const einzelKnaufX = (einzelBreite / 2 - 0.15) * (schiebeseite === 'rechts' ? -1 : 1)
     const knaufHöhe = -höhe / 2 + 2  // Knäufe immer 1m über dem Boden
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: {
+            ...obj,
+            startPos: {
+                ...(obj?.startPos ?? {}),
+                x: finalX,
+                y: finalY,
+                z: finalZ
+            }
+        },
+        objs
+    })
+    const warningColor = collisionReport.hasCollision ? '#d11a2a' : rahmenFarbe
+    const warningFillColor = collisionReport.hasCollision ? '#d11a2a' : türFüllFarbe
+    const warningFillColorInnen = collisionReport.hasCollision ? '#d11a2a' : türFüllFarbeInnen
 
     // Rotationslogik so, dass lokale +Z immer "außen" der Wand ist
     let schiebetürRotation = [0, 0, 0]
@@ -288,7 +305,7 @@ export default function SchiebeTür({
                     {/* Schiene - oben, doppelt so lang wie Türbreite */}
                     <mesh position={[schieneCenterX, höhe / 2 + 0.1, schieneZ]}>
                         <boxGeometry args={[schieneLänge, schieneHöhe, 0.15]} />
-                        <meshStandardMaterial color={rahmenFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {istDoppeltür ? (
@@ -297,33 +314,33 @@ export default function SchiebeTür({
                             {/* Linker Flügel - Vorderseite */}
                             <mesh position={[flügel1X+0.05, 0, tiefe / 2 + 0.1]}>
                                 <boxGeometry args={[flügelBreite, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbe} />
+                                <meshStandardMaterial color={warningFillColor} />
                             </mesh>
                             {/* Linker Flügel - Rückseite */}
                             <mesh position={[flügel1X, 0, -tiefe / 2 - 0.1]}>
                                 <boxGeometry args={[flügelBreite, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbeInnen} />
+                                <meshStandardMaterial color={warningFillColorInnen} />
                             </mesh>
 
                             {/* Linker Flügel - Rahmen oben */}
                             <mesh position={[flügel1X, höhe / 2 - 0.075, 0]}>
                                 <boxGeometry args={[flügelBreite, 0.15, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Linker Flügel - Rahmen unten */}
                             <mesh position={[flügel1X, -höhe / 2 + 0.075, 0]}>
                                 <boxGeometry args={[flügelBreite, 0.15, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Linker Flügel - Rahmen links (Außenseite) */}
                             <mesh position={[flügel1X - flügelBreite / 2 + 0.075, 0, 0]}>
                                 <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Linker Flügel - Rahmen rechts (Innenseite/Mittelpunkt) */}
                             <mesh position={[flügel1X + flügelBreite / 2 - 0.075, 0, 0]}>
                                 <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
 
                             {/* Linker Flügel - Griffe auf rechter Seite (Innenseite, zeigt nach rechts/Mitte) */}
@@ -340,33 +357,33 @@ export default function SchiebeTür({
                             {/* Rechter Flügel - Vorderseite */}
                             <mesh position={[flügel2X-0.05, 0, tiefe / 2 + 0.1]}>
                                 <boxGeometry args={[flügelBreite, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbe} />
+                                <meshStandardMaterial color={warningFillColor} />
                             </mesh>
                             {/* Rechter Flügel - Rückseite */}
                             <mesh position={[flügel2X, 0, -tiefe / 2 - 0.1]}>
                                 <boxGeometry args={[flügelBreite, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbeInnen} />
+                                <meshStandardMaterial color={warningFillColorInnen} />
                             </mesh>
 
                             {/* Rechter Flügel - Rahmen oben */}
                             <mesh position={[flügel2X, höhe / 2 - 0.075, 0]}>
                                 <boxGeometry args={[flügelBreite, 0.15, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Rechter Flügel - Rahmen unten */}
                             <mesh position={[flügel2X, -höhe / 2 + 0.075, 0]}>
                                 <boxGeometry args={[flügelBreite, 0.15, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Rechter Flügel - Rahmen links (Innenseite/Mittelpunkt) */}
                             <mesh position={[flügel2X - flügelBreite / 2 + 0.075, 0, 0]}>
                                 <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Rechter Flügel - Rahmen rechts (Außenseite) */}
                             <mesh position={[flügel2X + flügelBreite / 2 - 0.075, 0, 0]}>
                                 <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
 
                             {/* Rechter Flügel - Griffe auf linker Seite (Innenseite, zeigt nach links/Mitte) */}
@@ -385,33 +402,33 @@ export default function SchiebeTür({
                             {/* Einzelner Flügel - Vorderseite */}
                             <mesh position={[einzelX, 0, tiefe / 2 + 0.1]}>
                                 <boxGeometry args={[einzelBreite, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbe} />
+                                <meshStandardMaterial color={warningFillColor} />
                             </mesh>
                             {/* Einzelner Flügel - Rückseite */}
                             <mesh position={[einzelX, 0, -tiefe / 2 - 0.1]}>
                                 <boxGeometry args={[einzelBreite, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbeInnen} />
+                                <meshStandardMaterial color={warningFillColorInnen} />
                             </mesh>
 
                             {/* Einzelner Flügel - Rahmen oben */}
                             <mesh position={[einzelX, höhe / 2 - 0.075, 0]}>
                                 <boxGeometry args={[einzelBreite, 0.15, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Einzelner Flügel - Rahmen unten */}
                             <mesh position={[einzelX, -höhe / 2 + 0.075, 0]}>
                                 <boxGeometry args={[einzelBreite, 0.15, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Einzelner Flügel - Rahmen links */}
                             <mesh position={[einzelX - einzelBreite / 2 + 0.075, 0, 0]}>
                                 <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
                             {/* Einzelner Flügel - Rahmen rechts */}
                             <mesh position={[einzelX + einzelBreite / 2 - 0.075, 0, 0]}>
                                 <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                                <meshStandardMaterial color={rahmenFarbe} />
+                                <meshStandardMaterial color={warningColor} />
                             </mesh>
 
                             {/* Einzelner Flügel - Knauf (zeigt weg von Schieberichtung) */}

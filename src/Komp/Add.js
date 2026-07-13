@@ -8,11 +8,12 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
 import AppsIcon from '@mui/icons-material/Apps';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useLayoutEffect, useCallback, useMemo, useEffect } from 'react';
 
 import UiButton from './UiButton';
 import UiButtonEdit from './UiButtonEdit';
 import OpeningMovementHint from './OpeningMovementHint';
+import { hasAnyOpeningCollision } from './openingUtils';
 import ÖffnungenUi from './ÖffnungenKomp/ÖffnungUi'
 import LeerÖffnungBearbeiten from './ÖffnungenKomp/LeerÖffnungBearbeiten'
 import WandFensterBearbeiten from './ÖffnungenKomp/WandFensterBearbeiten'
@@ -24,6 +25,12 @@ import TransparentesPaneelBearbeiten from './ÖffnungenKomp/TransparentesPaneelB
 import LaderampeBearbeiten from './ÖffnungenKomp/LaderampeBearbeiten'
 import LichtKuppelBearbeiten from './ÖffnungenKomp/LichtKuppelBearbeiten'
 import PhotovoltaikBearbeiten from './ÖffnungenKomp/PhotovoltaikBearbeiten'
+
+const ADD_PANEL_LEFT = 20
+const ADD_PANEL_WIDTH = 250
+const PANEL_GAP = 10
+const UI_PANEL_ANIMATION_MS = 180
+const UI_BUTTON_EDIT_PANEL_NAMES = new Set(['Abmessungen', 'Verkleidung', 'Konstruktion', 'Angebot'])
 
 export default function Add({ 
     addObj, 
@@ -152,29 +159,81 @@ export default function Add({
   const [newId, setNewId] = useState(1);
   const hasSeenFirstOpeningHint = useRef(false);
   const [showOpeningHint, setShowOpeningHint] = useState(false);
+  const [openingHintCycle, setOpeningHintCycle] = useState(0);
+  const [uiEditPanelHeight, setUiEditPanelHeight] = useState(0)
+  const targetUiEditPanel = UI_BUTTON_EDIT_PANEL_NAMES.has(editMenü) ? editMenü : ''
+  const [renderedUiEditPanel, setRenderedUiEditPanel] = useState(targetUiEditPanel)
+  const [isUiEditPanelVisible, setIsUiEditPanelVisible] = useState(Boolean(targetUiEditPanel))
+  const hasOpeningOverlap = useMemo(() => hasAnyOpeningCollision(objs), [objs])
 
-  // Zeige Hint beim ersten Mal, wenn ein Öffnungs-Edit-Menü geöffnet wird
   useEffect(() => {
-    const openingEditMenus = new Set([
-      'LeerÖffnung-Bearbeiten',
-      'Fenster-Bearbeiten',
-      'Tür-Bearbeiten',
-      'SektionalTor-Bearbeiten',
-      'Schiebetür-Bearbeiten',
-      'Rolltor-Bearbeiten',
-      'TransparentesPaneel-Bearbeiten',
-      'Laderampe-Bearbeiten',
-      'Lichtkuppel-Bearbeiten',
-      'Photovoltaik-Bearbeiten'
-    ])
+    let timeoutId
+    let rafId
 
-    if (!hasSeenFirstOpeningHint.current && openingEditMenus.has(editMenü)) {
-      hasSeenFirstOpeningHint.current = true;
-      setShowOpeningHint(true);
-    } else if (!openingEditMenus.has(editMenü)) {
-      setShowOpeningHint(false);
+    if (targetUiEditPanel) {
+      setRenderedUiEditPanel(targetUiEditPanel)
+      rafId = window.requestAnimationFrame(() => {
+        setIsUiEditPanelVisible(true)
+      })
+    } else {
+      setIsUiEditPanelVisible(false)
+
+      if (renderedUiEditPanel) {
+        timeoutId = window.setTimeout(() => {
+          setRenderedUiEditPanel('')
+        }, UI_PANEL_ANIMATION_MS)
+      }
     }
-  }, [editMenü]);
+
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId)
+      }
+      if (rafId) {
+        window.cancelAnimationFrame(rafId)
+      }
+    }
+  }, [renderedUiEditPanel, targetUiEditPanel])
+
+  const handleOpeningCreated = useCallback((...args) => {
+    addObj(...args)
+    setOpeningHintCycle((prev) => prev + 1)
+
+    if (!hasSeenFirstOpeningHint.current) {
+      hasSeenFirstOpeningHint.current = true
+      setShowOpeningHint(true)
+    }
+  }, [addObj])
+
+  const isAbmessungenOpen = renderedUiEditPanel === 'Abmessungen'
+
+  useLayoutEffect(() => {
+    if (!isAbmessungenOpen) {
+      setUiEditPanelHeight(0)
+      return
+    }
+
+    const measurePanelHeight = () => {
+      const panel = document.getElementById('ui-button-edit-panel')
+      if (!panel) return
+      const measuredHeight = panel.getBoundingClientRect().height
+      setUiEditPanelHeight(Math.round(measuredHeight))
+    }
+
+    measurePanelHeight()
+    const rafId = window.requestAnimationFrame(measurePanelHeight)
+    window.addEventListener('resize', measurePanelHeight)
+
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      window.removeEventListener('resize', measurePanelHeight)
+    }
+  }, [isAbmessungenOpen])
+
+  const historyControlsTop = isAbmessungenOpen
+    ? 20 + uiEditPanelHeight + PANEL_GAP
+    : 20
+  const historyControlsLeft = ADD_PANEL_LEFT + ADD_PANEL_WIDTH + PANEL_GAP
 
   /*
   return (
@@ -207,10 +266,10 @@ export default function Add({
     <>
       <div style={{
             position: 'fixed',
-            top: 20,
-        left: 280,
+          top: historyControlsTop,
+          left: historyControlsLeft,
             display: 'flex',
-            gap: 10,
+            gap: 5,
             zIndex: 1000,
         }}>
           <div
@@ -325,15 +384,18 @@ export default function Add({
           icon={<GavelIcon fontSize='medium'/>} 
           name={'Angebot'} 
           onClick={() => setEditMenü(editMenü === 'Angebot' ? '' : 'Angebot')}
+          disabled={hasOpeningOverlap}
           isActive={editMenü === 'Angebot'}
           />
 
 
         </div>
 
-        {editMenü === 'Abmessungen' && <UiButtonEdit 
+        {renderedUiEditPanel === 'Abmessungen' && <UiButtonEdit 
             name={"Abmessungen"} 
             height={0} 
+          enablePanelAnimation
+          isVisible={isUiEditPanelVisible}
             breite={breite}
             setBreite={setBreite}
             länge={länge}
@@ -416,13 +478,16 @@ export default function Add({
             setKantenFarbe={setKantenFarbe}
             kranKapazität={kranKapazität}
             setKranKapazität={setKranKapazität}
+            objs={objs}
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
         {/* editMenü === 'Felder' && <UiButtonEdit name={'Felder'} height={1} /> */ }
-        {editMenü === 'Verkleidung' && <UiButtonEdit 
+        {renderedUiEditPanel === 'Verkleidung' && <UiButtonEdit 
             name={"Verkleidung"} 
             height={2} 
+          enablePanelAnimation
+          isVisible={isUiEditPanelVisible}
             breite={breite}
             setBreite={setBreite}
             länge={länge}
@@ -507,6 +572,7 @@ export default function Add({
             setKantenFarbe={setKantenFarbe}
             kranKapazität={kranKapazität}
             setKranKapazität={setKranKapazität}
+            objs={objs}
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
@@ -598,8 +664,8 @@ export default function Add({
             abmessungenAnzeigen={abmessungenAnzeigen}
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> } */}
-        {editMenü === 'Öffnungen-Auswahl' && <ÖffnungenUi wand={true} lang={clickedButtonPos?.lang ?? true} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeLänge={länge} gebäudeHöhe={höhe} dachArt={dachArt} dachneigung={dachneigung} />}
-        {editMenü === 'Öffnungen-Dach-Auswahl' && <ÖffnungenUi wand={false} lang={false} rechts={clickedButtonPos?.rechts ?? true} addObj={addObj} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeLänge={länge} gebäudeHöhe={höhe} dachArt={dachArt} dachneigung={dachneigung} />}
+        {editMenü === 'Öffnungen-Auswahl' && <ÖffnungenUi wand={true} lang={clickedButtonPos?.lang ?? true} rechts={clickedButtonPos?.rechts ?? true} addObj={handleOpeningCreated} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeLänge={länge} gebäudeHöhe={höhe} dachArt={dachArt} dachneigung={dachneigung} />}
+        {editMenü === 'Öffnungen-Dach-Auswahl' && <ÖffnungenUi wand={false} lang={false} rechts={clickedButtonPos?.rechts ?? true} addObj={handleOpeningCreated} setEditMenü={setEditMenü} newId={newId} setNewId={setNewId} clickedButtonPos={clickedButtonPos} gebäudeBreite={breite} gebäudeLänge={länge} gebäudeHöhe={höhe} dachArt={dachArt} dachneigung={dachneigung} />}
         {editMenü === 'LeerÖffnung-Bearbeiten' && selectedObject?.type === 'leeröffnung' && <LeerÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} dachArt={dachArt} dachneigung={dachneigung} />}
         {editMenü === 'Fenster-Bearbeiten' && selectedObject?.type === 'fenster' && <WandFensterBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
         {editMenü === 'Tür-Bearbeiten' && selectedObject?.type === 'tür-öffnung' && <TürÖffnungBearbeiten selectedObject={selectedObject} setEditMenü={setEditMenü} objs={objs} setObjs={setObjs} gebäudeHöhe={höhe} gebäudeBreite={breite} gebäudeLänge={länge} />}
@@ -701,9 +767,11 @@ export default function Add({
         /> 
         */}
 
-        {editMenü === 'Konstruktion' && <UiButtonEdit 
+        {renderedUiEditPanel === 'Konstruktion' && <UiButtonEdit 
             name={"Konstruktion"} 
           height={4} 
+            enablePanelAnimation
+            isVisible={isUiEditPanelVisible}
             breite={breite}
             setBreite={setBreite}
             länge={länge}
@@ -788,9 +856,11 @@ export default function Add({
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
         
-        {editMenü === 'Angebot' && <UiButtonEdit 
+        {renderedUiEditPanel === 'Angebot' && <UiButtonEdit 
             name={"Angebot"} 
           height={5} 
+            enablePanelAnimation
+            isVisible={isUiEditPanelVisible}
             setShowApp3={setShowApp3}
             setShowAppKontakt={setShowAppKontakt}
             breite={breite}
@@ -877,7 +947,11 @@ export default function Add({
             setAbmessungenAnzeigen={setAbmessungenAnzeigen}
         /> }
 
-        <OpeningMovementHint editMenü={editMenü} isFirstOpening={showOpeningHint} />
+        <OpeningMovementHint
+          editMenü={editMenü}
+          isFirstOpening={showOpeningHint}
+          openingCreatedCycle={openingHintCycle}
+        />
     </>
   )
 }

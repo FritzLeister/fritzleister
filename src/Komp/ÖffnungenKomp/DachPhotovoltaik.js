@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Photovoltaik-Paneel für Dach – Positionierung analog DachLeeröffnung
 export default function DachPhotovoltaik({
@@ -367,6 +368,19 @@ export default function DachPhotovoltaik({
     const tiefe = 0.5
     const breite = openingArgs[0]
     const höhe = openingArgs[1]
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: {
+            ...obj,
+            startPos: {
+                ...(obj?.startPos ?? {}),
+                x: finalX,
+                z: finalZ
+            }
+        },
+        objs
+    })
+    const warningColor = collisionReport.hasCollision ? '#d11a2a' : null
     const rahmenFarbName = obj?.rahmenFarbe ?? 'Weiß'
     const rahmenFarbMap = {
         Schwarz: '#1e1e1e',
@@ -442,41 +456,41 @@ export default function DachPhotovoltaik({
 
     const frontPanelMaterial = useMemo(
         () => new THREE.MeshStandardMaterial({
-            color: '#10345c',
-            emissive: '#0f2c4a',
+            color: warningColor ?? '#10345c',
+            emissive: warningColor ?? '#0f2c4a',
             emissiveIntensity: 0.22,
             side: THREE.DoubleSide,
             metalness: 0.08,
             roughness: 0.32
         }),
-        []
+        [warningColor]
     )
     const reflectionMaterial = useMemo(
         () => new THREE.MeshStandardMaterial({
-            color: '#c8d6e3',
-            emissive: '#90a7bb',
+            color: warningColor ?? '#c8d6e3',
+            emissive: warningColor ?? '#90a7bb',
             emissiveIntensity: 0.08,
             side: THREE.DoubleSide,
             metalness: 0.05,
             roughness: 0.16
         }),
-        []
+        [warningColor]
     )
     const backPanelMaterial = useMemo(
-        () => new THREE.MeshStandardMaterial({ color: '#171717', metalness: 0.12, roughness: 0.72 }),
-        []
+        () => new THREE.MeshStandardMaterial({ color: warningColor ?? '#171717', metalness: 0.12, roughness: 0.72 }),
+        [warningColor]
     )
     const frameMaterial = useMemo(
-        () => new THREE.MeshStandardMaterial({ color: rahmenFarbeHex, metalness: 0.62, roughness: 0.24 }),
-        [rahmenFarbeHex]
+        () => new THREE.MeshStandardMaterial({ color: warningColor ?? rahmenFarbeHex, metalness: 0.62, roughness: 0.24 }),
+        [rahmenFarbeHex, warningColor]
     )
     const cellLineMaterial = useMemo(
-        () => new THREE.MeshStandardMaterial({ color: strebenFarbeHex, metalness: 0.35, roughness: 0.28 }),
-        [strebenFarbeHex]
+        () => new THREE.MeshStandardMaterial({ color: warningColor ?? strebenFarbeHex, metalness: 0.35, roughness: 0.28 }),
+        [strebenFarbeHex, warningColor]
     )
     const centerRailMaterial = useMemo(
-        () => new THREE.MeshStandardMaterial({ color: strebenFarbeHex, metalness: 0.55, roughness: 0.3 }),
-        [strebenFarbeHex]
+        () => new THREE.MeshStandardMaterial({ color: warningColor ?? strebenFarbeHex, metalness: 0.55, roughness: 0.3 }),
+        [strebenFarbeHex, warningColor]
     )
 
     return (
@@ -484,7 +498,6 @@ export default function DachPhotovoltaik({
             position={[finalX, finalY, finalZ]}
             ref={groupRef}
             {...bind()}
-            onPointerDown={(event) => event.stopPropagation()}
             onClick={handleClick}
             onPointerOver={() => setIsHovered(true)}
             onPointerOut={() => setIsHovered(false)}
@@ -533,7 +546,7 @@ export default function DachPhotovoltaik({
             {kantenAnzeigen && (
                 <lineSegments>
                     <primitive attach="geometry" object={edgeGeometry} />
-                    <lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+                    <lineBasicMaterial attach="material" color={warningColor ?? borderColor} linewidth={2} />
                 </lineSegments>
             )}
         </group>

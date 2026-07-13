@@ -5,6 +5,7 @@ import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Rolltor für Wände – mit Lamellen, Rollkasten und Motor
 export default function RollTor({
@@ -246,6 +247,21 @@ export default function RollTor({
 	if (lang && rechts) rolltorRotation = [0, Math.PI, 0]
 	if (!lang && rechts) rolltorRotation = [0, -Math.PI / 2, 0]
 	if (!lang && !rechts) rolltorRotation = [0, Math.PI / 2, 0]
+	const collisionReport = getOpeningCollisionReport({
+		selectedObject: obj,
+		draftObject: {
+			...obj,
+			startPos: {
+				...(obj?.startPos ?? {}),
+				x: finalX,
+				y: finalY,
+				z: finalZ
+			}
+		},
+		objs
+	})
+	const warningColor = collisionReport.hasCollision ? '#d11a2a' : rolltorFarbe
+	const warningFillColor = collisionReport.hasCollision ? '#d11a2a' : rolltorFüllFarbe
 
 	return (
 		<group
@@ -262,7 +278,7 @@ export default function RollTor({
 					{/* Tor-Hintergrund */}
 					<mesh position={[0, 0, 0]}>
 						<boxGeometry args={[breite, höhe, tiefe]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					{/* Lamellen */}
@@ -273,11 +289,11 @@ export default function RollTor({
 							<group key={`lamelle-${i}`}>
 								<mesh position={[0, yPos, tiefe / 2 + 0.02]}>
 									<boxGeometry args={[breite - 0.15, lamellenHöhe - 0.02, lamellenTiefe * 0.2]} />
-									<meshStandardMaterial color={rolltorFüllFarbe} />
+									<meshStandardMaterial color={warningFillColor} />
 								</mesh>
 								<mesh position={[0, yPos, -tiefe / 2 - 0.02]}>
 									<boxGeometry args={[breite - 0.15, lamellenHöhe - 0.02, lamellenTiefe * 0.2]} />
-									<meshStandardMaterial color={rolltorFüllFarbe} />
+									<meshStandardMaterial color={warningFillColor} />
 								</mesh>
 
 								{i < lamellenAnzahl - 1 && (
@@ -293,23 +309,23 @@ export default function RollTor({
 					{/* Führungsschienen links/rechts */}
 					<mesh position={[-breite / 2 + 0.075, 0, 0]}>
 						<boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 					<mesh position={[breite / 2 - 0.075, 0, 0]}>
 						<boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					{/* Oberer Abschluss */}
 					<mesh position={[0, höhe / 2 - 0.075, 0]}>
 						<boxGeometry args={[breite, 0.15, tiefe + 0.1]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					{/* Rollkasten (innen/außen) */}
 					<mesh position={[0, rollkastenY, rollkastenFinalZ]}>
 						<boxGeometry args={[rollkastenBreite, rollkastenHöhe, rollkastenTiefe]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					{/* Motor links/rechts */}

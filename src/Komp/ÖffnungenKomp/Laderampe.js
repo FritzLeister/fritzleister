@@ -5,6 +5,7 @@ import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 export default function Laderampe({
 	gebäudeHöhe,
@@ -263,6 +264,23 @@ export default function Laderampe({
 	const überdachungDicke = 0.12
 
 	const reflektorZ = normalSign * (tiefe / 2 + 0.22)
+	const collisionReport = getOpeningCollisionReport({
+		selectedObject: obj,
+		draftObject: {
+			...obj,
+			startPos: {
+				...(obj?.startPos ?? {}),
+				x: finalX,
+				y: finaleY,
+				z: finalZ
+			}
+		},
+		objs
+	})
+	const warningColor = collisionReport.hasCollision ? '#d11a2a' : rolltorFarbe
+	const warningFillColor = collisionReport.hasCollision ? '#d11a2a' : rolltorFüllFarbe
+	const warningDarkColor = collisionReport.hasCollision ? '#d11a2a' : umrandungFarbeDunkler
+	const warningDarkColor2 = collisionReport.hasCollision ? '#d11a2a' : umrandungFarbeDunkler2
 
 	return (
 		<group
@@ -278,7 +296,7 @@ export default function Laderampe({
 				<>
 					<mesh position={[0, 0, 0]}>
 						<boxGeometry args={[breite, höhe, tiefe]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					{Array.from({ length: lamellenAnzahl }, (_, i) => {
@@ -287,11 +305,11 @@ export default function Laderampe({
 							<group key={`laderampe-lamelle-${i}`}>
 								<mesh position={[0, yPos, tiefe / 2 + 0.02]}>
 									<boxGeometry args={[breite - 0.15, lamellenHöhe - 0.02, lamellenTiefe * 0.2]} />
-									<meshStandardMaterial color={rolltorFüllFarbe} />
+									<meshStandardMaterial color={warningFillColor} />
 								</mesh>
 								<mesh position={[0, yPos, -tiefe / 2 - 0.02]}>
 									<boxGeometry args={[breite - 0.15, lamellenHöhe - 0.02, lamellenTiefe * 0.2]} />
-									<meshStandardMaterial color={rolltorFüllFarbe} />
+									<meshStandardMaterial color={warningFillColor} />
 								</mesh>
 
 								{i < lamellenAnzahl - 1 && (
@@ -306,16 +324,16 @@ export default function Laderampe({
 
 					<mesh position={[-breite / 2 + 0.075, 0, 0]}>
 						<boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 					<mesh position={[breite / 2 - 0.075, 0, 0]}>
 						<boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					<mesh position={[0, höhe / 2 - 0.075, 0]}>
 						<boxGeometry args={[breite, 0.15, tiefe + 0.1]} />
-						<meshStandardMaterial color={rolltorFarbe} />
+						<meshStandardMaterial color={warningColor} />
 					</mesh>
 
 					{/* Schlupftür */}
@@ -374,17 +392,17 @@ export default function Laderampe({
 							{/* Laderampe */}
 							<mesh position={[0, -höhe / 2 - (laderampenPlatteHöhe / 2) - 0.1, laderampenPlatteOffsetZ]}>
 								<boxGeometry args={[breite, laderampenPlatteHöhe + 0.2, laderampenPlatteTiefe]} />
-								<meshStandardMaterial color={umrandungFarbeDunkler2} />
+								<meshStandardMaterial color={warningDarkColor2} />
 							</mesh>
 
 							{/* Runde Stützen an den äußeren Rampenecken */}
 							<mesh position={[-stützenX, stützenY, stützenZ]}>
 								<cylinderGeometry args={[stützenRadius, stützenRadius, stützenHöhe-0.25, 16]} />
-								<meshStandardMaterial color={rolltorFarbe} />
+								<meshStandardMaterial color={warningColor} />
 							</mesh>
 							<mesh position={[stützenX, stützenY, stützenZ]}>
 								<cylinderGeometry args={[stützenRadius, stützenRadius, stützenHöhe-0.25, 16]} />
-								<meshStandardMaterial color={rolltorFarbe} />
+								<meshStandardMaterial color={warningColor} />
 							</mesh>
 						</>
 					)}
@@ -392,11 +410,11 @@ export default function Laderampe({
 					{/* Umrandung: nur 2 Seitenwände (kein Boden) */}
 					<mesh position={[-umrandungX, außenwandY, laderampenPlatteOffsetZ]}>
 						<boxGeometry args={[umrandungDicke, außenwandHöhe, laderampenPlatteTiefe]} />
-						<meshStandardMaterial color={umrandungFarbeDunkler} />
+						<meshStandardMaterial color={warningDarkColor} />
 					</mesh>
 					<mesh position={[umrandungX, außenwandY, laderampenPlatteOffsetZ]}>
 						<boxGeometry args={[umrandungDicke, außenwandHöhe, laderampenPlatteTiefe]} />
-						<meshStandardMaterial color={umrandungFarbeDunkler} />
+						<meshStandardMaterial color={warningDarkColor} />
 					</mesh>
 
                     {/* Schwarze Balken */}
@@ -417,7 +435,7 @@ export default function Laderampe({
 
 					<mesh position={[0, höhe / 2 + (überdachungDicke / 2), laderampenPlatteOffsetZ]}>
 						<boxGeometry args={[breite+0.25, überdachungDicke, laderampenPlatteTiefe]} />
-						<meshStandardMaterial color={umrandungFarbeDunkler} />
+						<meshStandardMaterial color={warningDarkColor} />
 					</mesh>
 
 				</>

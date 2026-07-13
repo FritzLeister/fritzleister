@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Transparentes Paneel für Wände – Glasfläche mit vertikalen Profilen
 export default function TransparentesPaneel({
@@ -260,6 +261,21 @@ export default function TransparentesPaneel({
 	const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
 	const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
 	const finalY = gridPosi.y
+	const collisionReport = getOpeningCollisionReport({
+		selectedObject: obj,
+		draftObject: {
+			...obj,
+			startPos: {
+				...(obj?.startPos ?? {}),
+				x: finalX,
+				y: finalY,
+				z: finalZ
+			}
+		},
+		objs
+	})
+	const warningGlassColor = collisionReport.hasCollision ? '#ff8080' : '#BFEFFF'
+	const warningFrameColor = collisionReport.hasCollision ? '#d11a2a' : '#9fd3e6'
 
 	const breite = paneelBreite
 	const höhe = paneelHöhe
@@ -288,7 +304,7 @@ export default function TransparentesPaneel({
 					<mesh position={[0, 0, tiefe / 2 + 0.02]}>
 						<boxGeometry args={[breite - 0.12, höhe - 0.12, 0.05]} />
 						<meshStandardMaterial
-							color="#BFEFFF"
+							color={warningGlassColor}
 							transparent
 							opacity={0.45}
 							depthWrite={false}
@@ -302,7 +318,7 @@ export default function TransparentesPaneel({
 					<mesh position={[0, 0, -tiefe / 2 - 0.02]}>
 						<boxGeometry args={[breite - 0.12, höhe - 0.12, 0.05]} />
 						<meshStandardMaterial
-							color="#BFEFFF"
+							color={warningGlassColor}
 							transparent
 							opacity={0.35}
 							depthWrite={false}
@@ -322,11 +338,11 @@ export default function TransparentesPaneel({
 							<group key={`profil-${i}`}>
 								<mesh position={[clampedX, 0, tiefe / 2 + 0.04]}>
 									<boxGeometry args={[0.05, höhe - 0.08, 0.05]} />
-									<meshStandardMaterial color="#9fd3e6" />
+									<meshStandardMaterial color={warningFrameColor} />
 								</mesh>
 								<mesh position={[clampedX, 0, -tiefe / 2 - 0.04]}>
 									<boxGeometry args={[0.05, höhe - 0.08, 0.05]} />
-									<meshStandardMaterial color="#9fd3e6" />
+									<meshStandardMaterial color={warningFrameColor} />
 								</mesh>
 							</group>
 						)
@@ -335,19 +351,19 @@ export default function TransparentesPaneel({
 					{/* Außenrahmen */}
 					<mesh position={[0, höhe / 2 - 0.04, 0]}>
 						<boxGeometry args={[breite, 0.08, tiefe + 0.05]} />
-						<meshStandardMaterial color="#9fd3e6" />
+						<meshStandardMaterial color={warningFrameColor} />
 					</mesh>
 					<mesh position={[0, -höhe / 2 + 0.04, 0]}>
 						<boxGeometry args={[breite, 0.08, tiefe + 0.05]} />
-						<meshStandardMaterial color="#9fd3e6" />
+						<meshStandardMaterial color={warningFrameColor} />
 					</mesh>
 					<mesh position={[-breite / 2 + 0.04, 0, 0]}>
 						<boxGeometry args={[0.08, höhe, tiefe + 0.05]} />
-						<meshStandardMaterial color="#9fd3e6" />
+						<meshStandardMaterial color={warningFrameColor} />
 					</mesh>
 					<mesh position={[breite / 2 - 0.04, 0, 0]}>
 						<boxGeometry args={[0.08, höhe, tiefe + 0.05]} />
-						<meshStandardMaterial color="#9fd3e6" />
+						<meshStandardMaterial color={warningFrameColor} />
 					</mesh>
 				</>
 			)}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function TransparentesPaneelBearbeiten({
 	selectedObject,
@@ -28,6 +29,17 @@ export default function TransparentesPaneelBearbeiten({
 		{ key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
 	]
 	const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
+	const draftObject = selectedObject ? {
+		...selectedObject,
+		value: [
+			clampValue(paneelBreite, 0.2, maxPaneelBreite),
+			clampValue(paneelHöhe, 0.2, maxPaneelHöhe)
+		],
+		abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+		abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+		abstandUnten: (zeigtWandPosition || istDachPaneel) ? (displayValues.abstandUnten ?? selectedObject.abstandUnten) : selectedObject.abstandUnten,
+	} : null
+	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
 
 	useEffect(() => {
 		if (!istDachPaneel || !selectedObject?.id) return
@@ -41,6 +53,10 @@ export default function TransparentesPaneelBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		if (collisionReport.hasCollision) {
+			window.alert(collisionReport.message)
+			return
+		}
 		if (zeigtWandPosition || istDachPaneel) {
 			handleRefreshPosition()
 		}
@@ -101,7 +117,7 @@ export default function TransparentesPaneelBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				{(zeigtWandPosition || istDachPaneel) && <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />}
+				{(zeigtWandPosition || istDachPaneel) && <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />}
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

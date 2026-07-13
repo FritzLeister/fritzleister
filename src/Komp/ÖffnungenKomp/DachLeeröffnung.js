@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Transparente Öffnung für Dach (mit Winkelrotation)
 export default function DachLeeröffnung({
@@ -372,6 +373,20 @@ export default function DachLeeröffnung({
     })
 
     const borderColor = isHovered ? '#5aa7ff' : '#000000'
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: {
+            ...obj,
+            startPos: {
+                ...(obj?.startPos ?? {}),
+                x: finalX,
+                z: finalZ
+            }
+        },
+        objs
+    })
+    const warningColor = collisionReport.hasCollision ? '#d11a2a' : '#87CEEB'
+    const warningBorderColor = collisionReport.hasCollision ? '#d11a2a' : borderColor
 
     if (!obj) {
         return null
@@ -392,7 +407,7 @@ export default function DachLeeröffnung({
                 <mesh position={[0, 0, 0]}>
                     <boxGeometry args={[skaliertBreite, skaliertHöhe, 1]} />
                     <meshStandardMaterial
-                        color="#87CEEB"
+                        color={warningColor}
                         transparent
                         opacity={0.25}
                         depthWrite={false}
@@ -408,7 +423,7 @@ export default function DachLeeröffnung({
             {kantenAnzeigen && (
                 <lineSegments position={[0, 0, 0]}>
                     <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(skaliertBreite, skaliertHöhe, 1)]} />
-                    <lineBasicMaterial attach="material" color={borderColor} linewidth={2} />
+                    <lineBasicMaterial attach="material" color={warningBorderColor} linewidth={2} />
                 </lineSegments>
             )}
         </group>

@@ -3,6 +3,7 @@ import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import MuiTextfeld from "../MuiTextfeld"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function LaderampeBearbeiten({
 	selectedObject,
@@ -59,6 +60,32 @@ export default function LaderampeBearbeiten({
 		return Math.min(Math.max(num, min), max)
 	}
 
+	const draftObject = selectedObject ? {
+		...selectedObject,
+		value: [
+			clampValue(laderampeBreite, 0.2, maxLaderampeBreite),
+			clampValue(laderampeHöhe, 0.2, maxLaderampeHöhe)
+		],
+		typ,
+		länge,
+		rampenhöhe: clampValue(rampenhöhe, 0, maxLaderampeRampenhöhe),
+		transparenteFüllung,
+		transparentePaneele: transparenteFüllung === 'ja' ? transparentePaneele : null,
+		fensterstreifenHöhe: transparenteFüllung === 'ja' ? fensterstreifenHöhe : null,
+		reflektor,
+		schlupftür,
+		schlupftürBreite: schlupftür === 'ja' ? clampValue(schlupftürBreite, 0.2, maxLaderampeBreite) : null,
+		schlupftürHöhe: schlupftür === 'ja' ? clampValue(schlupftürHöhe, 0.2, maxLaderampeHöhe) : null,
+		schlupftürDistanzX: schlupftür === 'ja' ? clampValue(schlupftürDistanzX, 0, maxLaderampeBreite) : null,
+		schlupftürOrientierung: schlupftür === 'ja' ? schlupftürOrientierung : null,
+		farbe,
+		füllFarbe,
+		verkleidungFarbe,
+		abstandLinks: clampValue(displayValues.abstandLinks ?? abstandLinks, 0, maxAbstand),
+		abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
+	} : null
+	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
 	const handleTypChange = (newTyp) => {
 		setTyp(newTyp)
 		setLänge(getLaderampeStartLängeByTyp(newTyp))
@@ -66,6 +93,10 @@ export default function LaderampeBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		if (collisionReport.hasCollision) {
+			window.alert(collisionReport.message)
+			return
+		}
 		handleRefreshPosition()
 		const geklemmteRampenhöhe = clampValue(rampenhöhe, 0, maxLaderampeRampenhöhe)
 		const maxLaderampeHöheNachRampe = Math.max(0.2, gebäudeHöhe - geklemmteRampenhöhe)
@@ -142,7 +173,7 @@ export default function LaderampeBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

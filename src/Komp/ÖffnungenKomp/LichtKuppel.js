@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { OPENING_GRID_STEP, dispatchOpeningPositionValues, persistOpeningPosition, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 function getRahmenFarbe(farbe) {
 	if (farbe === 'Schwarz') return '#1f2328'
@@ -396,6 +397,22 @@ export default function LichtKuppel({
 		geometry.computeVertexNormals()
 		return geometry
 	}, [breiteX, breiteY, kuppelHöhe])
+	const collisionReport = getOpeningCollisionReport({
+		selectedObject: obj,
+		draftObject: {
+			...obj,
+			startPos: {
+				...(obj?.startPos ?? {}),
+				x: finalX,
+				z: finalZ
+			}
+		},
+		objs
+	})
+	const warningColor = collisionReport.hasCollision ? '#d11a2a' : rahmenFarbe
+	const warningGlassColor = collisionReport.hasCollision ? '#ff8080' : '#CFF4FF'
+	const warningCupColor = collisionReport.hasCollision ? '#ff8080' : '#BFEFFF'
+	const warningBorderColor = collisionReport.hasCollision ? '#d11a2a' : borderColor
 
 	return (
 		<group
@@ -412,28 +429,28 @@ export default function LichtKuppel({
 					{/* Rahmen statt Vollplatte, damit die Öffnung frei bleibt */}
 					<mesh position={[0, (breiteY / 2) - (rahmenStärke / 2), 0]}>
 						<boxGeometry args={[breiteX, rahmenStärke, basisTiefe]} />
-						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+						<meshStandardMaterial color={warningColor} metalness={0.3} roughness={0.55} />
 					</mesh>
 
 					<mesh position={[0, -(breiteY / 2) + (rahmenStärke / 2), 0]}>
 						<boxGeometry args={[breiteX, rahmenStärke, basisTiefe]} />
-						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+						<meshStandardMaterial color={warningColor} metalness={0.3} roughness={0.55} />
 					</mesh>
 
 					<mesh position={[-(breiteX / 2) + (rahmenStärke / 2), 0, 0]}>
 						<boxGeometry args={[rahmenStärke, innenBreiteY, basisTiefe]} />
-						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+						<meshStandardMaterial color={warningColor} metalness={0.3} roughness={0.55} />
 					</mesh>
 
 					<mesh position={[(breiteX / 2) - (rahmenStärke / 2), 0, 0]}>
 						<boxGeometry args={[rahmenStärke, innenBreiteY, basisTiefe]} />
-						<meshStandardMaterial color={rahmenFarbe} metalness={0.3} roughness={0.55} />
+						<meshStandardMaterial color={warningColor} metalness={0.3} roughness={0.55} />
 					</mesh>
 					
 					<mesh position={[0, 0, (basisTiefe / 2) + (unterbauTiefe / 2)]}>
 						<boxGeometry args={[innenBreiteX, innenBreiteY, unterbauTiefe]} />
 						<meshStandardMaterial
-							color="#CFF4FF"
+							color={warningGlassColor}
 							transparent
 							opacity={0.88}
 							depthWrite={false}
@@ -445,7 +462,7 @@ export default function LichtKuppel({
 
 					<mesh geometry={pyramidGeometry}>
 						<meshStandardMaterial
-							color="#BFEFFF"
+							color={warningCupColor}
 							transparent
 							opacity={0.75}
 							depthWrite={false}
@@ -464,8 +481,7 @@ export default function LichtKuppel({
 					<lineSegments>
 						<edgesGeometry args={[new THREE.BoxGeometry(breiteX, breiteY, basisTiefe)]} />
 						<lineBasicMaterial 
-						// color={borderColor} 
-						color={isActive ? '#2f6db8' : borderColor}
+						color={collisionReport.hasCollision ? '#d11a2a' : (isActive ? '#2f6db8' : borderColor)}
 						linewidth={2} 
 						/>
 					</lineSegments>
@@ -477,7 +493,7 @@ export default function LichtKuppel({
 
 					<lineSegments>
 						<edgesGeometry args={[pyramidGeometry]} />
-						<lineBasicMaterial color={isActive ? '#2f6db8' : borderColor} linewidth={2} />
+						<lineBasicMaterial color={collisionReport.hasCollision ? '#d11a2a' : (isActive ? '#2f6db8' : warningBorderColor)} linewidth={2} />
 					</lineSegments>
 				</>
 			)}

@@ -6,6 +6,7 @@ import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // SektionalTor für Wände – Garagentor mit horizontalen Paneelen
 export default function SektionalTor({
@@ -214,6 +215,21 @@ export default function SektionalTor({
     const reflektorFarbe = colorMap[obj?.sektionalTorReflektorFarbe] ?? '#e6e6e6'
 
     const finalY = position[1] + 0.2 + (höhe / 2)
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: {
+            ...obj,
+            startPos: {
+                ...(obj?.startPos ?? {}),
+                x: finalX,
+                y: finalY,
+                z: finalZ
+            }
+        },
+        objs
+    })
+    const warningColor = collisionReport.hasCollision ? '#d11a2a' : sektionalTorFarbe
+    const warningFillColorInnen = collisionReport.hasCollision ? '#d11a2a' : sektionalTorFüllFarbeInnen
 
     // Rotation logic
     let sektionalTorRotation = [0, 0, 0]
@@ -331,7 +347,7 @@ export default function SektionalTor({
                                 </Subtraction>
                             ))}
                         </Geometry>
-                        <meshStandardMaterial color={sektionalTorFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Horizontale Paneele */}
@@ -359,7 +375,7 @@ export default function SektionalTor({
                                             side={THREE.DoubleSide}
                                         />
                                     ) : (
-                                        <meshStandardMaterial color={panelColor} />
+                                        <meshStandardMaterial color={collisionReport.hasCollision ? '#d11a2a' : panelColor} />
                                     )}
                                 </mesh>
 
@@ -375,7 +391,7 @@ export default function SektionalTor({
                                             side={THREE.DoubleSide}
                                         />
                                     ) : (
-                                        <meshStandardMaterial color={sektionalTorFüllFarbeInnen} />
+                                        <meshStandardMaterial color={warningFillColorInnen} />
                                     )}
                                 </mesh>
 
@@ -405,7 +421,7 @@ export default function SektionalTor({
                                 {i < panelCount - 1 && (
                                     <mesh position={[0, yPos - (panelHeight / 2), 0]}>
                                         <boxGeometry args={[breite, panelGap, tiefe + 0.1]} />
-                                        <meshStandardMaterial color={sektionalTorFarbe} />
+                                        <meshStandardMaterial color={warningColor} />
                                     </mesh>
                                 )}
 
@@ -424,25 +440,25 @@ export default function SektionalTor({
                     {/* Rahmen oben */}
                     <mesh position={[0, höhe / 2 - 0.075, 0]}>
                         <boxGeometry args={[breite, 0.15, tiefe + 0.1]} />
-                        <meshStandardMaterial color={sektionalTorFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Rahmen unten */}
                     <mesh position={[0, -höhe / 2 + 0.075, 0]} >
                         <boxGeometry args={[breite, 0.15, tiefe + 0.1]} />
-                        <meshStandardMaterial color={sektionalTorFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Rahmen links */}
                     <mesh position={[-breite / 2 + 0.075, 0, 0]}>
                         <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                        <meshStandardMaterial color={sektionalTorFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Rahmen rechts */}
                     <mesh position={[breite / 2 - 0.075, 0, 0]}>
                         <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                        <meshStandardMaterial color={sektionalTorFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Schlupftür */}

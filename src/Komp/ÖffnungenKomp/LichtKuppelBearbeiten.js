@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
+import { getOpeningCollisionReport } from "../openingUtils"
 
 export default function LichtKuppelBearbeiten({
 	selectedObject,
@@ -26,6 +27,19 @@ export default function LichtKuppelBearbeiten({
 		{ key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
 	]
 	const { displayValues, handleRefreshPosition } = useOpeningPositionDisplay(selectedObject, positionFields)
+	const draftObject = selectedObject ? {
+		...selectedObject,
+		value: [
+			clampValue(breiteX, 0.2, maxBreiteX),
+			clampValue(breiteY, 0.2, maxBreiteY)
+		],
+		horizontaleAusrichtung,
+		farbe,
+		abstandLinks: selectedObject.abstandLinks,
+		abstandRechts: selectedObject.abstandRechts,
+		abstandUnten: selectedObject.abstandUnten,
+	} : null
+	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
 
 	useEffect(() => {
 		if (!selectedObject?.id) return
@@ -39,6 +53,10 @@ export default function LichtKuppelBearbeiten({
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
+		if (collisionReport.hasCollision) {
+			window.alert(collisionReport.message)
+			return
+		}
 		handleRefreshPosition()
 		const sichereBreiteX = clampValue(breiteX, 0.2, maxBreiteX)
 		const sichereBreiteY = clampValue(breiteY, 0.2, maxBreiteY)
@@ -99,7 +117,7 @@ export default function LichtKuppelBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position:</p>
 

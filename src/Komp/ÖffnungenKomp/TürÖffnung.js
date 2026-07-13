@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
 import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition } from './wallOpeningPositionUtils'
+import { getOpeningCollisionReport } from '../openingUtils'
 
 // Tür für Wände – basiert auf WandFenster Logik
 export default function TürÖffnung({
@@ -250,6 +251,22 @@ export default function TürÖffnung({
     // Tür so positionieren, dass unteres Ende die Bodenplatte berührt
     // Bodenplatte oben ist bei: position[1] + 0.2 (Bodenplatte Höhe 0.4)
     const finalY = position[1] + 0.2 + (höhe / 2)
+    const collisionReport = getOpeningCollisionReport({
+        selectedObject: obj,
+        draftObject: {
+            ...obj,
+            startPos: {
+                ...(obj?.startPos ?? {}),
+                x: finalX,
+                y: finalY,
+                z: finalZ
+            }
+        },
+        objs
+    })
+    const warningColor = collisionReport.hasCollision ? '#d11a2a' : rahmenFarbe
+    const warningFillColor = collisionReport.hasCollision ? '#d11a2a' : türFüllFarbe
+    const warningFillColorInnen = collisionReport.hasCollision ? '#d11a2a' : türFüllFarbeInnen
 
     return (
         <group
@@ -266,27 +283,27 @@ export default function TürÖffnung({
                     {/* Türrahmen Hintergrund */}
                     <mesh position={[0, 0, 0]}>
                         <boxGeometry args={[breite, höhe, tiefe]} />
-                        <meshStandardMaterial color={rahmenFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Türblätter */}
                     <mesh position={[leftLeafCenterX, 0, tiefe / 2]}>
                         <boxGeometry args={[leafWidth - 0.15, höhe - 0.15, tiefe * 0.1]} />
-                        <meshStandardMaterial color={türFüllFarbe} />
+                        <meshStandardMaterial color={warningFillColor} />
                     </mesh>
                     <mesh position={[leftLeafCenterX, 0, -tiefe / 2]}>
                         <boxGeometry args={[leafWidth - 0.15, höhe - 0.15, tiefe * 0.1]} />
-                        <meshStandardMaterial color={türFüllFarbeInnen} />
+                        <meshStandardMaterial color={warningFillColorInnen} />
                     </mesh>
                     {isDoubleDoor && (
                         <>
                             <mesh position={[rightLeafCenterX, 0, tiefe / 2]}>
                                 <boxGeometry args={[leafWidth - 0.15, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbe} />
+                                <meshStandardMaterial color={warningFillColor} />
                             </mesh>
                             <mesh position={[rightLeafCenterX, 0, -tiefe / 2]}>
                                 <boxGeometry args={[leafWidth - 0.15, höhe - 0.15, tiefe * 0.1]} />
-                                <meshStandardMaterial color={türFüllFarbeInnen} />
+                                <meshStandardMaterial color={warningFillColorInnen} />
                             </mesh>
                         </>
                     )}
@@ -294,25 +311,25 @@ export default function TürÖffnung({
                     {/* Türrahmen oben */}
                     <mesh position={[0, höhe / 2 - 0.075, 0]}>
                         <boxGeometry args={[breite, 0.15, tiefe + 0.1]} />
-                        <meshStandardMaterial color={rahmenFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Türrahmen unten */}
                     <mesh position={[0, -höhe / 2 + 0.075, 0]}>
                         <boxGeometry args={[breite, 0.15, tiefe + 0.1]} />
-                        <meshStandardMaterial color={rahmenFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Türrahmen links */}
                     <mesh position={[-breite / 2 + 0.075, 0, 0]}>
                         <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                        <meshStandardMaterial color={rahmenFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Türrahmen rechts */}
                     <mesh position={[breite / 2 - 0.075, 0, 0]}>
                         <boxGeometry args={[0.15, höhe, tiefe + 0.1]} />
-                        <meshStandardMaterial color={rahmenFarbe} />
+                        <meshStandardMaterial color={warningColor} />
                     </mesh>
 
                     {/* Türklinke (kleine Kugel) */}
