@@ -87,7 +87,9 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
                         sprossenX,
                         sprossenY,
                         fensterFarbe,
-                        reflektorFarbe
+                        reflektorFarbe,
+                        abstandLinks: aktuellerAbstandLinks,
+                        abstandUnten: aktuellerAbstandUnten
                     }
                     : obj
             ))

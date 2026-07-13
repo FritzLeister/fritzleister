@@ -12,6 +12,7 @@ import DarstellungUI from './Komp/DarstellungUI'
 import FirstRunTutorial from './Komp/FirstRunTutorial'
 import { registerProductSnapshotCapture } from './utils/productSnapshotRegistry'
 import { useProductSnapshots } from './hooks/useProductSnapshots'
+import { hasAnyOpeningCollision } from './Komp/openingUtils'
 
 // Better seeded random number generator (Mulberry32)
 function createSeededRandom(seed) {
@@ -86,6 +87,52 @@ const CLOUD_CENTRAL_CONFIG = CLOUD_RING_CONFIG.map((cloud, index) => ({
     opacity: 0.58 + (index % 4) * 0.02,
     speed: cloud.speed * 0.7,
 }))
+
+const OPENING_TYPES = new Set([
+    'leeröffnung',
+    'fenster',
+    'tür-öffnung',
+    'schiebetür',
+    'rolltor',
+    'sektionaltor',
+    'transparentespaneel',
+    'laderampe',
+    'kleinlichtskuppel',
+    'photovoltaik'
+])
+
+function countOpeningsByType(objs = []) {
+    return (objs || []).reduce((acc, obj) => {
+        const type = obj?.type
+        if (!OPENING_TYPES.has(type)) {
+            return acc
+        }
+
+        acc[type] = (acc[type] || 0) + 1
+        return acc
+    }, {})
+}
+
+function mapOpeningSummaryItem(obj, index) {
+    return {
+        id: obj?.id ?? `opening-${index}`,
+        type: obj?.type ?? 'unbekannt',
+        bereich: obj?.bereich === 'dach' ? 'dach' : 'wand',
+        seite: obj?.lang ? 'längswand' : 'stirnwand',
+        richtung: obj?.rechts ? 'rechts' : 'links',
+        breite: obj?.value?.[0],
+        höhe: obj?.value?.[1],
+        abstandLinks: obj?.abstandLinks,
+        abstandRechts: obj?.abstandRechts,
+        abstandUnten: obj?.abstandUnten,
+        farbe: obj?.farbe ?? obj?.fensterFarbe ?? obj?.rahmenFarbe ?? null,
+        startPos: {
+            x: obj?.startPos?.x,
+            y: obj?.startPos?.y,
+            z: obj?.startPos?.z
+        }
+    }
+}
 
 function cloneHistoryValue(value) {
     return JSON.parse(
@@ -465,6 +512,64 @@ export default function App({
             };
             return [...prev, newObj];
         });
+    }
+
+    function buildAnfrageZusammenfassung() {
+        const openingObjects = (objs || []).filter((obj) => OPENING_TYPES.has(obj?.type))
+        const openingCounts = countOpeningsByType(openingObjects)
+        const openingItems = openingObjects.map((obj, index) => mapOpeningSummaryItem(obj, index))
+
+        return {
+            abmessung: {
+                breite,
+                länge,
+                höhe,
+                dachArt,
+                traufhöhe,
+                dachneigung,
+                dachAusrichtung,
+                diffTraufFirst
+            },
+            verkleidung: {
+                wandGeometrieVorgaben,
+                isolierung,
+                paneeltyp,
+                paneelBreiteMm,
+                wandOrientierung,
+                farbSchema,
+                außenFarbe,
+                außenFarbeMuster,
+                musterVerortung,
+                dachIsolierung,
+                dachPaneeltyp,
+                dachPaneelBreiteMm,
+                dachAußenFarbe,
+                dachPvcName,
+                pvcName
+            },
+            öffnungen: {
+                gesamt: openingItems.length,
+                überlappung: hasAnyOpeningCollision(openingObjects),
+                countsByType: openingCounts,
+                items: openingItems,
+                fensterFarbe,
+                türFarbe,
+                türFarbeInnen,
+                schiebeTorFarbe,
+                rollTorFarbe,
+                sektionalTorFarbe,
+                sektionalTorFarbeInnen
+            },
+            konstruktion: {
+                bodenplatteFarbe,
+                rahmenFarbe,
+                sekundärKonstruktionsFarbe,
+                sekundärHolzKonstruktionsFarbe,
+                zubehörFarbe,
+                kantenFarbe,
+                kranKapazität
+            }
+        }
     }
 
     function syncHistoryAvailability() {
@@ -909,7 +1014,7 @@ export default function App({
                 saveCurrentHalle();
 
                 setTimeout(() => {
-                    setShowApp3();
+                    setShowApp3(buildAnfrageZusammenfassung());
                 }, 100);
             }}
             title="Aktuelle Halle speichern und zur Übersicht wechseln."

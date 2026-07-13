@@ -87,6 +87,7 @@ function LandingPagefunc({ setShowApp }) {
 
 function AppPageFunc({ 
   setShowApp, 
+  setAnfrageSummary,
   flach, 
   länge, 
   setLänge, 
@@ -122,8 +123,18 @@ function AppPageFunc({
       <DesktopApplication 
         setShowApp={() => setShowApp("landing")} 
         setShowApp2={() => setShowApp("custom")} 
-        setShowApp3={() => setShowApp("preis")}
-        setShowAppKontakt={() => setShowApp("kontakt")}
+        setShowApp3={(summaryPayload) => {
+          if (summaryPayload) {
+            setAnfrageSummary(summaryPayload)
+          }
+          setShowApp("preis")
+        }}
+        setShowAppKontakt={(summaryPayload) => {
+          if (summaryPayload) {
+            setAnfrageSummary(summaryPayload)
+          }
+          setShowApp("kontakt")
+        }}
         flach={flach}
         länge={länge}
         setLänge={setLänge}
@@ -159,6 +170,7 @@ function Root() {
   const [flach, setFlach] = useState(false)
   const [hallenartSelection, setHallenartSelection] = useState("")
   const [dachSelection, setDachSelection] = useState("")
+  const [anfrageSummary, setAnfrageSummary] = useState(null)
 
   // länge: ; breite: ; höhe: ; flach: ; dachSelection: ; hallenartSelection: ;
   const [hallenSave, setHallenSave] = useState([])
@@ -247,6 +259,7 @@ function Root() {
       {(showApp === "app" || showApp === "kontakt") && (
         <AppPageFunc 
         setShowApp={setShowApp} 
+        setAnfrageSummary={setAnfrageSummary}
         flach={flach} 
         länge={länge} 
         setLänge={setLänge} 
@@ -277,8 +290,9 @@ function Root() {
         setHallenartSelection={setHallenartSelection}
         setDachSelection={setDachSelection}
         hallenSave={hallenSave}
-        setObjs={setObjs}
         onKontaktSubmit={saveKontaktHalle}
+        summaryData={anfrageSummary}
+        objs={objs}
         />
       )}
 
@@ -292,9 +306,10 @@ function Root() {
         setHallenartSelection={setHallenartSelection}
         setDachSelection={setDachSelection}
         hallenSave={hallenSave}
-        setObjs={setObjs}
         onKontaktSubmit={saveKontaktHalle}
         initialSchirm="kontakt"
+        summaryData={anfrageSummary}
+        objs={objs}
         />
       )}
 

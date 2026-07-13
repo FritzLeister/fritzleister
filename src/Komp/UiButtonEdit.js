@@ -10,6 +10,52 @@ const PANEL_ANIMATION_OPEN_MS = 260;
 const PANEL_ANIMATION_CLOSE_MS = 170;
 const PANEL_ANIMATION_EASING = 'cubic-bezier(0.2, 0.65, 0.3, 1)';
 
+function countOpeningsByType(objs = []) {
+    const openingTypes = new Set([
+        'leeröffnung',
+        'fenster',
+        'tür-öffnung',
+        'schiebetür',
+        'rolltor',
+        'sektionaltor',
+        'transparentespaneel',
+        'laderampe',
+        'kleinlichtskuppel',
+        'photovoltaik'
+    ]);
+
+    return (objs || []).reduce((acc, obj) => {
+        const type = obj?.type;
+        if (!openingTypes.has(type)) {
+            return acc;
+        }
+
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {});
+}
+
+function mapOpeningSummaryItem(obj, index) {
+    return {
+        id: obj?.id ?? `opening-${index}`,
+        type: obj?.type ?? 'unbekannt',
+        bereich: obj?.bereich === 'dach' ? 'dach' : 'wand',
+        seite: obj?.lang ? 'längswand' : 'stirnwand',
+        richtung: obj?.rechts ? 'rechts' : 'links',
+        breite: obj?.value?.[0],
+        höhe: obj?.value?.[1],
+        abstandLinks: obj?.abstandLinks,
+        abstandRechts: obj?.abstandRechts,
+        abstandUnten: obj?.abstandUnten,
+        farbe: obj?.farbe ?? obj?.fensterFarbe ?? obj?.rahmenFarbe ?? null,
+        startPos: {
+            x: obj?.startPos?.x,
+            y: obj?.startPos?.y,
+            z: obj?.startPos?.z
+        }
+    };
+}
+
 export default function UiButtonEdit({ 
     height, 
     name,
@@ -195,6 +241,77 @@ export default function UiButtonEdit({
         const openingObjs = (objs || []).filter((obj) => openingTypes.has(obj?.type));
         return hasAnyOpeningCollision(openingObjs);
     }, [objs]);
+
+    function buildAnfrageZusammenfassung() {
+        const openingTypes = new Set([
+            'leeröffnung',
+            'fenster',
+            'tür-öffnung',
+            'schiebetür',
+            'rolltor',
+            'sektionaltor',
+            'transparentespaneel',
+            'laderampe',
+            'kleinlichtskuppel',
+            'photovoltaik'
+        ]);
+        const openingObjects = (objs || []).filter((obj) => openingTypes.has(obj?.type));
+        const openingCounts = countOpeningsByType(openingObjects);
+        const openingItems = openingObjects.map((obj, index) => mapOpeningSummaryItem(obj, index));
+        const openingTotal = openingItems.length;
+
+        return {
+            abmessung: {
+                breite,
+                länge,
+                höhe,
+                dachArt,
+                traufhöhe,
+                dachneigung,
+                dachAusrichtung,
+                diffTraufFirst
+            },
+            verkleidung: {
+                wandGeometrieVorgaben,
+                isolierung,
+                paneeltyp,
+                paneelBreiteMm,
+                wandOrientierung,
+                farbSchema,
+                außenFarbe,
+                außenFarbeMuster,
+                musterVerortung,
+                dachIsolierung,
+                dachPaneeltyp,
+                dachPaneelBreiteMm,
+                dachAußenFarbe,
+                dachPvcName,
+                pvcName
+            },
+            öffnungen: {
+                gesamt: openingTotal,
+                überlappung: hasOpeningOverlap,
+                countsByType: openingCounts,
+                items: openingItems,
+                fensterFarbe,
+                türFarbe,
+                türFarbeInnen,
+                schiebeTorFarbe,
+                rollTorFarbe,
+                sektionalTorFarbe,
+                sektionalTorFarbeInnen
+            },
+            konstruktion: {
+                bodenplatteFarbe,
+                rahmenFarbe,
+                sekundärKonstruktionsFarbe,
+                sekundärHolzKonstruktionsFarbe,
+                zubehörFarbe,
+                kantenFarbe,
+                kranKapazität
+            }
+        };
+    }
 
     function abmessungsUI() {
         return(
@@ -1071,12 +1188,13 @@ export default function UiButtonEdit({
                                         if (hasOpeningOverlap) {
                                             return;
                                         }
+                                        const anfrageZusammenfassung = buildAnfrageZusammenfassung();
                                         if (setShowAppKontakt) {
-                                            setShowAppKontakt();
+                                            setShowAppKontakt(anfrageZusammenfassung);
                                             return;
                                         }
                                         if (setShowApp3) {
-                                            setShowApp3();
+                                            setShowApp3(anfrageZusammenfassung);
                                         }
                                     }}
                                 >

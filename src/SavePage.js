@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import "./styles.css";
 import AnfrageFormular from "./AnfrageFormular";
+import KonfigurationsZusammenfassung from "./KonfigurationsZusammenfassung";
 
 export default function SavePage({ 
     setShowApp,
@@ -10,16 +11,16 @@ export default function SavePage({
     setHöhe,
     setHallenartSelection,
     setDachSelection,
-    hallenSave,
-    setObjs,
     onKontaktSubmit,
-    initialSchirm = "preis"
+    initialSchirm = "preis",
+    summaryData,
+    objs
 }) {
 
-    const [schirm, setSchirm] = useState(initialSchirm)
+    const [schirm, setSchirm] = useState(initialSchirm === "kontakt" ? "zusammenfassung" : initialSchirm)
 
     useEffect(() => {
-        setSchirm(initialSchirm)
+        setSchirm(initialSchirm === "kontakt" ? "zusammenfassung" : initialSchirm)
     }, [initialSchirm])
 
     return(
@@ -58,8 +59,7 @@ export default function SavePage({
 
                         <div>
                             <button className="buttonDark" style={{ marginRight: "2.5px", width: 230 }} onClick={() => {
-                                setObjs([])
-                                setSchirm("kontakt")
+                                setSchirm("zusammenfassung")
                             }} >
                                 Preis Anfordern
                             </button>
@@ -71,6 +71,15 @@ export default function SavePage({
 
                     </div>
                 </div>
+            )}
+
+            {schirm === "zusammenfassung" && (
+                <KonfigurationsZusammenfassung
+                setSchirm={setSchirm}
+                setShowApp={setShowApp}
+                summaryData={summaryData}
+                liveObjs={objs}
+                />
             )}
             
             {schirm === "kontakt" && (
