@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 import { getOpeningCollisionReport } from "../openingUtils"
+import { centerOpeningInField } from "./openingAlignmentUtils"
 
 export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge, dachArt = 'satteldach', dachneigung = 0 }) {
     const istLangeWand = selectedObject?.lang ?? true
@@ -37,6 +38,14 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
     } : null
     const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
     const isDachLeeröffnung = selectedObject?.type === 'leeröffnung' && selectedObject?.lang === false
+
+    const handleAlignVertical = () => {
+        centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'vertical' })
+    }
+
+    const handleAlignHorizontal = () => {
+        centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'horizontal' })
+    }
 
     useEffect(() => {
         if (!isDachLeeröffnung || !selectedObject?.id) return
@@ -125,7 +134,7 @@ export default function LeerÖffnungBearbeiten({ selectedObject, setEditMenü, o
             
 
             <div style={{ margin: '15px', marginTop: '12px', marginRight: '12px' }}>
-                            <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
+                            <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} onAlignVertical={handleAlignVertical} onAlignHorizontal={handleAlignHorizontal} hideAlignmentActions={isDachLeeröffnung} />
 
                 <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

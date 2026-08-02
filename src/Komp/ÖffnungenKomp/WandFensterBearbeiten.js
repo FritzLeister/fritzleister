@@ -2,9 +2,10 @@ import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import { getOpeningCollisionReport } from "../openingUtils"
+import PositionInfoSection, { OPENING_POSITION_VALUES_EVENT } from "./PositionInfoSection"
+import { centerOpeningInField } from "./openingAlignmentUtils"
 
 export default function WandFensterBearbeiten({ selectedObject, setEditMenü, objs, setObjs, gebäudeHöhe, gebäudeBreite, gebäudeLänge }) {
-    const meterEinheit = 2.5
     const istLangeWand = selectedObject?.lang ?? true
     const maxFensterBreite = istLangeWand ? gebäudeLänge : gebäudeBreite
     const maxFensterHöhe = gebäudeHöhe
@@ -26,7 +27,6 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
 
     const aktuellerAbstandLinks = clampValue(Number(anzeigeAbstände.links ?? 0), 0, Number.POSITIVE_INFINITY)
     const aktuellerAbstandUnten = clampValue(Number(anzeigeAbstände.unten ?? 0), 0, Number.POSITIVE_INFINITY)
-    const formatDistance = (value) => `${(Number(value || 0) / meterEinheit).toFixed(2)} m`
     const draftObject = selectedObject ? {
         ...selectedObject,
         value: [
@@ -43,6 +43,18 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
         abstandUnten: aktuellerAbstandUnten
     } : null
     const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+    const positionFields = [
+        { key: 'abstandLinks', label: 'Abstand Links', hint: 'Per Button aktualisieren' },
+        { key: 'abstandUnten', label: 'Abstand Unten', hint: 'Zum Boden' }
+    ]
+
+    const handleAlignVertical = () => {
+        centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'vertical' })
+    }
+
+    const handleAlignHorizontal = () => {
+        centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'horizontal' })
+    }
 
     useEffect(() => {
         setAnzeigeAbstände({
@@ -53,7 +65,7 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
 
     useEffect(() => {
         const handlePositionValues = (event) => {
-            if (event?.detail?.id !== selectedObject?.id) return
+            if (String(event?.detail?.id) !== String(selectedObject?.id)) return
 
             setAnzeigeAbstände({
                 links: Number(event.detail.abstandLinks ?? 0),
@@ -62,7 +74,11 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
         }
 
         window.addEventListener('wand-fenster:position-values', handlePositionValues)
-        return () => window.removeEventListener('wand-fenster:position-values', handlePositionValues)
+        window.addEventListener(OPENING_POSITION_VALUES_EVENT, handlePositionValues)
+        return () => {
+            window.removeEventListener('wand-fenster:position-values', handlePositionValues)
+            window.removeEventListener(OPENING_POSITION_VALUES_EVENT, handlePositionValues)
+        }
     }, [selectedObject?.id])
 
     const handleRefreshPosition = () => {
@@ -135,76 +151,14 @@ export default function WandFensterBearbeiten({ selectedObject, setEditMenü, ob
             </div>
 
             <div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '10px',
-                    marginBottom: '6px',
-                    marginRight: '10px'
-                }}>
-                    <p className='text' style={{ fontSize: 13, marginBottom: 0 }}>Position:</p>
-                    <button
-                        onClick={handleRefreshPosition}
-                        style={{
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(0,0,0,0.18)',
-                            backgroundColor: 'rgba(255, 255, 255, 0.45)',
-                            color: 'black',
-                            cursor: 'pointer',
-                            fontWeight: 500,
-                            fontSize: '11px',
-                            lineHeight: 1.2,
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.65)'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.45)'}
-                    >
-                        Aktualisieren
-                    </button>
-                </div>
-
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '10px', 
-                    alignItems: 'center', 
-                    marginBottom: "10px", 
-                    justifyContent: 'space-between', 
-                    marginRight: "10px"
-                }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span className='text' style={{ fontWeight: 200 }}>Abstand Links</span>
-                        <span className='text' style={{ fontSize: 12 }}>Per Button aktualisieren</span>
-                    </div>
-                    <span className='text' style={{ fontWeight: 200 }}>{formatDistance(aktuellerAbstandLinks)}</span>
-                </div>
-
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '10px', 
-                    alignItems: 'center', 
-                    marginBottom: "14px", 
-                    justifyContent: 'space-between', 
-                    marginRight: "10px"
-                }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span className='text' style={{ fontWeight: 200 }}>Abstand Unten</span>
-                        <span className='text' style={{ fontSize: 12 }}>Zum Boden</span>
-                    </div>
-                    <span className='text' style={{ fontWeight: 200 }}>{formatDistance(aktuellerAbstandUnten)}</span>
-                </div>
-
-                {collisionReport.hasCollision ? (
-                    <div style={{
-                        margin: '0 10px 14px 0',
-                        color: '#b12a2a',
-                        fontSize: '12px',
-                        fontWeight: 600
-                    }}>
-                        Fenster überlappen sich.
-                    </div>
-                ) : null}
+                <PositionInfoSection
+                    fields={positionFields}
+                    values={{ abstandLinks: aktuellerAbstandLinks, abstandUnten: aktuellerAbstandUnten }}
+                    onRefresh={handleRefreshPosition}
+                    warningMessage={collisionReport.hasCollision ? 'Fenster überlappen sich.' : ''}
+                    onAlignVertical={handleAlignVertical}
+                    onAlignHorizontal={handleAlignHorizontal}
+                />
 
                 {/* <p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position im Segment:</p>
 

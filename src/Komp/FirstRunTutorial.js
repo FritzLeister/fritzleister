@@ -45,7 +45,7 @@ export default function FirstRunTutorial({ setEditMenü, editMenü }) {
         },
         {
             id: 'aktionen-oben',
-            title: 'Buttons oben',
+            title: 'Navigations Buttons',
             text: 'Oben rechts steuerst du den globalen Ablauf: Home bringt dich zur Startseite, Reset startet die Konfiguration neu und Save übernimmt den aktuellen Stand.',
             actionLabel: 'Obere Buttons zeigen',
             action: () => setEditMenü('')

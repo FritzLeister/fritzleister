@@ -5,7 +5,8 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 
 import Reflektor from './Reflektor'
-import { OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate, createDeferredStateFlusher } from './wallOpeningPositionUtils'
+import { OPENING_POSITION_REFRESH_EVENT, OPENING_POSITION_VALUES_EVENT } from './PositionInfoSection'
 import { getOpeningCollisionReport } from '../openingUtils'
 
 // Fenster für Wände – basiert auf LeerÖffnung Logik
@@ -58,8 +59,8 @@ export default function WandFenster({
     const initialY = obj?.startPos?.y ?? y
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
     const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
-    const pendingStartPosRef = useRef(null)
-    const startPosAnimationFrameRef = useRef(null)
+    const isDraggingRef = useRef(false)
+    const deferredStartPosRef = useRef(createDeferredStateFlusher())
     const arrowRepeatFrameRef = useRef(null)
     const arrowRepeatStateRef = useRef(null)
     const [isHovered, setIsHovered] = useState(false)
@@ -94,6 +95,25 @@ export default function WandFenster({
     useEffect(() => {
         gridPosiRef.current = gridPosi
     }, [gridPosi])
+
+    useEffect(() => {
+        if (isDraggingRef.current) return
+
+        const nextPos = {
+            x: obj?.startPos?.x ?? initialX,
+            z: obj?.startPos?.z ?? initialZ,
+            y: obj?.startPos?.y ?? initialY
+        }
+
+        if (
+            gridPosiRef.current.x !== nextPos.x ||
+            gridPosiRef.current.z !== nextPos.z ||
+            gridPosiRef.current.y !== nextPos.y
+        ) {
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+        }
+    }, [obj?.id, obj?.startPos?.x, obj?.startPos?.y, obj?.startPos?.z, initialX, initialY, initialZ])
 
     const buildDraftObject = useCallback((nextPos) => ({
         ...obj,
@@ -141,14 +161,15 @@ export default function WandFenster({
         ))
     }, [lang, objId, rechts, setObjs, xLinks, xRechts, z])
 
-    const flushScheduledStartPos = useCallback(() => {
-        startPosAnimationFrameRef.current = null
-
-        if (!pendingStartPosRef.current) return
-
-        updateStartPos(pendingStartPosRef.current)
-        pendingStartPosRef.current = null
+    const commitPendingStartPos = useCallback((value) => {
+        const nextPos = value ?? gridPosiRef.current
+        if (!nextPos) return
+        updateStartPos(nextPos)
     }, [updateStartPos])
+
+    const flushScheduledStartPos = useCallback(() => {
+        deferredStartPosRef.current.flush((value) => commitPendingStartPos(value))
+    }, [commitPendingStartPos])
 
     const clearArrowRepeat = useCallback(({ flush = false } = {}) => {
         arrowRepeatStateRef.current = null
@@ -158,24 +179,17 @@ export default function WandFenster({
             arrowRepeatFrameRef.current = null
         }
 
-        if (flush && pendingStartPosRef.current) {
+        if (flush) {
             flushScheduledStartPos()
         }
     }, [flushScheduledStartPos])
 
     const scheduleStartPosUpdate = useCallback((nextPos) => {
-        pendingStartPosRef.current = nextPos
-
-        if (startPosAnimationFrameRef.current !== null) return
-
-        startPosAnimationFrameRef.current = window.requestAnimationFrame(flushScheduledStartPos)
-    }, [flushScheduledStartPos])
+        deferredStartPosRef.current.schedule(nextPos, (value) => commitPendingStartPos(value))
+    }, [commitPendingStartPos])
 
     useEffect(() => () => {
         clearArrowRepeat()
-        if (startPosAnimationFrameRef.current !== null) {
-            window.cancelAnimationFrame(startPosAnimationFrameRef.current)
-        }
     }, [clearArrowRepeat])
 
     const persistPosition = useCallback((nextPos) => {
@@ -197,6 +211,15 @@ export default function WandFenster({
         const nextAbstandLinks = quantizeOpeningDistance(nextAbstandLinksRaw)
         const nextAbstandRechts = quantizeOpeningDistance(nextAbstandRechtsRaw)
         const nextAbstandUnten = quantizeOpeningDistance(nextAbstandUntenRaw)
+
+        window.dispatchEvent(new CustomEvent(OPENING_POSITION_VALUES_EVENT, {
+            detail: {
+                id: objId,
+                abstandLinks: nextAbstandLinks,
+                abstandRechts: nextAbstandRechts,
+                abstandUnten: nextAbstandUnten
+            }
+        }))
 
         window.dispatchEvent(new CustomEvent('wand-fenster:position-values', {
             detail: {
@@ -249,6 +272,40 @@ export default function WandFenster({
 
         window.addEventListener('wand-fenster:refresh-position', handleRefreshPosition)
         return () => window.removeEventListener('wand-fenster:refresh-position', handleRefreshPosition)
+    }, [objId, persistPosition])
+
+    useEffect(() => {
+        const handleSharedRefreshPosition = (event) => {
+            if (String(event?.detail?.id) !== String(objId)) return
+
+            const incoming = event?.detail
+            let nextPos = null
+
+            if (incoming?.startPos) {
+                nextPos = {
+                    x: incoming.startPos.x ?? gridPosiRef.current.x,
+                    z: incoming.startPos.z ?? gridPosiRef.current.z,
+                    y: incoming.startPos.y ?? gridPosiRef.current.y
+                }
+            }
+
+            if (!nextPos) {
+                nextPos = gridPosiRef.current
+            }
+
+            if (
+                nextPos.x !== gridPosiRef.current.x ||
+                nextPos.z !== gridPosiRef.current.z ||
+                nextPos.y !== gridPosiRef.current.y
+            ) {
+                gridPosiRef.current = nextPos
+                setGridPosi(nextPos)
+                persistPosition(nextPos)
+            }
+        }
+
+        window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleSharedRefreshPosition)
+        return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleSharedRefreshPosition)
     }, [objId, persistPosition])
 
     useEffect(() => {
@@ -430,6 +487,7 @@ export default function WandFenster({
         const scaleY = scale * 0.5
 
         if (first) {
+            isDraggingRef.current = true
             memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
         }
 
@@ -469,9 +527,8 @@ export default function WandFenster({
         }
 
         if (last) {
-            if (pendingStartPosRef.current) {
-                flushScheduledStartPos()
-            }
+            isDraggingRef.current = false
+            deferredStartPosRef.current.flush((value) => commitPendingStartPos(value))
             setOrbitKontrolle(true)
         }
 

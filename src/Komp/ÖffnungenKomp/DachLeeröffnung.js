@@ -55,6 +55,7 @@ export default function DachLeeröffnung({
     const initialZ = obj?.startPos?.z ?? z
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ })
     const gridPosiRef = useRef({ x: initialX, z: initialZ })
+    const isDraggingRef = useRef(false)
     const [isHovered, setIsHovered] = useState(false)
 
     const skaliertBreite = openingArgs[0] * 2.5
@@ -164,6 +165,23 @@ export default function DachLeeröffnung({
     useEffect(() => {
         gridPosiRef.current = gridPosi
     }, [gridPosi])
+
+    useEffect(() => {
+        if (isDraggingRef.current) return
+
+        const nextPos = {
+            x: obj?.startPos?.x ?? initialX,
+            z: obj?.startPos?.z ?? initialZ
+        }
+
+        if (
+            gridPosiRef.current.x !== nextPos.x ||
+            gridPosiRef.current.z !== nextPos.z
+        ) {
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+        }
+    }, [obj?.id, obj?.startPos?.x, obj?.startPos?.z, initialX, initialZ])
 
     const getRoofCenterYAtZ = useCallback((zValue) => {
         const safeZ = toFinite(zValue, z)

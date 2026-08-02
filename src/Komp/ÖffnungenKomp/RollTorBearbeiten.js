@@ -3,6 +3,7 @@ import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 import { getOpeningCollisionReport } from "../openingUtils"
+import { centerOpeningInField } from "./openingAlignmentUtils"
 
 export default function RollTorBearbeiten({
 	selectedObject,
@@ -56,6 +57,14 @@ export default function RollTorBearbeiten({
 		abstandRechts: clampValue(displayValues.abstandRechts ?? abstandRechts, 0, maxAbstand),
 	} : null
 	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
+	const handleAlignVertical = () => {
+		centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'vertical' })
+	}
+
+	const handleAlignHorizontal = () => {
+		centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'horizontal' })
+	}
 
 	const handleUpdate = () => {
 		if (!selectedObject) return
@@ -128,7 +137,7 @@ export default function RollTorBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} onAlignVertical={handleAlignVertical} onAlignHorizontal={handleAlignHorizontal} allowVerticalAlignment={false} />
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

@@ -1,6 +1,7 @@
 import { useDrag } from '@use-gesture/react'
 import { useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { OPENING_POSITION_REFRESH_EVENT } from './ÖffnungenKomp/PositionInfoSection'
 
 export default function DachFenster({ 
   koordinate,  
@@ -46,6 +47,23 @@ export default function DachFenster({
       }
   }
 
+  useEffect(() => {
+    const handleSharedRefreshPosition = (event) => {
+      if (String(event?.detail?.id) !== String(objId)) return
+
+      const incoming = event?.detail
+      if (incoming?.startPos) {
+        setGridPosi({
+          x: incoming.startPos.x ?? x,
+          z: incoming.startPos.z ?? z
+        })
+      }
+    }
+
+    window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleSharedRefreshPosition)
+    return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleSharedRefreshPosition)
+  }, [objId, x, z])
+
   const bind = useDrag(
     ({ offset: [zDrag, xDrag], first, last, }) => {
       if (!obj) return;
@@ -63,7 +81,6 @@ export default function DachFenster({
       } else {
         setGridPosi({x: newZ, z: newX})
       }
-      console.log(gridPosi)
 
       if (first) {
         setOrbitKontrolle(false)

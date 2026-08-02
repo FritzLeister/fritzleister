@@ -94,7 +94,7 @@ export default function GespeicherteHallen({
                 cursor: 'pointer',
                 zIndex: 1000
             }}
-            onClick={(e) => { e.stopPropagation(); console.log('Delete icon clicked for id', halle.id); deleteHalle(halle.id); }}
+            onClick={(e) => { e.stopPropagation(); deleteHalle(halle.id); }}
             >
                 <RemoveCircleOutlineIcon />
             </div>

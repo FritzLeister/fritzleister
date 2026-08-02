@@ -3,8 +3,9 @@ import { useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
-import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate, createDeferredStateFlusher } from './wallOpeningPositionUtils'
 import { getOpeningCollisionReport } from '../openingUtils'
+import { getTransparentesPaneelGridPosition, getTransparentesPaneelWorldPosition } from './transparentesPaneelPositionUtils'
 
 // Transparentes Paneel für Wände – Glasfläche mit vertikalen Profilen
 export default function TransparentesPaneel({
@@ -44,6 +45,8 @@ export default function TransparentesPaneel({
 
 	const { size } = useThree()
 	const groupRef = useRef()
+	const deferredStartPosRef = useRef(createDeferredStateFlusher())
+	const isDraggingRef = useRef(false)
 
 	let wandHöhe = gebäudeHöhe
 	if (dachArt === 'pultdach') {
@@ -55,6 +58,7 @@ export default function TransparentesPaneel({
 	const initialY = obj?.startPos?.y ?? defaultY
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
 	const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
+	const latestObjectRef = useRef(obj)
 	const [isHovered, setIsHovered] = useState(false)
 	const halbePaneelBreite = paneelBreite / 2
 	const randPuffer = 0.1
@@ -72,28 +76,64 @@ export default function TransparentesPaneel({
 
 	const minY = position[1] + 0.35 + (paneelHöhe / 2)
 	const maxY = position[1] + 0.2 + wandHöhe - (paneelHöhe / 2) + 0.48
+	const tiefe = 1.2
+
+	useEffect(() => {
+		latestObjectRef.current = obj
+	}, [obj])
 
 	useEffect(() => {
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
 
+	useEffect(() => {
+		if (isDraggingRef.current) return
+
+		const nextPos = getTransparentesPaneelGridPosition({
+			obj,
+			initialX,
+			initialZ,
+			initialY
+		})
+
+		if (
+			gridPosiRef.current.x !== nextPos.x ||
+			gridPosiRef.current.z !== nextPos.z ||
+			gridPosiRef.current.y !== nextPos.y
+		) {
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+		}
+	}, [obj, initialX, initialY, initialZ])
+
 	const updateStartPos = useCallback((nextPos) => {
-		const surfaceOffset = tiefe / 2 + 0.05
-		const normalSign = rechts ? -1 : 1
-		const realX = lang ? nextPos.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
-		const realZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : nextPos.z
+		const worldPos = getTransparentesPaneelWorldPosition({
+			nextPos,
+			lang,
+			rechts,
+			surfaceOffset: tiefe / 2 + 0.05,
+			xLinks,
+			xRechts,
+			z
+		})
 
 		updateOpeningStartPos({
 			objId,
 			setObjs,
 			setSelectedObject,
 			startPos: {
-				x: realX,
-				y: nextPos.y,
-				z: realZ
+				x: worldPos.x,
+				y: worldPos.y,
+				z: worldPos.z
 			}
 		})
-	}, [lang, objId, rechts, setObjs, setSelectedObject, xLinks, xRechts, z])
+	}, [lang, objId, rechts, setObjs, setSelectedObject, tiefe, xLinks, xRechts, z])
+
+	const commitPendingStartPos = useCallback((value) => {
+		const nextPos = value ?? gridPosiRef.current
+		if (!nextPos) return
+		updateStartPos(nextPos)
+	}, [updateStartPos])
 
 	const persistPosition = useCallback((nextPos) => {
 		const rawDistances = computeWallSideDistances({
@@ -116,14 +156,28 @@ export default function TransparentesPaneel({
 		}
 
 		dispatchOpeningPositionValues(objId, distances)
+		const worldPos = getTransparentesPaneelWorldPosition({
+			nextPos,
+			lang,
+			rechts,
+			surfaceOffset: tiefe / 2 + 0.05,
+			xLinks,
+			xRechts,
+			z
+		})
+
 		persistOpeningPosition({
 			objId,
 			setObjs,
 			setSelectedObject,
-			startPos: nextPos,
+			startPos: {
+				x: worldPos.x,
+				y: worldPos.y,
+				z: worldPos.z
+			},
 			distances
 		})
-	}, [halbePaneelBreite, lang, objId, paneelHöhe, position, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
+	}, [halbePaneelBreite, lang, objId, paneelHöhe, position, rechts, setObjs, setSelectedObject, xLinks, xRechts, z, zHinten, zVorne])
 
 	useEffect(() => {
 		const hasAbstandLinks = obj?.abstandLinks !== undefined && obj?.abstandLinks !== null
@@ -138,12 +192,49 @@ export default function TransparentesPaneel({
 	useEffect(() => {
 		const handleRefreshPosition = (event) => {
 			if (event?.detail?.id !== objId) return
-			persistPosition(gridPosiRef.current)
+
+			let nextPos = null
+			const incoming = event?.detail
+
+			if (incoming?.startPos) {
+				nextPos = {
+					x: incoming.startPos.x ?? gridPosiRef.current.x,
+					z: incoming.startPos.z ?? gridPosiRef.current.z,
+					y: incoming.startPos.y ?? gridPosiRef.current.y
+				}
+			} else if (incoming?.mode === 'horizontal') {
+				const leftDistance = Number(incoming?.abstandLinks ?? obj?.abstandLinks ?? 0)
+				nextPos = {
+					x: lang ? (xLinks + halbePaneelBreite + leftDistance) : gridPosiRef.current.x,
+					z: lang ? gridPosiRef.current.z : (zHinten + halbePaneelBreite + leftDistance),
+					y: gridPosiRef.current.y
+				}
+			} else if (incoming?.mode === 'vertical') {
+				const bottomDistance = Number(incoming?.abstandUnten ?? obj?.abstandUnten ?? 0)
+				nextPos = {
+					x: gridPosiRef.current.x,
+					z: gridPosiRef.current.z,
+					y: position[1] + (paneelHöhe / 2) + bottomDistance
+				}
+			}
+
+			if (!nextPos) {
+				const latestObject = latestObjectRef.current ?? obj
+				nextPos = {
+					x: latestObject?.startPos?.x ?? initialX,
+					z: latestObject?.startPos?.z ?? initialZ,
+					y: latestObject?.startPos?.y ?? initialY
+				}
+			}
+
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+			persistPosition(nextPos)
 		}
 
 		window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
 		return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
-	}, [objId, persistPosition])
+	}, [halbePaneelBreite, initialX, initialY, initialZ, lang, obj, objId, paneelHöhe, persistPosition, position, rechts, xLinks, xRechts, z, zHinten, zVorne])
 
 	const handleClick = () => {
 		const found = objs.find(o => o.id === objId)
@@ -204,17 +295,18 @@ export default function TransparentesPaneel({
 			const nextPos = { x: newX, z: newZ, y: newY }
 			gridPosiRef.current = nextPos
 			setGridPosi(nextPos)
-			updateStartPos(nextPos)
+			deferredStartPosRef.current.schedule(nextPos, (value) => commitPendingStartPos(value))
 		}
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, updateStartPos])
+	}, [commitPendingStartPos, objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, updateStartPos])
 
 	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 80 / size.width
 
 		if (first) {
+			isDraggingRef.current = true
 			memo = {
 				startX: gridPosiRef.current.x,
 				startZ: gridPosiRef.current.z,
@@ -239,6 +331,7 @@ export default function TransparentesPaneel({
 		const nextPos = { x: nextX, z: nextZ, y: nextY }
 		gridPosiRef.current = nextPos
 		setGridPosi(nextPos)
+		deferredStartPosRef.current.schedule(nextPos, (value) => commitPendingStartPos(value))
 
 		if (first) {
 			window.activeArrowControl = { kind: 'wand-transparentespaneel', id: objId }
@@ -246,7 +339,8 @@ export default function TransparentesPaneel({
 		}
 
 		if (last) {
-			updateStartPos(nextPos)
+			isDraggingRef.current = false
+			deferredStartPosRef.current.flush((value) => commitPendingStartPos(value))
 			setOrbitKontrolle(true)
 		}
 
@@ -255,12 +349,19 @@ export default function TransparentesPaneel({
 
 	const borderColor = isHovered ? '#5aa7ff' : '#000000'
 
-	const tiefe = 1.2
 	const surfaceOffset = tiefe / 2 + 0.05
-	const normalSign = rechts ? -1 : 1
-	const finalX = lang ? gridPosi.x : (rechts ? xLinks : xRechts) + (!lang ? normalSign * surfaceOffset : 0)
-	const finalZ = lang ? z + (lang ? normalSign * surfaceOffset : 0) : gridPosi.z
-	const finalY = gridPosi.y
+	const worldPos = getTransparentesPaneelWorldPosition({
+		nextPos: gridPosi,
+		lang,
+		rechts,
+		surfaceOffset,
+		xLinks,
+		xRechts,
+		z
+	})
+	const finalX = worldPos.x
+	const finalZ = worldPos.z
+	const finalY = worldPos.y
 	const collisionReport = getOpeningCollisionReport({
 		selectedObject: obj,
 		draftObject: {

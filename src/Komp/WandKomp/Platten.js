@@ -279,6 +279,8 @@ export default memo(Platten, (prevProps, nextProps) => {
         && prevProps.untereKanteAnzeigen === nextProps.untereKanteAnzeigen
         && prevProps.linienDicke === nextProps.linienDicke
         && prevProps.color === nextProps.color
+        && haveEqualOpenings(prevProps.öffnungen, nextProps.öffnungen)
+        && prevProps.color === nextProps.color
         && haveEqualNumberArrays(prevProps.position, nextProps.position)
         && haveEqualOpenings(prevProps.öffnungen, nextProps.öffnungen)
 })

@@ -35,7 +35,7 @@ export default function DarstellungsButton({ label, state, setState, onClick }) 
                     }
                 }}
             >
-                <span className='text' style={{ fontWeight: 200 }}>{label}</span>
+                <span className='text' style={{ fontWeight: 500 }}>{label}</span>
             </div>
         </>
     )

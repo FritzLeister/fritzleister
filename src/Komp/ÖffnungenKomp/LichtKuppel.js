@@ -77,12 +77,30 @@ export default function LichtKuppel({
 	const clampedInitialZ = Math.max(initialMinZ, Math.min(initialMaxZ, initialZ))
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: clampedInitialZ })
 	const gridPosiRef = useRef({ x: initialX, z: clampedInitialZ })
+	const isDraggingRef = useRef(false)
 	const [isHovered, setIsHovered] = useState(false)
 	const [isActive, setIsActive] = useState(false)
 
 	useEffect(() => {
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
+
+	useEffect(() => {
+		if (isDraggingRef.current) return
+
+		const nextPos = {
+			x: obj?.startPos?.x ?? initialX,
+			z: obj?.startPos?.z ?? initialZ
+		}
+
+		if (
+			gridPosiRef.current.x !== nextPos.x ||
+			gridPosiRef.current.z !== nextPos.z
+		) {
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+		}
+	}, [obj?.id, obj?.startPos?.x, obj?.startPos?.z, initialX, initialZ])
 
 	const getRoofCenterYAtZ = useCallback((zValue) => {
 		const safeZ = toFinite(zValue, z)

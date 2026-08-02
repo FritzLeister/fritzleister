@@ -217,7 +217,7 @@ export default function DarstellungUI({
                         state={öffnungenAnzeigen}
                         setState={setÖffnungenAnzeigen}
                     />
-                )}
+                )} 
 
                 {showButton('Rahmen') && (
                     <DarstellungsButton 

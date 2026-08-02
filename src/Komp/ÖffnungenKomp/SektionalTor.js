@@ -5,7 +5,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import Reflektor from './Reflektor'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
-import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, OPENING_GRID_STEP, quantizeOpeningDistance, resolveOpeningRefreshPosition, shouldSyncOpeningPositionFromProps, snapOpeningCoordinate } from './wallOpeningPositionUtils'
 import { getOpeningCollisionReport } from '../openingUtils'
 
 // SektionalTor für Wände – Garagentor mit horizontalen Paneelen
@@ -49,6 +49,9 @@ export default function SektionalTor({
     const initialY = obj?.startPos?.y ?? y
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
     const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
+    const lastSyncedPropPosRef = useRef({ x: initialX, z: initialZ, y: initialY })
+    const isDraggingRef = useRef(false)
+    const pendingPropSyncRef = useRef(false)
     const [isHovered, setIsHovered] = useState(false)
 
     const skaliertBreite = openingArgs[0] * 2.5
@@ -70,6 +73,49 @@ export default function SektionalTor({
     useEffect(() => {
         gridPosiRef.current = gridPosi
     }, [gridPosi])
+
+    const deferPropSyncUntilNextTick = useCallback(() => {
+        pendingPropSyncRef.current = true
+        if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => {
+                pendingPropSyncRef.current = false
+            })
+            return
+        }
+
+        window.setTimeout(() => {
+            pendingPropSyncRef.current = false
+        }, 0)
+    }, [])
+
+    useEffect(() => {
+        if (isDraggingRef.current) return
+        if (pendingPropSyncRef.current) {
+            pendingPropSyncRef.current = false
+            return
+        }
+
+        const nextPos = {
+            x: obj?.startPos?.x ?? initialX,
+            z: obj?.startPos?.z ?? initialZ,
+            y: obj?.startPos?.y ?? initialY
+        }
+
+        if (!shouldSyncOpeningPositionFromProps({ nextPos, lastSyncedPos: lastSyncedPropPosRef.current })) {
+            return
+        }
+
+        lastSyncedPropPosRef.current = nextPos
+
+        if (
+            gridPosiRef.current.x !== nextPos.x ||
+            gridPosiRef.current.z !== nextPos.z ||
+            gridPosiRef.current.y !== nextPos.y
+        ) {
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+        }
+    }, [obj?.id, obj?.startPos?.x, obj?.startPos?.y, obj?.startPos?.z, initialX, initialY, initialZ])
 
     const persistPosition = useCallback((nextPos) => {
         const rawDistances = computeWallSideDistances({
@@ -99,12 +145,26 @@ export default function SektionalTor({
     useEffect(() => {
         const handleRefreshPosition = (event) => {
             if (event?.detail?.id !== objId) return
+
+            const nextPos = resolveOpeningRefreshPosition({
+                incoming: event?.detail,
+                currentPos: gridPosiRef.current
+            })
+
+            if (nextPos) {
+                deferPropSyncUntilNextTick()
+                gridPosiRef.current = nextPos
+                setGridPosi(nextPos)
+                persistPosition(nextPos)
+                return
+            }
+
             persistPosition(gridPosiRef.current)
         }
 
         window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
         return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
-    }, [objId, persistPosition])
+    }, [deferPropSyncUntilNextTick, objId, persistPosition])
     const handleClick = () => {
         const found = objs.find(o => o.id === objId)
         if (found) {
@@ -172,6 +232,7 @@ export default function SektionalTor({
             setGridPosi({ x: newX, z: gridPosi.z, y: gridPosi.y })
 
             if (first) {
+                deferPropSyncUntilNextTick()
                 window.activeArrowControl = { kind: 'wand-sektionaltor', id: objId }
                 setOrbitKontrolle(false)
             }
@@ -182,6 +243,7 @@ export default function SektionalTor({
             setGridPosi({ x: gridPosi.x, z: newZ, y: gridPosi.y })
 
             if (first) {
+                deferPropSyncUntilNextTick()
                 window.activeArrowControl = { kind: 'wand-sektionaltor', id: objId }
                 setOrbitKontrolle(false)
             }

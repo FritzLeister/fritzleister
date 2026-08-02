@@ -3,7 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { OPENING_POSITION_REFRESH_EVENT } from './PositionInfoSection'
-import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate } from './wallOpeningPositionUtils'
+import { computeBottomDistance, computeWallSideDistances, dispatchOpeningPositionValues, persistOpeningPosition, updateOpeningStartPos, OPENING_GRID_STEP, quantizeOpeningDistance, snapOpeningCoordinate, createDeferredStateFlusher, getWallOpeningStartPos, shouldSyncOpeningPositionFromProps } from './wallOpeningPositionUtils'
 import { getOpeningCollisionReport } from '../openingUtils'
 
 // Transparente Öffnung für Wände (long-side aktuell)
@@ -46,6 +46,7 @@ export default function LeerÖffnung({
 
 	const { size, camera } = useThree()
 	const groupRef = useRef()
+	const deferredStartPosRef = useRef(createDeferredStateFlusher())
 
 	// Verwende startPos, falls verfügbar
 	const initialX = obj?.startPos?.x ?? x
@@ -53,6 +54,9 @@ export default function LeerÖffnung({
 	const initialY = obj?.startPos?.y ?? y
 	const [gridPosi, setGridPosi] = useState({ x: initialX, z: initialZ, y: initialY })
 	const gridPosiRef = useRef({ x: initialX, z: initialZ, y: initialY })
+	const lastSyncedPropPosRef = useRef({ x: initialX, z: initialZ, y: initialY })
+	const latestObjectRef = useRef(obj)
+	const isDraggingRef = useRef(false)
 	const [isHovered, setIsHovered] = useState(false)
 
 	const höhe = skaliertHöhe
@@ -94,21 +98,61 @@ export default function LeerÖffnung({
 	}
 
 	useEffect(() => {
+		latestObjectRef.current = obj
+	}, [obj])
+
+	useEffect(() => {
 		gridPosiRef.current = gridPosi
 	}, [gridPosi])
 
+	useEffect(() => {
+		if (isDraggingRef.current) return
+
+		const nextPos = {
+			x: obj?.startPos?.x ?? initialX,
+			z: obj?.startPos?.z ?? initialZ,
+			y: obj?.startPos?.y ?? initialY
+		}
+
+		if (!shouldSyncOpeningPositionFromProps({ nextPos, lastSyncedPos: lastSyncedPropPosRef.current })) {
+			return
+		}
+
+		lastSyncedPropPosRef.current = nextPos
+
+		if (
+			gridPosiRef.current.x !== nextPos.x ||
+			gridPosiRef.current.z !== nextPos.z ||
+			gridPosiRef.current.y !== nextPos.y
+		) {
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+		}
+	}, [obj?.id, obj?.startPos?.x, obj?.startPos?.y, obj?.startPos?.z, initialX, initialY, initialZ])
+
 	const updateStartPos = useCallback((nextPos) => {
+		const worldStartPos = getWallOpeningStartPos({
+			nextPos,
+			lang,
+			rechts,
+			xLinks,
+			xRechts,
+			z
+		})
+
 		updateOpeningStartPos({
 			objId,
 			setObjs,
 			setSelectedObject,
-			startPos: {
-				x: lang ? nextPos.x : (rechts ? xLinks : xRechts),
-				y: nextPos.y,
-				z: lang ? z : nextPos.z
-			}
+			startPos: worldStartPos
 		})
 	}, [lang, objId, rechts, setObjs, setSelectedObject, xLinks, xRechts, z])
+
+	const commitPendingStartPos = useCallback((value) => {
+		const nextPos = value ?? gridPosiRef.current
+		if (!nextPos) return
+		updateStartPos(nextPos)
+	}, [updateStartPos])
 
 	const persistPosition = useCallback((nextPos) => {
 		const rawDistances = computeWallSideDistances({
@@ -135,10 +179,17 @@ export default function LeerÖffnung({
 			objId,
 			setObjs,
 			setSelectedObject,
-			startPos: nextPos,
+			startPos: getWallOpeningStartPos({
+				nextPos,
+				lang,
+				rechts,
+				xLinks,
+				xRechts,
+				z
+			}),
 			distances
 		})
-	}, [halbeBreite, höhe, lang, objId, position, setObjs, setSelectedObject, xLinks, xRechts, zHinten, zVorne])
+	}, [halbeBreite, höhe, lang, objId, position, rechts, setObjs, setSelectedObject, xLinks, xRechts, z, zHinten, zVorne])
 
 	useEffect(() => {
 		const hasAbstandLinks = obj?.abstandLinks !== undefined && obj?.abstandLinks !== null
@@ -153,12 +204,49 @@ export default function LeerÖffnung({
 	useEffect(() => {
 		const handleRefreshPosition = (event) => {
 			if (event?.detail?.id !== objId) return
-			persistPosition(gridPosiRef.current)
+
+			let nextPos = null
+			const incoming = event?.detail
+
+			if (incoming?.startPos) {
+				nextPos = {
+					x: incoming.startPos.x ?? gridPosiRef.current.x,
+					z: incoming.startPos.z ?? gridPosiRef.current.z,
+					y: incoming.startPos.y ?? gridPosiRef.current.y
+				}
+			} else if (incoming?.mode === 'horizontal') {
+				const leftDistance = Number(incoming?.abstandLinks ?? obj?.abstandLinks ?? 0)
+				nextPos = {
+					x: lang ? (xLinks + halbeBreite + leftDistance) : gridPosiRef.current.x,
+					z: lang ? gridPosiRef.current.z : (zHinten + halbeBreite + leftDistance),
+					y: gridPosiRef.current.y
+				}
+			} else if (incoming?.mode === 'vertical') {
+				const bottomDistance = Number(incoming?.abstandUnten ?? obj?.abstandUnten ?? 0)
+				nextPos = {
+					x: gridPosiRef.current.x,
+					z: gridPosiRef.current.z,
+					y: position[1] + (höhe / 2) + bottomDistance
+				}
+			}
+
+			if (!nextPos) {
+				const latestObject = latestObjectRef.current ?? obj
+				nextPos = {
+					x: latestObject?.startPos?.x ?? initialX,
+					z: latestObject?.startPos?.z ?? initialZ,
+					y: latestObject?.startPos?.y ?? initialY
+				}
+			}
+
+			gridPosiRef.current = nextPos
+			setGridPosi(nextPos)
+			persistPosition(nextPos)
 		}
 
 		window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
 		return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
-	}, [objId, persistPosition])
+	}, [halbeBreite, höhe, initialX, initialY, initialZ, lang, obj, objId, persistPosition, position, xLinks, xRechts, z, zHinten, zVorne])
 
 	useEffect(() => {
 		const handleKeyDown = (event) => {
@@ -210,18 +298,19 @@ export default function LeerÖffnung({
 			const nextPos = { x: newX, z: newZ, y: newY }
 			gridPosiRef.current = nextPos
 			setGridPosi(nextPos)
-			updateStartPos(nextPos)
+			deferredStartPosRef.current.schedule(nextPos, (value) => commitPendingStartPos(value))
 		}
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, updateStartPos])
+	}, [commitPendingStartPos, objId, lang, rechts, minX, maxX, minZ, maxZ, minY, maxY, updateStartPos])
 
 	const bind = useDrag(({ movement: [dragMoveX, dragMoveY], first, last, memo }) => {
 		const scale = 100 / size.width
 		const scaleY = 100 / size.height
 
 		if (first) {
+			isDraggingRef.current = true
 			memo = { startX: gridPosi.x, startZ: gridPosi.z, startY: gridPosi.y }
 		}
 
@@ -233,7 +322,9 @@ export default function LeerÖffnung({
 			const dragMultiplier = rechts ? -1 : 1
 			let newX = snapOpeningCoordinate(memo.startX + (dragMultiplier * dragMoveX * scale), minX, minX, maxX)
 			nextPos = { x: newX, z: gridPosi.z, y: newY }
+			gridPosiRef.current = nextPos
 			setGridPosi(nextPos)
+			deferredStartPosRef.current.schedule(nextPos, (value) => commitPendingStartPos(value))
 
 			if (first) {
 				window.activeArrowControl = { kind: 'wand-leeroeffnung', id: objId }
@@ -246,7 +337,9 @@ export default function LeerÖffnung({
 			const dragMultiplier = rechts ? 1 : -1
 			let newZ = snapOpeningCoordinate(memo.startZ + (dragMultiplier * dragMoveX * scale), minZ, minZ, maxZ)
 			nextPos = { x: gridPosi.x, z: newZ, y: newY }
+			gridPosiRef.current = nextPos
 			setGridPosi(nextPos)
+			deferredStartPosRef.current.schedule(nextPos, (value) => commitPendingStartPos(value))
 
 			if (first) {
 				window.activeArrowControl = { kind: 'wand-leeroeffnung', id: objId }
@@ -257,7 +350,8 @@ export default function LeerÖffnung({
 		}
 
 		if (last) {
-			updateStartPos(nextPos)
+			isDraggingRef.current = false
+			deferredStartPosRef.current.flush((value) => commitPendingStartPos(value))
 			setOrbitKontrolle(true)
 		}
 

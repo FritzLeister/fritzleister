@@ -19,7 +19,6 @@ export default function SliderMui({ title, multiplier, value, onChange, min, max
                 step={1}
                 onChange={(e, newValue) => {
                     onChange(newValue)
-                    console.log(e, newValue)
                 }}
             />
         </Box>

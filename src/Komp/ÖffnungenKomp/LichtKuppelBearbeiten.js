@@ -3,6 +3,7 @@ import MuiNumberfield from "../MuiNumberfield"
 import MuiSelect from "../MuiSelect"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 import { getOpeningCollisionReport } from "../openingUtils"
+import { centerOpeningInField } from "./openingAlignmentUtils"
 
 export default function LichtKuppelBearbeiten({
 	selectedObject,
@@ -10,7 +11,8 @@ export default function LichtKuppelBearbeiten({
 	objs,
 	setObjs,
 	gebäudeBreite,
-	gebäudeLänge
+	gebäudeLänge,
+	gebäudeHöhe
 }) {
 	const maxBreiteX = gebäudeLänge
 	const maxBreiteY = Math.floor(gebäudeBreite / 2)
@@ -40,6 +42,14 @@ export default function LichtKuppelBearbeiten({
 		abstandUnten: selectedObject.abstandUnten,
 	} : null
 	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
+	const handleAlignVertical = () => {
+		centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'vertical' })
+	}
+
+	const handleAlignHorizontal = () => {
+		centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'horizontal' })
+	}
 
 	useEffect(() => {
 		if (!selectedObject?.id) return
@@ -117,7 +127,7 @@ export default function LichtKuppelBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />
+				<PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} onAlignVertical={handleAlignVertical} onAlignHorizontal={handleAlignHorizontal} hideAlignmentActions />
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Position:</p>
 

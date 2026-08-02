@@ -4,6 +4,14 @@ export const SCENE_UNITS_PER_METER = 2.5
 export const OPENING_GRID_STEP_METERS = 0.25
 export const OPENING_GRID_STEP = OPENING_GRID_STEP_METERS * SCENE_UNITS_PER_METER
 
+export function getWallOpeningStartPos({ nextPos, lang, rechts, xLinks, xRechts, z }) {
+    return {
+        x: lang ? nextPos.x : (rechts ? xLinks : xRechts),
+        y: nextPos.y,
+        z: lang ? z : nextPos.z
+    }
+}
+
 export function computeWallSideDistances({ nextPos, lang, xLinks, xRechts, zHinten, zVorne, halfWidth }) {
     const abstandLinksRaw = lang
         ? nextPos.x - (xLinks + halfWidth)
@@ -40,6 +48,81 @@ export function dispatchOpeningPositionValues(id, values) {
             ...values
         }
     }))
+}
+
+export function resolveOpeningRefreshPosition({ incoming, currentPos, fallbackPos = null }) {
+    if (!incoming?.startPos) return null
+
+    const basePos = currentPos ?? fallbackPos ?? {}
+    return {
+        x: incoming.startPos.x ?? basePos.x,
+        z: incoming.startPos.z ?? basePos.z,
+        y: incoming.startPos.y ?? basePos.y
+    }
+}
+
+export function shouldSyncOpeningPositionFromProps({ nextPos, lastSyncedPos }) {
+    if (!lastSyncedPos) return true
+
+    const normalize = (value) => {
+        const numericValue = Number(value)
+        return Number.isFinite(numericValue) ? numericValue : 0
+    }
+
+    return (
+        normalize(nextPos?.x) !== normalize(lastSyncedPos?.x) ||
+        normalize(nextPos?.z) !== normalize(lastSyncedPos?.z) ||
+        normalize(nextPos?.y) !== normalize(lastSyncedPos?.y)
+    )
+}
+
+export function createDeferredStateFlusher({
+    requestFrameFn = (callback) => window.requestAnimationFrame(callback),
+    cancelFrameFn = (frameId) => window.cancelAnimationFrame(frameId)
+} = {}) {
+    let frameId = null
+    let pendingValue = null
+    let pendingCallback = null
+
+    const flushPending = () => {
+        const valueToApply = pendingValue
+        const callbackToRun = pendingCallback
+
+        pendingValue = null
+        pendingCallback = null
+        frameId = null
+
+        if (callbackToRun && valueToApply !== null && valueToApply !== undefined) {
+            callbackToRun(valueToApply)
+        }
+    }
+
+    return {
+        schedule(value, callback) {
+            pendingValue = value
+            pendingCallback = callback
+
+            if (frameId === null) {
+                frameId = requestFrameFn(flushPending)
+            }
+        },
+        flush(callback) {
+            if (frameId !== null) {
+                cancelFrameFn(frameId)
+                frameId = null
+            }
+
+            const valueToApply = pendingValue
+            const callbackToRun = callback ?? pendingCallback
+
+            pendingValue = null
+            pendingCallback = null
+
+            if (callbackToRun && valueToApply !== null && valueToApply !== undefined) {
+                callbackToRun(valueToApply)
+            }
+        }
+    }
 }
 
 export function updateOpeningStartPos({

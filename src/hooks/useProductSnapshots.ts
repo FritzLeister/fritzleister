@@ -31,11 +31,55 @@ const SNAPSHOT_VIEWS: SnapshotView[] = [
 const SNAPSHOT_CAMERA_FOV = 13;
 const SNAPSHOT_DISTANCE_MULTIPLIER = 0.3;
 const SNAPSHOT_MIN_DISTANCE = 0.35;
+const MAX_SNAPSHOT_VIEWS = 6;
+const SNAPSHOT_MIN_WIDTH = 960;
+const SNAPSHOT_MIN_HEIGHT = 540;
+const SNAPSHOT_MAX_WIDTH = 1920;
+const SNAPSHOT_MAX_HEIGHT = 1080;
+const SNAPSHOT_MAX_PIXELS_PER_VIEW = 2_073_600; // 1920*1080
+const SNAPSHOT_CAPTURE_TIMEOUT_MS = 8_000;
 const REFERENCE_HALL_DIMENSIONS = {
   width: 30,
   length: 70,
   height: 6,
 };
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function limitSnapshotDimensions(requestedWidth: number, requestedHeight: number) {
+  let safeWidth = clamp(Math.round(requestedWidth), SNAPSHOT_MIN_WIDTH, SNAPSHOT_MAX_WIDTH);
+  let safeHeight = clamp(Math.round(requestedHeight), SNAPSHOT_MIN_HEIGHT, SNAPSHOT_MAX_HEIGHT);
+
+  const area = safeWidth * safeHeight;
+  if (area > SNAPSHOT_MAX_PIXELS_PER_VIEW) {
+    const scale = Math.sqrt(SNAPSHOT_MAX_PIXELS_PER_VIEW / area);
+    safeWidth = Math.max(SNAPSHOT_MIN_WIDTH, Math.round(safeWidth * scale));
+    safeHeight = Math.max(SNAPSHOT_MIN_HEIGHT, Math.round(safeHeight * scale));
+  }
+
+  return { width: safeWidth, height: safeHeight };
+}
+
+function createCaptureDeadline(timeoutMs: number) {
+  let expired = false;
+  const timer = window.setTimeout(() => {
+    expired = true;
+  }, timeoutMs);
+
+  return {
+    isExpired: () => expired,
+    throwIfExpired: (message: string) => {
+      if (expired) {
+        throw new Error(message);
+      }
+    },
+    clear: () => {
+      window.clearTimeout(timer);
+    },
+  };
+}
 
 function waitForFrame() {
   return new Promise<void>((resolve) => {
@@ -102,6 +146,8 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
     hallLengthMeters = REFERENCE_HALL_DIMENSIONS.length,
     hallHeightMeters = REFERENCE_HALL_DIMENSIONS.height,
   } = options;
+  const safeDimensions = limitSnapshotDimensions(width, height);
+  const captureViews = SNAPSHOT_VIEWS.slice(0, MAX_SNAPSHOT_VIEWS);
 
   return useCallback(async (): Promise<ProductSnapshot[]> => {
     const snapshotRoot = scene.getObjectByName(rootObjectName) ?? scene;
@@ -123,8 +169,13 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
       0.35
     );
 
-    const snapshotCamera = new THREE.PerspectiveCamera(SNAPSHOT_CAMERA_FOV, width / height, 0.1, 5000);
-    const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+    const snapshotCamera = new THREE.PerspectiveCamera(
+      SNAPSHOT_CAMERA_FOV,
+      safeDimensions.width / safeDimensions.height,
+      0.1,
+      5000
+    );
+    const renderTarget = new THREE.WebGLRenderTarget(safeDimensions.width, safeDimensions.height, {
       depthBuffer: true,
       stencilBuffer: false,
       generateMipmaps: false,
@@ -141,39 +192,38 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
       });
       await waitForFrame();
 
-      for (const view of SNAPSHOT_VIEWS) {
+      for (const view of captureViews) {
+        const deadline = createCaptureDeadline(SNAPSHOT_CAPTURE_TIMEOUT_MS);
+
         try {
           // Wir rendern jede technische Perspektive mit einer separaten Kamera,
           // damit OrbitControls und die sichtbare UI-Kamera unberührt bleiben.
           fitCameraToObject(snapshotCamera, bounds, view.direction, proportionalScale, view.up);
           await waitForFrame();
+          deadline.throwIfExpired(`Snapshot für ${view.name} wurde wegen Zeitüberschreitung abgebrochen.`);
 
           gl.setRenderTarget(renderTarget);
           gl.clear(true, true, true);
           gl.render(scene, snapshotCamera);
+          deadline.throwIfExpired(`Snapshot für ${view.name} wurde wegen Zeitüberschreitung abgebrochen.`);
 
-          const pixels = new Uint8Array(width * height * 4);
-          gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixels);
+          const pixels = new Uint8Array(safeDimensions.width * safeDimensions.height * 4);
+          gl.readRenderTargetPixels(renderTarget, 0, 0, safeDimensions.width, safeDimensions.height, pixels);
+          deadline.throwIfExpired(`Snapshot für ${view.name} wurde wegen Zeitüberschreitung abgebrochen.`);
+          const snapshotImage = buildDataUrlFromPixels(pixels, safeDimensions.width, safeDimensions.height);
 
           snapshots.push({
             name: view.name,
-            image: buildDataUrlFromPixels(pixels, width, height),
+            image: snapshotImage,
           });
         } catch (viewError) {
-          console.error(`Snapshot für ${view.name} konnte nicht erzeugt werden.`, viewError);
-
-          try {
-            // Fallback: direkter Canvas-Export, falls das RenderTarget in einer Umgebung nicht lesbar ist.
-            gl.setRenderTarget(null);
-            gl.render(scene, snapshotCamera);
-
-            snapshots.push({
-              name: view.name,
-              image: gl.domElement.toDataURL('image/png'),
-            });
-          } catch (fallbackError) {
-            console.error(`Fallback-Snapshot für ${view.name} ist ebenfalls fehlgeschlagen.`, fallbackError);
+          if (deadline.isExpired()) {
+            console.warn(`Snapshot für ${view.name} wurde aus Stabilitätsgründen übersprungen.`);
+          } else {
+            console.error(`Snapshot für ${view.name} konnte nicht erzeugt werden.`, viewError);
           }
+        } finally {
+          deadline.clear();
         }
       }
     } finally {
@@ -191,5 +241,5 @@ export function useProductSnapshots(options: UseProductSnapshotsOptions = {}) {
     }
 
     return snapshots;
-  }, [camera, gl, hallHeightMeters, hallLengthMeters, hallWidthMeters, height, hiddenObjectNames, rootObjectName, scene, width]);
+  }, [camera, captureViews, gl, hallHeightMeters, hallLengthMeters, hallWidthMeters, hiddenObjectNames, rootObjectName, safeDimensions.height, safeDimensions.width, scene]);
 }

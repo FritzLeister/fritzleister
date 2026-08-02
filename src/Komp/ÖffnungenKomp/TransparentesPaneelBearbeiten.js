@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import MuiNumberfield from "../MuiNumberfield"
 import PositionInfoSection, { useOpeningPositionDisplay } from "./PositionInfoSection"
 import { getOpeningCollisionReport } from "../openingUtils"
+import { centerOpeningInField } from "./openingAlignmentUtils"
 
 export default function TransparentesPaneelBearbeiten({
 	selectedObject,
@@ -40,6 +41,14 @@ export default function TransparentesPaneelBearbeiten({
 		abstandUnten: (zeigtWandPosition || istDachPaneel) ? (displayValues.abstandUnten ?? selectedObject.abstandUnten) : selectedObject.abstandUnten,
 	} : null
 	const collisionReport = getOpeningCollisionReport({ selectedObject, draftObject, objs })
+
+	const handleAlignVertical = () => {
+		centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'vertical' })
+	}
+
+	const handleAlignHorizontal = () => {
+		centerOpeningInField({ selectedObject, objs, setObjs, gebäudeHöhe, mode: 'horizontal' })
+	}
 
 	useEffect(() => {
 		if (!istDachPaneel || !selectedObject?.id) return
@@ -117,7 +126,7 @@ export default function TransparentesPaneelBearbeiten({
 			</div>
 
 			<div style={{ margin: '10px', marginTop: '8px', marginRight: '12px' }}>
-				{(zeigtWandPosition || istDachPaneel) && <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} />}
+				{(zeigtWandPosition || istDachPaneel) && <PositionInfoSection fields={positionFields} values={displayValues} onRefresh={handleRefreshPosition} warningMessage={collisionReport.hasCollision ? collisionReport.message : ''} onAlignVertical={handleAlignVertical} onAlignHorizontal={handleAlignHorizontal} allowVerticalAlignment={true} hideAlignmentActions={istDachPaneel} />}
 
 				<p className='text' style={{ fontSize: 13, marginBottom: "6px" }}>Abmessungen:</p>
 

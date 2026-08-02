@@ -177,16 +177,9 @@ function Root() {
   const [objs, setObjs] = useState([
   ])
   
-  useEffect(() => {
-        console.log("hallenSave updated:", hallenSave);
-    }, [hallenSave]);
-
-
   function deleteHalle(id) {
-    console.log("deleteHalle called with id:", id);
     setHallenSave(prev => {
       const next = prev.filter(item => item.id !== id);
-      // console.log("hallenSave after delete:", next);
       return next;
     })
   }

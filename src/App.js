@@ -1032,7 +1032,7 @@ export default function App({
             </div>
             
             <div
-                onClick={() => window.open("https://www.stahlbau-perthel.de", "_blank")}
+                onClick={() => window.open("https://www.stahlbau-perthel.de", "_blank", "noopener,noreferrer")}
                 style={{ margin: 0, cursor: 'pointer' }}
             >
                 <img 

@@ -10,6 +10,48 @@ type LoadedImage = {
   height: number;
 };
 
+const MAX_SNAPSHOTS_PER_PDF = 6;
+const MAX_SNAPSHOT_DATA_URL_LENGTH = 12_000_000;
+const IMAGE_LOAD_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
+
+function normalizeSnapshotName(name: unknown) {
+  const normalized = String(name ?? '').trim();
+  if (normalized.length === 0) {
+    return 'Ansicht';
+  }
+
+  return normalized.slice(0, 48);
+}
+
+function sanitizeSnapshots(snapshots: ProductSnapshot[]) {
+  return snapshots
+    .filter((snapshot) => typeof snapshot?.image === 'string' && snapshot.image.startsWith('data:image/'))
+    .filter((snapshot) => snapshot.image.length <= MAX_SNAPSHOT_DATA_URL_LENGTH)
+    .slice(0, MAX_SNAPSHOTS_PER_PDF)
+    .map((snapshot) => ({
+      name: normalizeSnapshotName(snapshot.name),
+      image: snapshot.image,
+    }));
+}
+
 function loadImageDimensions(imageSource: string) {
   return new Promise<LoadedImage>((resolve, reject) => {
     const image = new Image();
@@ -24,6 +66,8 @@ export async function generateOrderPdf({ snapshots = [] }: GenerateOrderPdfParam
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 18;
+  const safeSnapshots = sanitizeSnapshots(snapshots);
+  const skippedSnapshots = Math.max(0, snapshots.length - safeSnapshots.length);
 
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(20);
@@ -57,13 +101,19 @@ export async function generateOrderPdf({ snapshots = [] }: GenerateOrderPdfParam
     pdf.text(line, margin, 84 + (index * 8));
   });
 
-  if (snapshots.length === 0) {
+  if (safeSnapshots.length === 0) {
     pdf.setTextColor(120, 120, 120);
     pdf.text('Es konnten keine Modellansichten erzeugt werden. Die PDF enthält nur die Übersicht.', margin, 162);
     pdf.setTextColor(0, 0, 0);
   }
 
-  for (const snapshot of snapshots) {
+  if (skippedSnapshots > 0) {
+    pdf.setTextColor(120, 120, 120);
+    pdf.text(`${skippedSnapshots} Modellansicht(en) wurden aus Stabilitätsgründen ausgelassen.`, margin, 170);
+    pdf.setTextColor(0, 0, 0);
+  }
+
+  for (const snapshot of safeSnapshots) {
     pdf.addPage('a4', 'portrait');
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(18);
@@ -71,7 +121,11 @@ export async function generateOrderPdf({ snapshots = [] }: GenerateOrderPdfParam
 
     try {
       // Jede Ansicht wird proportional in das A4-Layout eingepasst, damit nichts abgeschnitten wird.
-      const imageSize = await loadImageDimensions(snapshot.image);
+      const imageSize = await withTimeout(
+        loadImageDimensions(snapshot.image),
+        IMAGE_LOAD_TIMEOUT_MS,
+        `Bild konnte für ${snapshot.name} nicht rechtzeitig geladen werden.`
+      );
       const usableWidth = pageWidth - (margin * 2);
       const usableHeight = pageHeight - 40;
       const scale = Math.min(usableWidth / imageSize.width, usableHeight / imageSize.height);

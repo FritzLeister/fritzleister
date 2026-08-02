@@ -83,11 +83,52 @@ export default function DachPhotovoltaik({
     const clampedInitialZ = Math.max(initialMinZ, Math.min(initialMaxZ, initialZ))
     const [gridPosi, setGridPosi] = useState({ x: initialX, z: clampedInitialZ })
     const gridPosiRef = useRef({ x: initialX, z: clampedInitialZ })
+    const latestObjectRef = useRef(obj)
+    const isDraggingRef = useRef(false)
     const [isHovered, setIsHovered] = useState(false)
+
+    useEffect(() => {
+        latestObjectRef.current = obj
+    }, [obj])
 
     useEffect(() => {
         gridPosiRef.current = gridPosi
     }, [gridPosi])
+
+    useEffect(() => {
+        if (isDraggingRef.current) return
+
+        const nextPos = {
+            x: obj?.startPos?.x ?? initialX,
+            z: obj?.startPos?.z ?? initialZ
+        }
+
+        if (
+            gridPosiRef.current.x !== nextPos.x ||
+            gridPosiRef.current.z !== nextPos.z
+        ) {
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+        }
+    }, [obj?.id, obj?.startPos?.x, obj?.startPos?.z, initialX, initialZ])
+
+    useEffect(() => {
+        if (isDraggingRef.current) return
+
+        const current = gridPosiRef.current
+        const nextPos = {
+            x: obj?.startPos?.x ?? current.x,
+            z: obj?.startPos?.z ?? current.z
+        }
+
+        if (
+            current.x !== nextPos.x ||
+            current.z !== nextPos.z
+        ) {
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+        }
+    }, [obj?.startPos?.x, obj?.startPos?.z])
 
     const getRoofCenterYAtZ = useCallback((zValue) => {
         const safeZ = toFinite(zValue, z)
@@ -165,10 +206,15 @@ export default function DachPhotovoltaik({
     }, [fallbackAbstandLinks, fallbackAbstandRechts, fallbackAbstandUnten, getRoofCenterYAtZ, objId, openingArgs, setObjs, setSelectedObject, traufhöhe, x, xLinks, xRechts, y, z])
 
     const updatePosition = useCallback((nextPos) => {
-        gridPosiRef.current = nextPos
-        setGridPosi(nextPos)
-        persistPosition(nextPos)
-    }, [persistPosition])
+        const normalized = {
+            x: toFinite(nextPos?.x, gridPosiRef.current?.x ?? x),
+            z: toFinite(nextPos?.z, gridPosiRef.current?.z ?? z)
+        }
+
+        gridPosiRef.current = normalized
+        setGridPosi(normalized)
+        persistPosition(normalized)
+    }, [persistPosition, x, z])
 
     let rotation = 0
     let finalX = gridPosi.x
@@ -266,12 +312,45 @@ export default function DachPhotovoltaik({
     useEffect(() => {
         const handleRefreshPosition = (event) => {
             if (event?.detail?.id !== objId) return
-            persistPosition(gridPosiRef.current)
+
+            let nextPos = null
+            const incoming = event?.detail
+
+			if (incoming?.startPos) {
+				nextPos = {
+					x: incoming.startPos.x ?? gridPosiRef.current.x,
+					z: incoming.startPos.z ?? gridPosiRef.current.z
+				}
+			} else if (incoming?.mode === 'horizontal') {
+				const xValue = incoming?.startPos?.x ?? gridPosiRef.current.x
+				nextPos = {
+					x: xValue,
+					z: gridPosiRef.current.z
+				}
+			} else if (incoming?.mode === 'vertical') {
+				const zValue = incoming?.startPos?.z ?? gridPosiRef.current.z
+				nextPos = {
+					x: gridPosiRef.current.x,
+					z: zValue
+				}
+			}
+
+            if (!nextPos) {
+                const latestObject = latestObjectRef.current ?? obj
+                nextPos = {
+                    x: latestObject?.startPos?.x ?? initialX,
+                    z: latestObject?.startPos?.z ?? initialZ
+                }
+            }
+
+            gridPosiRef.current = nextPos
+            setGridPosi(nextPos)
+            persistPosition(nextPos)
         }
 
         window.addEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
         return () => window.removeEventListener(OPENING_POSITION_REFRESH_EVENT, handleRefreshPosition)
-    }, [objId, persistPosition])
+    }, [initialX, initialZ, obj, objId, persistPosition])
 
     // Tastatursteuerung mit Pfeiltasten (nur wenn dieses Paneel aktiv ist)
     useEffect(() => {
@@ -360,6 +439,7 @@ export default function DachPhotovoltaik({
         }
 
         if (last) {
+            isDraggingRef.current = false
             setOrbitKontrolle(true)
         }
     }, { filterTaps: true })

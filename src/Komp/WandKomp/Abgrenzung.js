@@ -134,19 +134,15 @@ export default function Abgrenzung({
         const breiteInMeter = originalBreite || (wandLänge / 2.5)
         const balkenPositionen = []
         
-        console.log('Kurze Wand:', wandTyp, 'originalBreite:', originalBreite, 'breiteInMeter:', breiteInMeter, 'wandLänge:', wandLänge)
-        
         if (breiteInMeter < 9) {
             // 2 Balken nahe an den Rändern (Abstand von 2 Einheiten vom Rand)
             balkenPositionen.push(zHinten - 1 + 2)
             balkenPositionen.push(zVorne + 1 - 2)
-            console.log('< 9m: Erstelle 2 Balken bei:', balkenPositionen)
         } else if (anzahlBalken > 0) {
             const gleichmäßigerAbstand = wandLänge / (anzahlBalken + 1)
             for (let i = 1; i <= anzahlBalken; i++) {
                 balkenPositionen.push((zHinten - 1) + (i * gleichmäßigerAbstand))
             }
-            console.log('>= 9m: Erstelle', anzahlBalken, 'Balken bei:', balkenPositionen)
         }
         
         balkenPositionen.forEach((balkenZ, idx) => {

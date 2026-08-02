@@ -65,7 +65,10 @@ export function useOpeningPositionDisplay(selectedObject, fields) {
     }
 }
 
-export default function PositionInfoSection({ fields, values, onRefresh, warningMessage }) {
+export default function PositionInfoSection({ fields, values, onRefresh, warningMessage, onAlignVertical, onAlignHorizontal, allowVerticalAlignment = true, allowHorizontalAlignment = true, hideAlignmentActions = false }) {
+    const hasAlignmentActions = Boolean((allowVerticalAlignment && onAlignVertical) || (allowHorizontalAlignment && onAlignHorizontal))
+    const shouldRenderAlignmentActions = !hideAlignmentActions && hasAlignmentActions
+
     return (
         <>
             <div style={{
@@ -117,6 +120,60 @@ export default function PositionInfoSection({ fields, values, onRefresh, warning
                     <span className='text' style={{ fontWeight: 200 }}>{formatSceneDistance(values[field.key])}</span>
                 </div>
             ))}
+
+            {shouldRenderAlignmentActions ? (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    margin: '0 10px 14px 0'
+                }}>
+                    {allowVerticalAlignment && onAlignVertical ? (
+                        <button
+                            onClick={onAlignVertical}
+                            style={{
+                                width: '100%',
+                                padding: '8px 10px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(0,0,0,0.18)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                color: 'black',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: '12px',
+                                lineHeight: 1.25,
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.5)'}
+                        >
+                            Vertikal zentrieren
+                        </button>
+                    ) : null}
+                    {allowHorizontalAlignment && onAlignHorizontal ? (
+                        <button
+                            onClick={onAlignHorizontal}
+                            style={{
+                                width: '100%',
+                                padding: '8px 10px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(0,0,0,0.18)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                color: 'black',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: '12px',
+                                lineHeight: 1.25,
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.5)'}
+                        >
+                            Horizontal zentrieren
+                        </button>
+                    ) : null}
+                </div>
+            ) : null}
 
             {warningMessage ? (
                 <div style={{

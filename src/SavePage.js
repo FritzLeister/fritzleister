@@ -19,6 +19,31 @@ export default function SavePage({
 
     const [schirm, setSchirm] = useState(initialSchirm === "kontakt" ? "zusammenfassung" : initialSchirm)
 
+    const actionButtonBaseStyle = {
+        width: 230,
+        height: 92,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        lineHeight: 1.25,
+        whiteSpace: "normal"
+    }
+    const preisScreenActions = [
+        {
+            key: "summary",
+            label: "Preis Anfordern",
+            style: {},
+            onClick: () => setSchirm("zusammenfassung")
+        },
+        {
+            key: "edit",
+            label: "Erneut Überarbeiten",
+            style: {},
+            onClick: () => setShowApp("app")
+        }
+    ]
+
     useEffect(() => {
         setSchirm(initialSchirm === "kontakt" ? "zusammenfassung" : initialSchirm)
     }, [initialSchirm])
@@ -57,16 +82,17 @@ export default function SavePage({
                         }}>Sie haben nun zwei Möglichkeiten:
                         </h4>
 
-                        <div>
-                            <button className="buttonDark" style={{ marginRight: "2.5px", width: 230 }} onClick={() => {
-                                setSchirm("zusammenfassung")
-                            }} >
-                                Preis Anfordern
-                            </button>
-
-                            <button className="buttonDark" onClick={() => setShowApp("custom")} style={{ marginLeft: "2.5px", width: 230 }} >
-                                Erneut Überarbeiten
-                            </button>
+                        <div style={{ display: "flex", alignItems: "stretch", justifyContent: "center", gap: 6 }}>
+                            {preisScreenActions.map((action) => (
+                                <button
+                                    key={action.key}
+                                    className="buttonDark"
+                                    style={{ ...actionButtonBaseStyle, ...action.style }}
+                                    onClick={action.onClick}
+                                >
+                                    {action.label}
+                                </button>
+                            ))}
                         </div>
 
                     </div>
