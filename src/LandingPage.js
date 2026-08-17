@@ -43,6 +43,9 @@ export default function LandingPage({
                         <button className="button landingButton landingButtonSecondary" onClick={() => setShowApp("saved")}>
                             Gespeichert
                         </button>
+                        <button className="button landingButton landingButtonSecondary" onClick={() => setShowApp("faq")}>
+                            FAQ
+                        </button>
                         <button className="button landingButton landingButtonPrimary" onClick={() => setShowApp("app")}>
                             Konfiguration starten
                         </button>

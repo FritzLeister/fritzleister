@@ -287,6 +287,612 @@ h4 {
   color: rgba(19, 44, 68, 0.82);
 }
 
+.savedHallenPage {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  padding: 24px 18px 32px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(1200px 520px at 10% -5%, rgba(238, 246, 255, 0.95), rgba(238, 246, 255, 0) 55%),
+    radial-gradient(900px 460px at 92% 110%, rgba(219, 236, 255, 0.9), rgba(219, 236, 255, 0) 60%),
+    linear-gradient(150deg, #f7fafc 0%, #edf4fa 46%, #e6eef7 100%);
+}
+
+.savedHallenAmbientOrbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.savedHallenOrb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(2px);
+  opacity: 0.55;
+}
+
+.savedHallenOrbOne {
+  width: clamp(150px, 24vw, 320px);
+  aspect-ratio: 1;
+  left: clamp(-30px, 3vw, 20px);
+  top: clamp(30px, 12vh, 110px);
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(149, 195, 235, 0.45) 54%, rgba(149, 195, 235, 0) 72%);
+}
+
+.savedHallenOrbTwo {
+  width: clamp(200px, 30vw, 360px);
+  aspect-ratio: 1;
+  right: clamp(-50px, 2vw, 8px);
+  bottom: clamp(20px, 10vh, 90px);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0%, rgba(130, 174, 226, 0.42) 50%, rgba(130, 174, 226, 0) 74%);
+}
+
+.savedHallenStage {
+  position: relative;
+  z-index: 1;
+  width: min(1080px, calc(100vw - 28px));
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 36px);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.66));
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow: 0 22px 70px rgba(6, 38, 71, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+
+.savedHallenBackButton {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(37, 83, 121, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #17324a;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(8, 46, 78, 0.08);
+}
+
+.savedHallenHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  margin-left: 44px; /* Platz für den Zurück-Button */
+}
+
+.savedHallenHeaderText {
+  flex: 1;
+  text-align: left;
+}
+
+.savedHallenLogo {
+  width: clamp(110px, 15vw, 160px);
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.savedHallenTitle {
+  margin: 0 0 8px;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.08;
+  color: #0b1e31;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+}
+
+.savedHallenIntro {
+  margin: 0 auto 24px;
+  max-width: 58ch;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.4;
+  color: #223a52;
+}
+
+.savedHallenGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.savedHallenRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.savedHallenEmptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 180px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px dashed rgba(37, 83, 121, 0.28);
+}
+
+.savedHallenEmptyText {
+  margin: 0;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 17px;
+  color: #4d6476;
+}
+
+.savedHalleCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: min(100%, 260px);
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(37, 83, 121, 0.18);
+  box-shadow: 0 10px 28px rgba(8, 46, 78, 0.08);
+  min-height: 220px;
+}
+
+.savedHalleActionBar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.savedHalleActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(15, 95, 155, 0.09);
+  color: #0f5f9b;
+  cursor: pointer;
+}
+
+.savedHalleTitle {
+  margin: 0 0 10px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.25;
+  color: #10324d;
+}
+
+.savedHalleNameWrapper {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.savedHalleInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(37, 83, 121, 0.2);
+  border-radius: 10px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  color: #10324d;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.savedHalleMeta {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.savedHalleMeta p {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  color: #4d6476;
+}
+
+.savedHalleMeta span {
+  color: #4d6476;
+}
+
+.savedHalleMeta strong {
+  color: #10324d;
+  font-weight: 700;
+}
+
+.savePageShell {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 24px 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(1200px 520px at 10% -5%, rgba(238, 246, 255, 0.95), rgba(238, 246, 255, 0) 55%),
+    radial-gradient(900px 460px at 92% 110%, rgba(219, 236, 255, 0.9), rgba(219, 236, 255, 0) 60%),
+    linear-gradient(150deg, #f7fafc 0%, #edf4fa 46%, #e6eef7 100%);
+}
+
+.savePageAmbientOrbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.savePageOrb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(2px);
+  opacity: 0.55;
+}
+
+.savePageOrbOne {
+  width: clamp(150px, 26vw, 320px);
+  aspect-ratio: 1;
+  left: clamp(-30px, 3vw, 20px);
+  top: clamp(30px, 12vh, 110px);
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(149, 195, 235, 0.45) 54%, rgba(149, 195, 235, 0) 72%);
+}
+
+.savePageOrbTwo {
+  width: clamp(200px, 32vw, 360px);
+  aspect-ratio: 1;
+  right: clamp(-50px, 2vw, 8px);
+  bottom: clamp(20px, 10vh, 90px);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0%, rgba(130, 174, 226, 0.42) 50%, rgba(130, 174, 226, 0) 74%);
+}
+
+.savePageCard {
+  position: relative;
+  z-index: 1;
+  width: min(860px, calc(100vw - 28px));
+  padding: clamp(24px, 4vw, 36px);
+  border-radius: 28px;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.66));
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow: 0 22px 70px rgba(6, 38, 71, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  text-align: center;
+}
+
+.savePageCardCompact {
+  width: min(720px, calc(100vw - 28px));
+}
+
+.savePageLogo {
+  width: clamp(110px, 15vw, 160px);
+  margin-bottom: 14px;
+}
+
+.savePageTitle {
+  margin: 0 0 10px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: clamp(24px, 4vw, 36px);
+  line-height: 1.16;
+  color: #0b1e31;
+}
+
+.savePageTitleCompact {
+  font-size: clamp(24px, 4vw, 32px);
+  margin-bottom: 20px;
+}
+
+.savePageSubtitle {
+  margin: 0 0 20px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: clamp(15px, 2vw, 18px);
+  color: #223a52;
+}
+
+.savePageActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.savePageButton {
+  min-width: 210px;
+  min-height: 64px;
+  border-radius: 13px;
+  font-size: clamp(16px, 2vw, 18px);
+  font-weight: 700;
+  padding: 17px 24px;
+  margin: 0;
+  color: #ecf5ff;
+  background: linear-gradient(135deg, #0f5f9b 0%, #0f7dbd 56%, #1b93d1 100%);
+  box-shadow: 0 10px 24px rgba(9, 87, 139, 0.35);
+}
+
+.savePageButton:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+.savePageBackButton {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  border: 1px solid rgba(37, 83, 121, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #17324a;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(8, 46, 78, 0.08);
+}
+
+.summaryCard {
+  width: min(1080px, calc(100vw - 28px));
+  max-height: min(90vh, 920px);
+  overflow-y: auto;
+}
+
+.summaryTitle {
+  margin-bottom: 6px;
+}
+
+.summarySubtitle {
+  margin-bottom: 20px;
+}
+
+.summarySections {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+
+.summarySection {
+  border: 1px solid rgba(37, 83, 121, 0.16);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 10px 24px rgba(8, 46, 78, 0.07);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+
+.summarySectionTitle {
+  margin: 0 0 12px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 20px;
+  color: #10324d;
+}
+
+.summaryRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(37, 83, 121, 0.1);
+  padding-bottom: 6px;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.summaryRowLabel {
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  color: #4d6476;
+}
+
+.summaryRowValue {
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #10324d;
+  text-align: right;
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.summaryCardItem {
+  border: 1px solid rgba(37, 83, 121, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px;
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.summaryCardTitle {
+  margin: 0 0 8px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 15px;
+  color: #10324d;
+}
+
+.summaryCardDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.summaryCardDetail {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.summaryCardDetailLabel {
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 12px;
+  color: #4d6476;
+}
+
+.summaryCardDetailValue {
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #10324d;
+  text-align: right;
+}
+
+.summaryContinueButton {
+  margin-top: 22px;
+  width: min(100%, 420px);
+}
+
+.contactForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.contactSectionTitle {
+  margin: 18px 0 8px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 22px;
+  color: #10324d;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contactField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  color: #4d6476;
+}
+
+.contactField span {
+  font-weight: 700;
+  color: #10324d;
+}
+
+.contactField input,
+.contactField textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(37, 83, 121, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  color: #10324d;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.contactField textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.contactFieldFull {
+  grid-column: 1 / -1;
+}
+
+.contactSubmitButton {
+  margin-top: 10px;
+  width: min(100%, 260px);
+}
+
+@media (max-width: 767px) {
+  .summaryRows {
+    grid-template-columns: 1fr;
+  }
+}
+
+.faqPage {
+  justify-content: flex-start;
+  padding-top: clamp(24px, 4vw, 54px);
+  padding-bottom: clamp(30px, 6vw, 56px);
+}
+
+.faqStage {
+  width: min(980px, calc(100vw - 28px));
+}
+
+.faqTitle {
+  font-size: clamp(30px, 5.4vw, 46px);
+}
+
+.faqSubtitle {
+  margin-bottom: 24px;
+}
+
+.faqListScroll {
+  max-height: calc(2 * 152px + 14px);
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 24px;
+}
+
+.faqGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  text-align: left;
+}
+
+.faqCard {
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(37, 83, 121, 0.16);
+  box-shadow: 0 10px 24px rgba(8, 46, 78, 0.08);
+}
+
+.faqQuestion {
+  margin: 0 0 8px;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 18px;
+  color: #10324d;
+}
+
+.faqAnswer {
+  margin: 0;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4d6476;
+}
+
+.faqActions {
+  justify-content: center;
+}
+
 @media (max-width: 767px) {
   .landingPage {
     justify-content: center;
@@ -316,6 +922,14 @@ h4 {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+  }
+
+  .faqListScroll {
+    max-height: calc(2 * 132px + 14px);
+  }
+
+  .faqGrid {
+    grid-template-columns: 1fr;
   }
 
   .landingButton {

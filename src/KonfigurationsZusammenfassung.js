@@ -283,7 +283,9 @@ export default function KonfigurationsZusammenfassung({ setSchirm, setShowApp, s
                 row("Traufhöhe", abmessung.höhe, { suffix: " m" }),
                 row("Dachart", abmessung.dachArt, { mapKey: "dachArt" }),
                 row("Dachneigung", abmessung.dachneigung, { suffix: "°" }),
-                row("Dachausrichtung", abmessung.dachAusrichtung, { mapKey: "dachAusrichtung" })
+                ...(abmessung.dachArt === "pultdach"
+                    ? [row("Dachausrichtung", abmessung.dachAusrichtung, { mapKey: "dachAusrichtung" })]
+                    : [])
             ].filter(Boolean),
             cards: []
         },
@@ -382,113 +384,74 @@ export default function KonfigurationsZusammenfassung({ setSchirm, setShowApp, s
     }, [totalRevealItems]);
 
     return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", padding: "20px", background: "#ffffff", position: "fixed", inset: 0, zIndex: 2000 }}>
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    padding: "30px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    color: "#000000ff",
-                    width: "100%",
-                    height: "80%",
-                    maxWidth: 900,
-                    maxHeight: "80vh",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    zIndex: 1000,
-                    borderRadius: 12,
-                    boxSizing: "border-box",
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    background: "#ffffff",
-                    position: "relative"
-                }}
-            >
+        <div className="savePageShell">
+            <div className="savePageAmbientOrbs" aria-hidden="true">
+                <span className="savePageOrb savePageOrbOne" />
+                <span className="savePageOrb savePageOrbTwo" />
+            </div>
+
+            <div className="savePageCard summaryCard">
                 <button
                     type="button"
-                    className="buttonDark"
+                    className="savePageBackButton"
                     onClick={() => setShowApp("app")}
-                    style={{
-                        position: "absolute",
-                        top: 18,
-                        left: 18,
-                        minHeight: "auto",
-                        padding: "10px 16px",
-                        fontSize: 14,
-                        lineHeight: 1,
-                        zIndex: 1
-                    }}
                 >
                     Zur Halle
                 </button>
 
-                <img src="/LogoPerthel.png" alt="Logo" style={{ width: 200, marginBottom: 0 }} />
+                <img src="/LogoPerthel.png" alt="Logo" className="savePageLogo" />
 
-                <h2 style={{ fontSize: 40, marginBottom: 8 }}>Konfigurations-Check</h2>
-                <p className="text" style={{ marginTop: 0, marginBottom: 24, textAlign: "center", maxWidth: 640 }}>
+                <p className="landingEyebrow">Prüfung</p>
+                <h2 className="savePageTitle summaryTitle">Konfigurations-Check</h2>
+                <p className="savePageSubtitle summarySubtitle">
                     Prüfen Sie jetzt Ihre Auswahl Schritt für Schritt. Erst danach geht es ins Kontaktformular.
                 </p>
 
-                <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 18 }}>
+                <div className="summarySections">
                     {revealOrder.map((section) => (
                         <div
                             key={section.title}
+                            className="summarySection"
                             style={{
-                                border: "1px solid rgba(0, 0, 0, 0.12)",
-                                borderRadius: 12,
-                                padding: "12px 14px",
-                                background: "rgba(247, 247, 247, 0.65)",
                                 opacity: visibleItems > section.headingIndex ? 1 : 0,
-                                transform: visibleItems > section.headingIndex ? "translateY(0)" : "translateY(8px)",
-                                transition: "opacity 280ms ease, transform 280ms ease"
+                                transform: visibleItems > section.headingIndex ? "translateY(0)" : "translateY(8px)"
                             }}
                         >
-                            <h3 className="text" style={{ margin: "4px 0 12px", fontSize: 22 }}>{section.title}</h3>
+                            <h3 className="summarySectionTitle">{section.title}</h3>
 
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 14px" }}>
+                            <div className="summaryRows">
                                 {section.rows.map((row) => (
                                     <div
                                         key={`${section.title}-${row.label}`}
+                                        className="summaryRow"
                                         style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            gap: 12,
-                                            borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
-                                            paddingBottom: 5,
                                             opacity: visibleItems > row.revealIndex ? 1 : 0,
-                                            transform: visibleItems > row.revealIndex ? "translateY(0)" : "translateY(6px)",
-                                            transition: "opacity 240ms ease, transform 240ms ease"
+                                            transform: visibleItems > row.revealIndex ? "translateY(0)" : "translateY(6px)"
                                         }}
                                     >
-                                        <span className="text" style={{ opacity: 0.7 }}>{row.label}</span>
-                                        <span className="text" style={{ fontWeight: 600, textAlign: "right" }}>{row.value}</span>
+                                        <span className="summaryRowLabel">{row.label}</span>
+                                        <span className="summaryRowValue">{row.value}</span>
                                     </div>
                                 ))}
                             </div>
 
                             {section.cards.length > 0 && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginTop: section.rows.length > 0 ? 12 : 0 }}>
+                                <div className="summaryCards">
                                     {section.cards.map((card) => (
                                         <div
                                             key={`${section.title}-${card.title}`}
+                                            className="summaryCardItem"
                                             style={{
-                                                border: "1px solid rgba(0, 0, 0, 0.1)",
-                                                borderRadius: 10,
-                                                background: "#ffffff",
-                                                padding: "10px 12px",
                                                 opacity: visibleItems > card.revealIndex ? 1 : 0,
-                                                transform: visibleItems > card.revealIndex ? "translateY(0)" : "translateY(8px)",
-                                                transition: "opacity 260ms ease, transform 260ms ease"
+                                                transform: visibleItems > card.revealIndex ? "translateY(0)" : "translateY(8px)"
                                             }}
                                         >
-                                            <h4 className="text" style={{ margin: "0 0 8px", fontSize: 15 }}>{card.title}</h4>
-                                            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                                            <h4 className="summaryCardTitle">{card.title}</h4>
+                                            <div className="summaryCardDetails">
                                                 {card.details.map((detail) => (
-                                                    <div key={`${card.title}-${detail.label}`} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                                                        <span className="text" style={{ opacity: 0.65, fontSize: 12 }}>{detail.label}</span>
-                                                        <span className="text" style={{ fontSize: 12, fontWeight: 600, textAlign: "right" }}>{detail.value}</span>
+                                                    <div key={`${card.title}-${detail.label}`} className="summaryCardDetail">
+                                                        <span className="summaryCardDetailLabel">{detail.label}</span>
+                                                        <span className="summaryCardDetailValue">{detail.value}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -502,9 +465,8 @@ export default function KonfigurationsZusammenfassung({ setSchirm, setShowApp, s
 
                 <button
                     type="button"
-                    className="buttonDark"
+                    className="button savePageButton summaryContinueButton"
                     onClick={() => setSchirm("kontakt")}
-                    style={{ marginTop: 26, width: "100%", maxWidth: 420 }}
                 >
                     Weiter zum Kontaktformular
                 </button>

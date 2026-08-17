@@ -67,111 +67,73 @@ export default function GespeicherteHallen({
     }
 
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "flex-start",
-                padding: 18,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                color: "#000000ff",
-                width: "100%",
-                minHeight: "100px",
-                maxWidth: 900,
-                border: "1px solid rgba(0, 0, 0, 0.1)",
-                borderRadius: 12,
-                background: "#ffffff",
-                margin: "10px auto",
-                cursor: 'default',
-                position: "relative"
-            }}
-        >
-            <div style={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                cursor: 'pointer',
-                zIndex: 1000
-            }}
-            onClick={(e) => { e.stopPropagation(); deleteHalle(halle.id); }}
-            >
-                <RemoveCircleOutlineIcon />
-            </div>
+        <div className="savedHalleCard">
+            <div className="savedHalleActionBar">
+                <button
+                    className="savedHalleActionButton"
+                    onClick={() => setOutput(!output)}
+                    aria-label="Bezeichnung bearbeiten"
+                    type="button"
+                >
+                    <EditIcon fontSize="small" />
+                </button>
 
-            <div style={{
-                position: 'absolute',
-                top: 10,
-                right: 35,
-                cursor: 'pointer',
-                zIndex: 1000
-            }}
-            onClick={handleClick}
-            >
-                <OpenInNewIcon />
-            </div>
+                <button
+                    className="savedHalleActionButton"
+                    onClick={handleClick}
+                    aria-label="Halle öffnen"
+                    type="button"
+                >
+                    <OpenInNewIcon fontSize="small" />
+                </button>
 
-            <div style={{
-                position: 'absolute',
-                top: 10,
-                right: 60,
-                cursor: 'pointer',
-                zIndex: 1000
-            }}
-            onClick={() => setOutput(!output)}
-            >
-                <EditIcon />
+                <button
+                    className="savedHalleActionButton"
+                    onClick={(e) => { e.stopPropagation(); deleteHalle(halle.id); }}
+                    aria-label="Halle löschen"
+                    type="button"
+                >
+                    <RemoveCircleOutlineIcon fontSize="small" />
+                </button>
             </div>
-
-            {/*  
-            <h3 style={{ marginBottom: "10px", marginTop: "0px" }} className="text">{halle.name === "" ? `Halle ${index + 1}` : halle.name}</h3>
-            */}
 
             {output ? (
-                <div>
+                <div className="savedHalleNameWrapper">
                     <input
-                    style={{ marginBottom: "10px", marginTop: "0px", height: "25px", width: getWidthInput() }}
-                    placeholder='Titel...'
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") handleInputEnter();
-                    }}
-                    value={inputValue}
-                    onChange={handleInputChange}
+                        className="savedHalleInput"
+                        style={{ width: getWidthInput() }}
+                        placeholder='Titel...'
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") handleInputEnter();
+                        }}
+                        value={inputValue}
+                        onChange={handleInputChange}
                     />
-                    {/* <CheckCircleIcon style={{marginLeft: "5px"}} /> */}
                 </div>
-            ):(
-                <h3 style={{ marginBottom: "10px", marginTop: "0px", width: getWidthInput(), height: "25px" }} className="text">{halle.name === "" ? `Halle ${index + 1}` : halle.name}</h3>
+            ) : (
+                <h3 className="savedHalleTitle">{halle.name === "" ? `Halle ${index + 1}` : halle.name}</h3>
             )}
 
-            <div>
-                <p className="text" >
-                    Länge: 
-                    <text className="text" style={{ fontWeight: "400" }}>
-                        {halle.savedHalleLänge || halle.länge}m
-                    </text>
+            <div className="savedHalleMeta">
+                <p>
+                    <span>Länge</span>
+                    <strong>{halle.savedHalleLänge || halle.länge}m</strong>
                 </p>
-                <p className="text">
-                    Breite: 
-                    <text className="text" style={{ fontWeight: "400" }}>
-                        {halle.savedHalleBreite || halle.breite}m
-                    </text>
+                <p>
+                    <span>Breite</span>
+                    <strong>{halle.savedHalleBreite || halle.breite}m</strong>
                 </p>
-                <p className="text">
-                    Höhe: 
-                    <text className="text" style={{ fontWeight: "400" }}>
-                        {halle.savedHalleHöhe || halle.höhe}m
-                    </text>
+                <p>
+                    <span>Höhe</span>
+                    <strong>{halle.savedHalleHöhe || halle.höhe}m</strong>
                 </p>
-                <p className="text">
-                    Dachart: 
-                    <text className="text" style={{ fontWeight: "400" }}>
-                        {halle.savedHalleDachArt || halle.dachArt}
-                    </text>
+                <p>
+                    <span>Dachart</span>
+                    <strong>{halle.savedHalleDachArt || halle.dachArt}</strong>
                 </p>
-                <p className="text">
-                    Hallenart: 
-                    <text className="text" style={{ fontWeight: "400" }}>{halle.savedHalleArt || halle.hallenArt}</text>
+                <p>
+                    <span>Hallenart</span>
+                    <strong>{halle.savedHalleArt || halle.hallenArt}</strong>
                 </p>
             </div>
         </div>

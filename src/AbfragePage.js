@@ -20,7 +20,7 @@ export default function AbfragePage({
     breite, 
     setBreite, 
     höhe, 
-    setHöhe,
+    setHöhe, 
     hallenartSelection,
     setHallenartSelection,
     dachSelection,

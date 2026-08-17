@@ -10,8 +10,28 @@ import LoadingPage from "./LoadingPage";
 import MobileBlockScreen from "./MobileBlockScreen";
 import SavePage from "./SavePage";
 import SavedHallen from "./SavedHallen";
+import FAQPage from "./FAQPage";
 
+const SAVED_HALLEN_STORAGE_KEY = "ersteHalle.savedHallen";
 
+function loadSavedHallen() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(SAVED_HALLEN_STORAGE_KEY);
+    if (!storedValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+    return Array.isArray(parsedValue) ? parsedValue : [];
+  } catch (error) {
+    console.warn("Konnte gespeicherte Hallen nicht laden:", error);
+    return [];
+  }
+}
 
 function CustomPageFunc({ 
   setShowApp, 
@@ -88,7 +108,8 @@ function LandingPagefunc({ setShowApp }) {
 function AppPageFunc({ 
   setShowApp, 
   setAnfrageSummary,
-  flach, 
+  flach,
+  setFlach,
   länge, 
   setLänge, 
   breite, 
@@ -136,6 +157,7 @@ function AppPageFunc({
           setShowApp("kontakt")
         }}
         flach={flach}
+        setFlach={setFlach}
         länge={länge}
         setLänge={setLänge}
         breite={breite}
@@ -173,9 +195,21 @@ function Root() {
   const [anfrageSummary, setAnfrageSummary] = useState(null)
 
   // länge: ; breite: ; höhe: ; flach: ; dachSelection: ; hallenartSelection: ;
-  const [hallenSave, setHallenSave] = useState([])
+  const [hallenSave, setHallenSave] = useState(loadSavedHallen)
   const [objs, setObjs] = useState([
   ])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(SAVED_HALLEN_STORAGE_KEY, JSON.stringify(hallenSave));
+    } catch (error) {
+      console.warn("Konnte gespeicherte Hallen nicht speichern:", error);
+    }
+  }, [hallenSave]);
   
   function deleteHalle(id) {
     setHallenSave(prev => {
@@ -253,7 +287,8 @@ function Root() {
         <AppPageFunc 
         setShowApp={setShowApp} 
         setAnfrageSummary={setAnfrageSummary}
-        flach={flach} 
+        flach={flach}
+        setFlach={setFlach}
         länge={länge} 
         setLänge={setLänge} 
         breite={breite} 
@@ -321,6 +356,10 @@ function Root() {
         setObjs={setObjs}
         hydrateObjs={hydrateObjs}
         />
+      )}
+
+      {showApp === "faq" && (
+        <FAQPage setShowApp={setShowApp} />
       )}
     </StrictMode>
   );

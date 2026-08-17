@@ -259,6 +259,7 @@ export default function UiButtonEdit({
         const openingCounts = countOpeningsByType(openingObjects);
         const openingItems = openingObjects.map((obj, index) => mapOpeningSummaryItem(obj, index));
         const openingTotal = openingItems.length;
+        const relevanteDachAusrichtung = dachArt === 'pultdach' ? dachAusrichtung : null;
 
         return {
             abmessung: {
@@ -268,7 +269,7 @@ export default function UiButtonEdit({
                 dachArt,
                 traufhöhe,
                 dachneigung,
-                dachAusrichtung,
+                dachAusrichtung: relevanteDachAusrichtung,
                 diffTraufFirst
             },
             verkleidung: {

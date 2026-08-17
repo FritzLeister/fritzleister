@@ -240,6 +240,7 @@ export default function App({
     setShowAppKontakt,
     appSequence, 
     flach,
+    setFlach,
     länge,
     setLänge,
     breite,
@@ -464,6 +465,94 @@ export default function App({
         ));
     }
 
+    function handleReset() {
+        setFlach(false)
+        setLänge(70)
+        setBreite(30)
+        setHöhe(6)
+        setHallenartSelection("")
+        setDachSelection("")
+        setEditMenü("")
+
+        setDachArt('satteldach')
+        setTraufhöhe(3)
+        setDachneigung(5)
+        setSockelhöhe(2)
+        setDachAusrichtung('Rechts')
+        setDiffTraufFirst(4)
+
+        setWandGeometrieVorgaben('verkleidete-wand-mit-sockel')
+        setIsolierung('isoliert')
+        setPaneeltyp('trapez')
+        setPaneelBreiteMm(2500)
+        setWandOrientierung('vertikal')
+        setFarbSchema('einfarbig')
+        setAußenFarbe('white')
+        setAußenFarbeMuster('white')
+        setMusterVerortung('4, 5')
+        setDachIsolierung('isoliert')
+        setDachPaneeltyp('trapez')
+        setDachPaneelBreiteMm(2500)
+        setDachAußenFarbe('grey')
+        setDachPvcName('PVC-Folie')
+        setPvcName('PVC-Folie')
+
+        setFensterFarbe('?')
+        setTürFarbe('?')
+        setSchiebeTorFarbe('?')
+        setRollTorFarbe('?')
+        setSektionalTorFarbe('?')
+        setTürFarbeInnen('?')
+        setSektionalTorFarbeInnen('?')
+
+        setGebäudeZweck('Produktionshalle')
+        setBauBeginn(new Date().getFullYear())
+        setAnwerbungKunden('Soziale-Medien')
+        setGrößeGebäudeM2(760)
+
+        setBodenplatteFarbe('white')
+        setRahmenFarbe('lightblue')
+        setSekundärKonstruktionsFarbe('grey')
+        setSekundärHolzKonstruktionsFarbe('?')
+        setZubehörFarbe('?')
+        setKantenFarbe('?')
+        setKranKapazität(1)
+
+        setKantenAnzeigen(true)
+        setOberflächenAnzeigen(true)
+        setAbmessungenAnzeigen(true)
+        setPlattenAnzeigen(true)
+        setMassivwändeAnzeigen(true)
+        setÖffnungenAnzeigen(true)
+        setRahmenAnzeigen(true)
+        setPfettenAnzeigen(true)
+        setWandriegelAnzeigen(true)
+        setKantteileAnzeigen(true)
+        setZubehörAnzeigen(true)
+        setBodenplatteAnzeigen(true)
+        setVolumenAnzeigen(true)
+        setStraßenAnzeigen(true)
+        setStrukturelleKomponentenAnzeigen(true)
+        setDekorationenAnzeigen(true)
+        setGebäudeformAnzeigen(true)
+        setAnschleppungenAnzeigen(true)
+        setSekundärstrukturAnzeigen(true)
+        setKreuzverbändeAnzeigen(true)
+
+        setObjs([])
+        setSelectedObject(null)
+        setTürAttribute(false)
+        setClickedButtonPos(null)
+        setTopActionsHighlight(false)
+        undoHistoryRef.current = []
+        redoHistoryRef.current = []
+        currentHistorySnapshotRef.current = null
+        currentHistoryActionKeyRef.current = ''
+        hasInitializedHistoryRef.current = false
+        setCanUndo(false)
+        setCanRedo(false)
+    }
+
     function addObj(value, type, id, rechts, startPos = null, lang = true, extraData = {}) {
         const newObj = {
             value: value,
@@ -518,6 +607,7 @@ export default function App({
         const openingObjects = (objs || []).filter((obj) => OPENING_TYPES.has(obj?.type))
         const openingCounts = countOpeningsByType(openingObjects)
         const openingItems = openingObjects.map((obj, index) => mapOpeningSummaryItem(obj, index))
+        const relevanteDachAusrichtung = dachArt === 'pultdach' ? dachAusrichtung : null
 
         return {
             abmessung: {
@@ -527,7 +617,7 @@ export default function App({
                 dachArt,
                 traufhöhe,
                 dachneigung,
-                dachAusrichtung,
+                dachAusrichtung: relevanteDachAusrichtung,
                 diffTraufFirst
             },
             verkleidung: {
@@ -977,10 +1067,7 @@ export default function App({
                 transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
-            onClick={() => {
-                setShowApp2()
-                setObjs([])
-            }}
+            onClick={handleReset}
             title="Konfiguration zurücksetzen und neu starten."
             onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.25)';
