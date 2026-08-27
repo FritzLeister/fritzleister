@@ -11,6 +11,8 @@ export default function SavedHallen({
     setHöhe,
     setHallenartSelection,
     setDachSelection,
+    setFlach,
+    setAppearanceConfig,
     deleteHalle,
     setHallenSave,
     objs,
@@ -71,6 +73,8 @@ export default function SavedHallen({
                   setHöhe={setHöhe}
                   setHallenartSelection={setHallenartSelection}
                   setDachSelection={setDachSelection}
+                  setFlach={setFlach}
+                  setAppearanceConfig={setAppearanceConfig}
                   deleteHalle={deleteHalle}
                   editNameHalle={editNameHalle}
                   nameEdit={nameEdit}
@@ -96,6 +100,8 @@ export default function SavedHallen({
                     setHöhe={setHöhe}
                     setHallenartSelection={setHallenartSelection}
                     setDachSelection={setDachSelection}
+                    setFlach={setFlach}
+                    setAppearanceConfig={setAppearanceConfig}
                     deleteHalle={deleteHalle}
                     editNameHalle={editNameHalle}
                     nameEdit={nameEdit}

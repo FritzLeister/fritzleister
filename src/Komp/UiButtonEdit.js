@@ -161,6 +161,7 @@ export default function UiButtonEdit({
     const hasMountedRef = useRef(false);
     const refreshTimeoutRef = useRef(null);
     const previousDimensionsRef = useRef({ breite, länge, höhe, dachArt });
+    const lastRefreshKeyRef = useRef('');
 
     // Bei echten Änderungen im Abmessungen-Menü die Maßlinien kurz aus/an schalten,
     // damit die Darstellung sauber neu aufgebaut wird.
@@ -185,26 +186,40 @@ export default function UiButtonEdit({
             return;
         }
 
+        const refreshKey = `${breite}-${länge}-${höhe}-${dachArt}`;
+        if (lastRefreshKeyRef.current === refreshKey) {
+            return;
+        }
+
+        lastRefreshKeyRef.current = refreshKey;
+
         if (refreshTimeoutRef.current) {
             clearTimeout(refreshTimeoutRef.current);
         }
 
         setAbmessungenAnzeigen(false);
-        refreshTimeoutRef.current = setTimeout(() => {
+        refreshTimeoutRef.current = window.setTimeout(() => {
             setAbmessungenAnzeigen(true);
             refreshTimeoutRef.current = null;
+            lastRefreshKeyRef.current = '';
         }, 10);
+
+        return () => {
+            if (refreshTimeoutRef.current) {
+                window.clearTimeout(refreshTimeoutRef.current);
+                refreshTimeoutRef.current = null;
+            }
+        };
     }, [abmessungenAnzeigen, breite, dachArt, höhe, länge, name, setAbmessungenAnzeigen]);
 
     useEffect(() => {
         return () => {
             if (refreshTimeoutRef.current) {
-                clearTimeout(refreshTimeoutRef.current);
+                window.clearTimeout(refreshTimeoutRef.current);
                 refreshTimeoutRef.current = null;
-                setAbmessungenAnzeigen(true);
             }
         };
-    }, [setAbmessungenAnzeigen]);
+    }, []);
 
     // Setze sockelhöhe auf 0, wenn "Verkleidete Wand" ohne Sockel gewählt wird
     useEffect(() => {

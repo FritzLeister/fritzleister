@@ -13,6 +13,31 @@ import SavedHallen from "./SavedHallen";
 import FAQPage from "./FAQPage";
 
 const SAVED_HALLEN_STORAGE_KEY = "ersteHalle.savedHallen";
+const SHARE_QUERY_PARAM = "share";
+
+function decodeSharePayload(value) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const normalized = value.replace(/ /g, "+");
+    const binary = window.atob(normalized);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+
+    if (typeof TextDecoder !== "undefined") {
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    return JSON.parse(decodeURIComponent(binary));
+  } catch (error) {
+    try {
+      return JSON.parse(decodeURIComponent(value));
+    } catch (fallbackError) {
+      return null;
+    }
+  }
+}
 
 function loadSavedHallen() {
   if (typeof window === "undefined") {
@@ -125,7 +150,9 @@ function AppPageFunc({
   objs,
   setObjs,
   editMenü,
-  setEditMenü
+  setEditMenü,
+  appearanceConfig,
+  setAppearanceConfig
 }) {
 
   const [loading, setLoading] = useState(true);
@@ -173,6 +200,8 @@ function AppPageFunc({
         setObjs={setObjs}
         editMenü={editMenü}
         setEditMenü={setEditMenü}
+        appearanceConfig={appearanceConfig}
+        setAppearanceConfig={setAppearanceConfig}
       />
       </DeviceGate>}
     </>
@@ -193,6 +222,7 @@ function Root() {
   const [hallenartSelection, setHallenartSelection] = useState("")
   const [dachSelection, setDachSelection] = useState("")
   const [anfrageSummary, setAnfrageSummary] = useState(null)
+  const [appearanceConfig, setAppearanceConfig] = useState({})
 
   // länge: ; breite: ; höhe: ; flach: ; dachSelection: ; hallenartSelection: ;
   const [hallenSave, setHallenSave] = useState(loadSavedHallen)
@@ -227,6 +257,8 @@ function Root() {
         länge,
         dachArt: (dachSelection === "" ? "satteldach" : dachSelection),
         hallenArt: (hallenartSelection === "" ? "industrie" : hallenartSelection),
+        flach,
+        appearance: appearanceConfig || {},
         objs: Array.isArray(objs) ? objs.map(obj => ({ ...obj })) : [],
         name: ""
       };
@@ -253,6 +285,65 @@ function Root() {
       }
     })
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const encodedShare = new URLSearchParams(window.location.search).get(SHARE_QUERY_PARAM);
+    if (!encodedShare) {
+      return;
+    }
+
+    try {
+      const decodedPayload = decodeSharePayload(encodedShare);
+      if (!decodedPayload || decodedPayload.version !== 1 || !decodedPayload.hall) {
+        return;
+      }
+
+      const sharedHall = decodedPayload.hall;
+      setLänge(sharedHall.länge ?? 70);
+      setBreite(sharedHall.breite ?? 30);
+      setHöhe(sharedHall.höhe ?? 6);
+      setFlach(Boolean(sharedHall.flach ?? false));
+      setHallenartSelection(sharedHall.hallenArt ?? "");
+      setDachSelection(sharedHall.dachArt ?? "");
+      setAppearanceConfig(sharedHall.appearance ?? {});
+
+      setHallenSave(prev => {
+        const normalizedHall = {
+          id: sharedHall.id ?? Date.now(),
+          breite: sharedHall.breite ?? 30,
+          höhe: sharedHall.höhe ?? 6,
+          länge: sharedHall.länge ?? 70,
+          dachArt: sharedHall.dachArt ?? "satteldach",
+          hallenArt: sharedHall.hallenArt ?? "industrie",
+          flach: Boolean(sharedHall.flach ?? false),
+          appearance: sharedHall.appearance ?? {},
+          objs: Array.isArray(sharedHall.objs) ? sharedHall.objs.map(obj => ({ ...obj })) : [],
+          name: typeof sharedHall.name === "string" ? sharedHall.name : ""
+        };
+
+        const alreadyExists = prev.some(item => item.id === normalizedHall.id);
+        if (alreadyExists) {
+          return prev;
+        }
+
+        return [normalizedHall, ...prev];
+      });
+
+      setObjs(hydrateObjs(Array.isArray(sharedHall.objs) ? sharedHall.objs : []));
+      setShowApp("app");
+
+      if (typeof window !== "undefined" && window.history?.replaceState) {
+        const cleanUrl = `${window.location.pathname}${window.location.hash}`;
+        window.history.replaceState({}, "", cleanUrl);
+      }
+    } catch (error) {
+      console.warn("Konnte freigegebene Halle nicht laden:", error);
+    }
+  }, []);
   
 
   return (
@@ -305,6 +396,8 @@ function Root() {
         setObjs={setObjs}
         editMenü={editMenü}
         setEditMenü={setEditMenü}
+        appearanceConfig={appearanceConfig}
+        setAppearanceConfig={setAppearanceConfig}
         />
       )}
 
@@ -351,6 +444,8 @@ function Root() {
         setHöhe={setHöhe}
         setHallenartSelection={setHallenartSelection}
         setDachSelection={setDachSelection}
+        setFlach={setFlach}
+        setAppearanceConfig={setAppearanceConfig}
         deleteHalle={deleteHalle}
         objs={objs}
         setObjs={setObjs}
