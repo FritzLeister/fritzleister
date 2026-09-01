@@ -58,6 +58,251 @@ function loadSavedHallen() {
   }
 }
 
+const DEMO_HALL_CONFIGURATION = {
+  länge: 50,
+  breite: 22,
+  höhe: 5,
+  flach: false,
+  hallenArt: "industrie",
+  dachArt: "satteldach",
+  appearance: {},
+  objs: [
+    {
+      abstandLinks: 39.375,
+      abstandRechts: 75.625,
+      abstandUnten: 0.625,
+      fensterFarbe: "Weiß",
+      id: 1,
+      lang: true,
+      posSegment: "mittig",
+      rechts: false,
+      reflektor: "keine",
+      reflektorFarbe: "Weiß",
+      sprossenX: 0,
+      sprossenY: 0,
+      startPos: { x: -13.025, z: 27.5, rechts: false, lang: true, y: 1.175 },
+      type: "fenster",
+      value: [4, 3],
+      vorne: true
+    },
+    {
+      abstandLinks: 75,
+      abstandRechts: 40,
+      abstandUnten: 0.625,
+      fensterFarbe: "Weiß",
+      id: 2,
+      lang: true,
+      posSegment: "mittig",
+      rechts: false,
+      reflektor: "keine",
+      reflektorFarbe: "Weiß",
+      sprossenX: 0,
+      sprossenY: 0,
+      startPos: { x: 17.6, z: 27.5, rechts: false, lang: true, y: 1.175 },
+      type: "fenster",
+      value: [4, 3],
+      vorne: true
+    },
+    {
+      abstandLinks: 110.625,
+      abstandRechts: 4.375,
+      abstandUnten: 0.625,
+      fensterFarbe: "Weiß",
+      id: 3,
+      lang: true,
+      posSegment: "mittig",
+      rechts: false,
+      reflektor: "keine",
+      reflektorFarbe: "Weiß",
+      sprossenX: 0,
+      sprossenY: 0,
+      startPos: { x: 53.225, z: 27.5, rechts: false, lang: true, y: 1.175 },
+      type: "fenster",
+      value: [4, 3],
+      vorne: true
+    },
+    {
+      abstandLinks: 3.75,
+      abstandRechts: 111.25,
+      abstandUnten: 0.625,
+      fensterFarbe: "Weiß",
+      id: 4,
+      lang: true,
+      posSegment: "mittig",
+      rechts: false,
+      reflektor: "keine",
+      reflektorFarbe: "Weiß",
+      sprossenX: 0,
+      sprossenY: 0,
+      startPos: { x: -53.65, z: 27.5, rechts: false, lang: true, y: 1.175 },
+      type: "fenster",
+      value: [4, 3],
+      vorne: true
+    },
+    {
+      abstandLinks: 18.125,
+      abstandRechts: 17.5,
+      abstandUnten: 0,
+      fensterstreifenHöhe: null,
+      id: 5,
+      lang: false,
+      posSegment: "mittig",
+      rechts: true,
+      reflektor: "keine",
+      schlupftür: "nein",
+      schlupftürBreite: null,
+      schlupftürDistanzX: null,
+      schlupftürHöhe: null,
+      schlupftürOrientierung: null,
+      sektionalTorFarbe: "Weiß",
+      sektionalTorFüllFarbe: "Grau",
+      sektionalTorFüllFarbeInnen: "Grau",
+      sektionalTorReflektorFarbe: "Weiß",
+      startPos: { x: -63.2, z: 0.1, rechts: true, lang: false, y: 0.8999999999999999 },
+      transparenteFüllung: "nein",
+      transparentePaneele: null,
+      type: "sektionaltor",
+      value: [7, 3],
+      vorne: true
+    },
+    {
+      farbe: "Weiß",
+      fensterstreifenHöhe: null,
+      füllFarbe: "Weiß",
+      id: 6,
+      lang: true,
+      länge: 3,
+      posSegment: "mittig",
+      rampenhöhe: 0.8,
+      rechts: true,
+      reflektor: "keine",
+      schlupftür: "nein",
+      schlupftürBreite: null,
+      schlupftürDistanzX: null,
+      schlupftürHöhe: null,
+      schlupftürOrientierung: null,
+      startPos: { x: 35.51785714285715, z: -28.2, rechts: true, lang: true },
+      transparenteFüllung: "nein",
+      transparentePaneele: null,
+      typ: "ladehaus",
+      type: "laderampe",
+      value: [3.5, 4.2],
+      verkleidungFarbe: "Weiß",
+      vorne: true
+    },
+    {
+      farbe: "Weiß",
+      fensterstreifenHöhe: null,
+      füllFarbe: "Weiß",
+      id: 7,
+      lang: true,
+      länge: 3,
+      posSegment: "mittig",
+      rampenhöhe: 0.8,
+      rechts: true,
+      reflektor: "keine",
+      schlupftür: "nein",
+      schlupftürBreite: null,
+      schlupftürDistanzX: null,
+      schlupftürHöhe: null,
+      schlupftürOrientierung: null,
+      startPos: { x: -0.1249999999999929, z: -28.2, rechts: true, lang: true },
+      transparenteFüllung: "nein",
+      transparentePaneele: null,
+      typ: "ladehaus",
+      type: "laderampe",
+      value: [3.5, 4.2],
+      verkleidungFarbe: "Weiß",
+      vorne: true
+    },
+    {
+      abstandLinks: 21.25,
+      abstandRechts: 93.125,
+      farbe: "Weiß",
+      fensterstreifenHöhe: null,
+      füllFarbe: "Weiß",
+      id: 8,
+      lang: true,
+      länge: 3,
+      posSegment: "mittig",
+      rampenhöhe: 0.8,
+      rechts: true,
+      reflektor: "keine",
+      schlupftür: "nein",
+      schlupftürBreite: null,
+      schlupftürDistanzX: null,
+      schlupftürHöhe: null,
+      schlupftürOrientierung: null,
+      startPos: { x: -36.025, z: -28.2, rechts: true, lang: true, y: 2.775 },
+      transparenteFüllung: "nein",
+      transparentePaneele: null,
+      typ: "ladehaus",
+      type: "laderampe",
+      value: [3.5, 4.2],
+      verkleidungFarbe: "Weiß",
+      vorne: true
+    },
+    {
+      abstandLinks: 75,
+      abstandRechts: 40,
+      abstandUnten: 0.625,
+      fensterFarbe: "Weiß",
+      id: 9,
+      lang: true,
+      posSegment: "mittig",
+      rechts: true,
+      reflektor: "keine",
+      reflektorFarbe: "Weiß",
+      sprossenX: 0,
+      sprossenY: 0,
+      startPos: { x: 17.6, z: -27.5, rechts: true, lang: true, y: 1.175 },
+      type: "fenster",
+      value: [4, 3],
+      vorne: true
+    },
+    {
+      abstandLinks: 39.375,
+      abstandRechts: 75.625,
+      abstandUnten: 0.625,
+      fensterFarbe: "Weiß",
+      id: 10,
+      lang: true,
+      posSegment: "mittig",
+      rechts: true,
+      reflektor: "keine",
+      reflektorFarbe: "Weiß",
+      sprossenX: 0,
+      sprossenY: 0,
+      startPos: { x: -18.65, z: -27.5, rechts: true, lang: true, y: 1.175 },
+      type: "fenster",
+      value: [4, 3],
+      vorne: true
+    },
+    {
+      id: 11,
+      lang: false,
+      posSegment: "mittig",
+      rechts: false,
+      reflektor: "keine",
+      schiebeseite: "beide",
+      schiebetürFüllFarbe: "Weiß",
+      schiebetürFüllFarbeInnen: "Weiß",
+      schiebetürSchienenFarbe: "Grau",
+      schlupftür: "nein",
+      schlupftürBreite: null,
+      schlupftürDistanz: null,
+      schlupftürHöhe: null,
+      schlupftürOrientierung: null,
+      schlupftürTransparent: null,
+      startPos: { x: 63.2, z: -0.07499999999999574, rechts: false, lang: false },
+      type: "schiebetür",
+      value: [3, 3],
+      vorne: true,
+      öffnet: "außen"
+    }
+  ]
+};
+
 function CustomPageFunc({ 
   setShowApp, 
   setFlach, 
@@ -286,6 +531,21 @@ function Root() {
     })
   }
 
+  function handleOpenDemo() {
+    const demoHall = DEMO_HALL_CONFIGURATION;
+
+    setLänge(demoHall.länge ?? 70);
+    setBreite(demoHall.breite ?? 30);
+    setHöhe(demoHall.höhe ?? 6);
+    setFlach(Boolean(demoHall.flach ?? false));
+    setHallenartSelection(demoHall.hallenArt ?? "");
+    setDachSelection(demoHall.dachArt ?? "");
+    setAppearanceConfig(demoHall.appearance ?? {});
+    setEditMenü("");
+    setObjs(hydrateObjs(Array.isArray(demoHall.objs) ? demoHall.objs : []));
+    setShowApp("app");
+  }
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -454,7 +714,7 @@ function Root() {
       )}
 
       {showApp === "faq" && (
-        <FAQPage setShowApp={setShowApp} />
+        <FAQPage setShowApp={setShowApp} onOpenDemo={handleOpenDemo} />
       )}
     </StrictMode>
   );

@@ -11,6 +11,10 @@ const faqItems = [
     answer: "Ja. Über den Button „Gespeichert“ können Sie komplette Hallen-Varianten im Browser ablegen und später wieder öffnen."
   },
   {
+    question: "Gibt es eine Demo-Halle?",
+    answer: "Ja. Mit dem Button „Demo-Halle ansehen“ öffnet sich direkt eine beispielhafte Konfiguration mit typischen Fenstern, Toren und Ladehaus-Elementen."
+  },
+  {
     question: "Welche Öffnungstypen sind verfügbar?",
     answer: "Die Konfiguration unterstützt unter anderem Leeröffnungen, Türen, Rolltore, Lichtkuppeln und Photovoltaik-Elemente."
   },
@@ -24,7 +28,7 @@ const faqItems = [
   }
 ];
 
-export default function FAQPage({ setShowApp }) {
+export default function FAQPage({ setShowApp, onOpenDemo }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     const previousOverflowX = document.body.style.overflowX;
@@ -69,6 +73,9 @@ export default function FAQPage({ setShowApp }) {
         <div className="landingActions faqActions">
           <button className="button landingButton landingButtonSecondary" onClick={() => setShowApp("landing")}>
             Zur Startseite
+          </button>
+          <button className="button landingButton landingButtonPrimary" onClick={() => onOpenDemo?.()}>
+            Demo-Halle ansehen
           </button>
           <button className="button landingButton landingButtonPrimary" onClick={() => setShowApp("app")}>
             Konfiguration starten
